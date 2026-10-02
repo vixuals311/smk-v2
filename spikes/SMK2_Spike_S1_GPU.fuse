@@ -1,0 +1,62 @@
+--[[--
+SMK2_Spike_S1_GPU.fuse — Phase 0, Spike S1
+QUESTION: Does a DVIP GPU Fuse run identically in Resolve Free vs Studio and on CUDA / Metal / OpenCL?
+PASS: Output is a smooth RGB gradient (R=x, G=y, B=0.5), alpha=1, identical on all backends; console prints
+      "[S1] GPU OK". The "Checker" toggle must show a 32px pixel-space checker with NO aspect stretching.
+FAIL: Output is transparent/unchanged, or console prints "[S1] GPU FAILED -> CPU fallback".
+STATUS: UNVERIFIED in Resolve (written without a Resolve install). API shape follows the DVIPComputeNode
+        pattern from the Fuse SDK; correct any call that errors and record it in docs/PHASE0_CHECKLIST.md.
+--]]--
+FuRegisterClass("SMK2_Spike_S1_GPU", CT_SourceTool, {
+  REGS_Name = "SMK2 Spike S1 GPU", REGS_Category = "Fuses\\SMK v2\\Spikes",
+  REGS_OpIconString = "S1", REG_SupportsDoD = false, REG_Source_GlobalCtrls = true,
+  REG_Source_SizeCtrls = true, REG_Source_AspectCtrls = true, REG_NoPreCalcProcess = true,
+})
+
+local S1Params = [[
+  int size[2];
+  int checker;
+]]
+local Kernel = [[
+  __KERNEL__ void S1Kernel(__CONSTANTREF__ S1Params *p, __TEXTURE2D_WRITE__ dst)
+  {
+    DEFINE_KERNEL_ITERATORS_XY(x, y)
+    if (x >= p->size[0] || y >= p->size[1]) return;
+    float u = (x + 0.5f) / (float)p->size[0];
+    float v = (y + 0.5f) / (float)p->size[1];
+    float3 c = make_float3(u, v, 0.5f);
+    if (p->checker) {            // pixel-space checker: square cells regardless of aspect
+      int cx = (int)(x / 32), cy = (int)(y / 32);
+      float k = ((cx + cy) & 1) ? 1.0f : 0.25f;
+      c = c * k;
+    }
+    _tex2DVec4Write(dst, x, y, make_float4(c.x, c.y, c.z, 1.0f));
+  }
+]]
+
+function Create()
+  InChecker = self:AddInput("Checker (pixel space)", "Checker", {
+    LINKID_DataType = "Number", INPID_InputControl = "CheckboxControl", INP_Default = 0, })
+  OutImage = self:AddOutput("Output", "Output", { LINKID_DataType = "Image", LINK_Main = 1, })
+end
+
+function Process(req)
+  local out = Image({ IMG_Width = Width, IMG_Height = Height, IMG_Depth = Depth, IMG_DeferAlloc = true })
+  local ok = pcall(function()
+    local node = DVIPComputeNode(req, "S1Kernel", Kernel, "S1Params", S1Params)
+    local p = node:GetParamBlock(S1Params)
+    p.size = { out.Width, out.Height }
+    p.checker = math.floor(InChecker:GetValue(req).Value)
+    node:SetParamBlock(p)
+    node:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR, TEX_ADDRESS_MODE_CLAMP, TEX_NORMALIZED_COORDS_TRUE)
+    node:AddOutput("dst", out)
+    if not node:RunSession(req) then error("RunSession failed") end
+  end)
+  if ok then print("[S1] GPU OK " .. out.Width .. "x" .. out.Height)
+  else
+    print("[S1] GPU FAILED -> CPU fallback")
+    out = Image({ IMG_Width = Width, IMG_Height = Height, IMG_Depth = Depth })
+    out:Fill(Pixel({ R = 1, G = 0, B = 1, A = 1 }))   -- magenta = fallback was used
+  end
+  OutImage:Set(req, out)
+end

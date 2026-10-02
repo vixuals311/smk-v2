@@ -1,0 +1,28 @@
+# SMK v2 Architecture (from the Master Plan, 2026-09-29)
+
+Four layers, five core nodes. Only core nodes render or animate; products are presets.
+
+| Layer | Contents | Status |
+|---|---|---|
+| Library | `src/core/smk_core.lua` — seconds/clip-relative timing, easing + real-time spring, stagger, integer hash. Inlined at build. | **Done (39 tests)** |
+| Core nodes | Animator (GPU), Shape (SDF), Text, Look, Motion (modifier) | Motion modifier drafted; rest gated on Phase 0 |
+| Products | UI Block, Callout, Connector, Progress, Counter, Focus Zoom, Cursor, ... as `.drfx` presets | Not started |
+| Workflow | SMK Studio Lite | Not started (frozen until Phases 1-3 pass) |
+
+## Timing model
+`t` = seconds from clip start (`(frame - RenderStart)/rate`), `T` = clip length, `d = Index × Stagger`.
+In starts at `InDelay + d`; Out starts at `T − OutOffset − OutDur`; Hold is the settled state in between.
+Each phase has its own engine; only the active one is evaluated. Springs use real time and may settle past the phase end
+(no end-of-duration jump). If Out begins before an In spring has settled, Out wins (value steps from the in-flight value).
+
+## Rules carried from v1
+No global-name scripts; opacity only via `Merge.Blend` or the Animator (never `Transform.Blend`); forward-only DAG;
+one undo per Studio action; no runtime `require()`; unkeyed persistence (never index-assign StartFrame-style inputs).
+New IDs are `SMK2_*`; no v1 migration in 2.0.
+
+## Clean-room
+Ideas only from NeoEditFX; no code or node graphs copied. The bundle was obtained from a redistribution site.
+
+## Compatibility notes
+Fusion embeds LuaJIT (Lua 5.1): core uses no bitwise operators / `goto` / integer division. Tests run it on Lua 5.5 via lupa,
+so 5.1-only breakage is guarded by a grep in review, not by the runtime.

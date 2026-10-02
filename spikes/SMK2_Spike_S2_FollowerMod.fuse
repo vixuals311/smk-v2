@@ -1,0 +1,30 @@
+--[[--
+SMK2_Spike_S2_FollowerMod.fuse — Phase 0, Spike S2
+QUESTION: Does a Text+ StyledTextFollower re-evaluate a connected Fuse modifier at each character's delayed time,
+          and does it survive save/reopen?
+HOW: Modifier outputs a ramp 0..1 over "Ramp (s)" using req.Time (seconds = frame / comp rate), and prints the
+     (req.Time) it is asked for. Right-click Text+ Follower > Transform > Size (or Opacity) > Modify With > this.
+     Set Follower Delay Type = Per Character, Delay = 2 frames, Order = Left to Right.
+PASS: Characters reach the ramp end staggered (character N lags by N*delay); console shows distinct req.Time per
+      character in one frame; after Save > close > reopen the connection is intact, no BezierSpline appears on the
+      Follower input, and output is identical.
+FAIL: All characters identical (modifier is evaluated at the base time only) -> fallback = script-written splines.
+--]]--
+FuRegisterClass("SMK2_Spike_S2_FollowerMod", CT_Modifier, {
+  REGS_Name = "SMK2 Spike S2 Follower", REGS_Category = "Fuses\\SMK v2\\Spikes",
+  REGID_DataType = "Number", REGID_InputDataType = "Number", REG_TimeVariant = true, REG_Version = 1,
+})
+function Create()
+  InRamp = self:AddInput("Ramp (s)", "RampSeconds", { LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl", INP_Default = 0.5, INP_MinScale = 0.05, INP_MaxScale = 5 })
+  InLog = self:AddInput("Log req.Time", "LogTime", { LINKID_DataType = "Number",
+    INPID_InputControl = "CheckboxControl", INP_Default = 1 })
+  Out = self:AddOutput("Output", "Output", { LINKID_DataType = "Number", LINK_Main = 1 })
+end
+function Process(req)
+  local rate = self.Comp:GetPrefs("Comp.FrameFormat.Rate") or 24
+  local sec = req.Time / rate
+  if InLog:GetValue(req).Value > 0.5 then print(string.format("[S2] req.Time=%.3f (%.4fs)", req.Time, sec)) end
+  local r = math.max(InRamp:GetValue(req).Value, 1e-3)
+  Out:Set(req, Number(math.min(math.max(sec / r, 0), 1)))
+end

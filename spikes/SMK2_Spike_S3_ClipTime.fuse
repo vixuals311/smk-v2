@@ -1,0 +1,35 @@
+--[[--
+SMK2_Spike_S3_ClipTime.fuse — Phase 0, Spike S3
+QUESTION: Can a Fuse read the clip's render range and frame rate inside Process (self.Comp attrs / prefs),
+          on BOTH the Fusion page and an Edit-page Fusion clip / Title?
+HOW: Modifier; connect its output to any slider and watch the console + the 3 "Report" outputs via the
+     Spreadsheet or by reading the value. Test (a) Fusion page, (b) Edit-page Fusion clip trimmed to a
+     different length than the comp, (c) a Title with this attached, (d) change clip length by trimming, re-check.
+PASS: Printed RenderStart/RenderEnd match the visible clip range, Rate matches timeline fps, and values update
+      after trimming without re-opening. Output = clip-relative seconds (0 at first frame).
+FAIL: Attrs are nil/constant, or don't follow trims -> fallback: expose Start/End as inputs filled by a template expression.
+--]]--
+FuRegisterClass("SMK2_Spike_S3_ClipTime", CT_Modifier, {
+  REGS_Name = "SMK2 Spike S3 ClipTime", REGS_Category = "Fuses\\SMK v2\\Spikes",
+  REGID_DataType = "Number", REGID_InputDataType = "Number", REG_TimeVariant = true, REG_Version = 1,
+})
+function Create()
+  InMode = self:AddInput("Output", "Mode", { LINKID_DataType = "Number", INPID_InputControl = "ComboControl",
+    INP_Default = 0, INP_Integer = true,
+    { CCS_AddString = "Clip-relative seconds" }, { CCS_AddString = "Clip length (s)" },
+    { CCS_AddString = "Render start" }, { CCS_AddString = "Render end" }, { CCS_AddString = "Rate" } })
+  Out = self:AddOutput("Output", "Output", { LINKID_DataType = "Number", LINK_Main = 1 })
+end
+function Process(req)
+  local a = self.Comp:GetAttrs() or {}
+  local rs, re = a.COMPN_RenderStart, a.COMPN_RenderEnd
+  local gs, ge = a.COMPN_GlobalStart, a.COMPN_GlobalEnd
+  local rate = self.Comp:GetPrefs("Comp.FrameFormat.Rate")
+  print(string.format("[S3] t=%s RenderStart=%s RenderEnd=%s GlobalStart=%s GlobalEnd=%s Rate=%s",
+    tostring(req.Time), tostring(rs), tostring(re), tostring(gs), tostring(ge), tostring(rate)))
+  rs, re, rate = rs or 0, re or 0, (rate and rate > 0) and rate or 24
+  local m = InMode:GetValue(req).Value
+  local v = (req.Time - rs) / rate
+  if m == 1 then v = (re - rs + 1) / rate elseif m == 2 then v = rs elseif m == 3 then v = re elseif m == 4 then v = rate end
+  Out:Set(req, Number(v))
+end

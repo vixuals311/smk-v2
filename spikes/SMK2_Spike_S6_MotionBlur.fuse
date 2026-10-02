@@ -1,0 +1,63 @@
+--[[--
+SMK2_Spike_S6_MotionBlur.fuse — Phase 0, Spike S6
+QUESTION: Does in-kernel motion blur (N sub-frame samples) beat Fusion's own Transform motion blur on speed and quality?
+HOW: Moves the input along X using a sine over time (px/frame) and averages N samples across the shutter, all in one
+     kernel. Compare against Transform (Motion Blur on, same Quality/Shutter) moving identically: fps at 1080p / 4K
+     and edge quality. Samples 1/8/16/32.
+PASS: Equal-or-better smoothness at fewer ms/frame than Transform's blur for N<=16.
+FAIL: Slower or banded -> element uses native Transform motion blur instead.
+STATUS: UNVERIFIED (see S1 note on DVIP API).
+--]]--
+FuRegisterClass("SMK2_Spike_S6_MotionBlur", CT_Tool, {
+  REGS_Name = "SMK2 Spike S6 MotionBlur", REGS_Category = "Fuses\\SMK v2\\Spikes", REG_NoPreCalcProcess = true,
+})
+local S6Params = [[
+  int size[2];
+  float dx0;
+  float dx1;
+  int n;
+]]
+local Kernel = [[
+  __KERNEL__ void S6Kernel(__CONSTANTREF__ S6Params *p, __TEXTURE2D__ src, __TEXTURE2D_WRITE__ dst)
+  {
+    DEFINE_KERNEL_ITERATORS_XY(x, y)
+    if (x >= p->size[0] || y >= p->size[1]) return;
+    float4 acc = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+    for (int i = 0; i < p->n; ++i) {
+      float s = (p->n > 1) ? (float)i / (float)(p->n - 1) : 0.5f;
+      float dx = p->dx0 + (p->dx1 - p->dx0) * s;        // sample the shifted position inside the shutter
+      acc += _tex2DVecN(src, (x - dx + 0.5f) / (float)p->size[0], (y + 0.5f) / (float)p->size[1], 15);
+    }
+    _tex2DVec4Write(dst, x, y, acc / (float)p->n);
+  }
+]]
+function Create()
+  InImage = self:AddInput("Input", "Input", { LINKID_DataType = "Image", LINK_Main = 1 })
+  InAmp = self:AddInput("Amplitude (px)", "Amp", { LINKID_DataType = "Number", INPID_InputControl = "SliderControl",
+    INP_Default = 300, INP_MinScale = 0, INP_MaxScale = 1000 })
+  InSamples = self:AddInput("Samples", "Samples", { LINKID_DataType = "Number", INPID_InputControl = "SliderControl",
+    INP_Default = 8, INP_Integer = true, INP_MinScale = 1, INP_MaxScale = 64 })
+  InShutter = self:AddInput("Shutter (frames)", "Shutter", { LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl", INP_Default = 0.5, INP_MinScale = 0, INP_MaxScale = 1 })
+  OutImage = self:AddOutput("Output", "Output", { LINKID_DataType = "Image", LINK_Main = 1 })
+end
+function Process(req)
+  local img = InImage:GetValue(req)
+  if not img then OutImage:Set(req, nil) return end
+  local out = Image({ IMG_Like = img, IMG_DeferAlloc = true })
+  local amp, sh = InAmp:GetValue(req).Value, InShutter:GetValue(req).Value
+  local pos = function(t) return amp * math.sin(t / 12) end       -- px position at frame t
+  local ok = pcall(function()
+    local node = DVIPComputeNode(req, "S6Kernel", Kernel, "S6Params", S6Params)
+    local p = node:GetParamBlock(S6Params)
+    p.size = { img.DataWindow:Width(), img.DataWindow:Height() }
+    p.n = math.max(1, math.floor(InSamples:GetValue(req).Value))
+    p.dx0, p.dx1 = pos(req.Time - sh / 2), pos(req.Time + sh / 2)
+    node:SetParamBlock(p)
+    node:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR, TEX_ADDRESS_MODE_CLAMP, TEX_NORMALIZED_COORDS_TRUE)
+    node:AddInput("src", img); node:AddOutput("dst", out)
+    if not node:RunSession(req) then error("RunSession failed") end
+  end)
+  if not ok then print("[S6] GPU FAILED"); out = img end
+  OutImage:Set(req, out)
+end

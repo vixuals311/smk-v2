@@ -1,0 +1,35 @@
+--[[--
+SMK2_Spike_S4_DoD.fuse — Phase 0, Spike S4
+QUESTION: Can an image Fuse shrink its output Domain of Definition to the element's bounds so downstream Merges are cheaper?
+HOW: Image in -> out. "Shrink DoD" crops the DoD to a centred box of Box W/H (normalised). Stack 20 copies into a
+     Merge chain with Shrink on/off and compare playback fps + the DoD overlay (View > Show DoD).
+PASS: DoD overlay shows the small box, image inside is unchanged, and fps with 20 stacked elements improves.
+FAIL: DoD ignored / image clipped wrongly -> keep full-frame output (rely on fewer nodes).
+--]]--
+FuRegisterClass("SMK2_Spike_S4_DoD", CT_Tool, {
+  REGS_Name = "SMK2 Spike S4 DoD", REGS_Category = "Fuses\\SMK v2\\Spikes",
+  REG_SupportsDoD = true, REG_NoPreCalcProcess = true,
+})
+function Create()
+  InImage = self:AddInput("Input", "Input", { LINKID_DataType = "Image", LINK_Main = 1 })
+  InShrink = self:AddInput("Shrink DoD", "Shrink", { LINKID_DataType = "Number",
+    INPID_InputControl = "CheckboxControl", INP_Default = 1 })
+  InW = self:AddInput("Box W", "BoxW", { LINKID_DataType = "Number", INPID_InputControl = "SliderControl",
+    INP_Default = 0.3, INP_MinScale = 0.01, INP_MaxScale = 1 })
+  InH = self:AddInput("Box H", "BoxH", { LINKID_DataType = "Number", INPID_InputControl = "SliderControl",
+    INP_Default = 0.2, INP_MinScale = 0.01, INP_MaxScale = 1 })
+  OutImage = self:AddOutput("Output", "Output", { LINKID_DataType = "Image", LINK_Main = 1 })
+end
+function Process(req)
+  local img = InImage:GetValue(req)
+  if not img then OutImage:Set(req, nil) return end
+  local out = img:Copy()
+  if InShrink:GetValue(req).Value > 0.5 then
+    local W, H = img.DataWindow:Width(), img.DataWindow:Height()
+    local bw, bh = InW:GetValue(req).Value * W, InH:GetValue(req).Value * H
+    local x0, y0 = (W - bw) / 2, (H - bh) / 2
+    out.DataWindow = ImgRectI(math.floor(x0), math.floor(y0), math.ceil(x0 + bw), math.ceil(y0 + bh))
+    print(string.format("[S4] DoD -> %d,%d..%d,%d", out.DataWindow.left, out.DataWindow.bottom, out.DataWindow.right, out.DataWindow.top))
+  end
+  OutImage:Set(req, out)
+end
