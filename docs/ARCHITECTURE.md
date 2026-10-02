@@ -39,3 +39,12 @@ Conclusion: the budget is spent per node, so stacked-card products must **not ad
 Merge the element already has through one `SMK2 Motion Rig` modifier (Phase 1b gate). `SMK2 Animator` remains for single
 elements and for effects that need image resampling. File-level locals in a Fuse are not visible in `Process` (Resolve re-executes
 the file); share state through globals filled in `Create()`.
+
+## Decision after Phase 1b (2026-10-02)
+Fuse *modifiers* cost ~3 ms/instance/frame just like Fuse nodes (null modifier x20 = 67.5 ms; native expressions 22.5 ms; baseline 7.5 ms),
+so the Rig is not faster than the Animator. User-measured viewer playback (60 fps timeline, 20 cards): 23–26 fps first pass,
+58 fps once cached — this, not Deliver render time, is what artists see, so the gate is re-scoped to
+"first-pass ≥ 24 fps and cached ≥ 58 fps; render ms/frame tracked as the regression metric".
+Rule going forward: **one Fuse instance per element, never more.** `SMK2 Shape` therefore carries its own motion; Animator/Rig remain
+for animating existing images. If a stack needs more speed, Studio Lite can bake native expressions from the same core math.
+Rotation convention confirmed: positive = counter-clockwise.
