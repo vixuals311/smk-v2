@@ -48,3 +48,9 @@ so the Rig is not faster than the Animator. User-measured viewer playback (60 fp
 Rule going forward: **one Fuse instance per element, never more.** `SMK2 Shape` therefore carries its own motion; Animator/Rig remain
 for animating existing images. If a stack needs more speed, Studio Lite can bake native expressions from the same core math.
 Rotation convention confirmed: positive = counter-clockwise.
+
+## Phase 2 results (2026-10-02)
+Shape H1–H11 pass; colour pickers fine; ring sweep clockwise from 12 o'clock; live Edit-page trim moves Out (verified by user).
+Benchmark (render ms/frame, 20 cards, 1080p): Shape+Merges 50.8; Shape+Text+ 140.8; v1 UIBlock+Text+ ≈ 2,526. Viewer fps (user): Shape+Text+ 6–7,
+v1 6–8. Time is dominated by full-frame Merges (every generator output is 1080p float32) and by Text+ merges (≈4.5 ms each).
+Next lever: tight output buffers (S7). If unavailable: multi-element Shape (one Fuse draws N elements) for repeated groups.

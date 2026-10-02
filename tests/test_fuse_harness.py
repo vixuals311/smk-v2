@@ -41,7 +41,7 @@ v1, _ = run(110); v2, _ = run(110, ClipLength=100.0); check("ClipLength override
 # fps independence: same seconds -> same value (rate fixed in mock, so compare 0.25s)
 v, ph = run(6, EngineIn=1.0)  # spring at 0.25s
 check("spring engine active, finite", v == v and v != 1.0)
-for name in ("S1_GPU", "S2_FollowerMod", "S3_ClipTime", "S4_DoD", "S6_MotionBlur"):
+for name in ("S1_GPU", "S2_FollowerMod", "S3_ClipTime", "S4_DoD", "S6_MotionBlur", "S7_TightBuffer"):
     s = open(os.path.join(ROOT, f"dist/spikes/SMK2_Spike_{name}.fuse")).read()
     try: lua.eval("function(src) return assert(loadstring or load)(src) end")(s); ok = True
     except Exception as e: ok = False; print(e)

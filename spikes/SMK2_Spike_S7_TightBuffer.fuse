@@ -1,0 +1,105 @@
+--[[--
+SMK2_Spike_S7_TightBuffer.fuse — Phase 2b, Spike S7 (supersedes S4)
+QUESTION: Can a GPU generator output a SMALL image (just the element's bounding box, positioned inside the full canvas)
+          so downstream Merges are cheap? Phase 2 data: 20 full-frame Shape merges = 50 ms/frame vs ~2.5 ms for Text+ (small DoD).
+          S4 showed `out.DataWindow = ...` is ignored and `IMG_Like + IMG_DataWindow` still painted the whole frame.
+HOW: Generator draws a 640x360 px box (green->blue gradient by GLOBAL x) centred in the canvas. "Method" picks how the
+     output image is allocated; every method also prints out.Width/Height/DataWindow and a few attributes to the console:
+       0 Full frame (control)                       Image{IMG_Width=W, IMG_Height=H}
+       1 Small buffer + XOffset/YOffset             Image{IMG_Width=bw, IMG_Height=bh, IMG_XOffset=x0, IMG_YOffset=y0}
+       2 Small buffer + offsets + original canvas   as 1 plus IMG_OriginalWidth/IMG_OriginalHeight = W,H (if accepted)
+       3 Full size + IMG_DataWindow                 Image{IMG_Width=W, IMG_Height=H, IMG_DataWindow=ImgRectI(...)}
+       4 Small buffer, Fuse sets the canvas via IMG_Like-free constructor + Domain fields (IMG_Like of a W×H probe)
+PASS (per method): in a Merge over a grey Background the box appears at the SAME pixels as method 0, the DoD overlay
+     (View > Show DoD) is the small box, and 20 stacked copies render faster than method 0.
+Report per method: works? (pixel-identical to method 0), DoD overlay, ms/frame of 20 stacked, console attribute dump.
+STATUS: UNVERIFIED — attribute names follow the Fuse SDK image attributes; a failing method prints the error.
+--]]--
+FuRegisterClass("SMK2_Spike_S7_TightBuffer", CT_SourceTool, {
+  REGS_Name = "SMK2 Spike S7 TightBuffer", REGS_Category = "Fuses\\SMK v2\\Spikes", REGS_OpIconString = "S7",
+  REG_Source_GlobalCtrls = true, REG_Source_SizeCtrls = true, REG_Source_AspectCtrls = true,
+  REG_NoPreCalcProcess = true, REG_Version = 1,
+})
+
+S7Params = [[
+  int size[2];
+  int origin[2];
+  int box[4];
+]]
+S7Source = [[
+__KERNEL__ void S7Kernel(__CONSTANTREF__ S7Params *p, __TEXTURE2D_WRITE__ dst)
+{
+  DEFINE_KERNEL_ITERATORS_XY(x, y);
+  if (x >= p->size[0] || y >= p->size[1]) return;
+  int gx = x + p->origin[0], gy = y + p->origin[1];          // global canvas pixel
+  float4 c = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+  if (gx >= p->box[0] && gx < p->box[2] && gy >= p->box[1] && gy < p->box[3]) {
+    float u = (float)(gx - p->box[0]) / (float)(p->box[2] - p->box[0]);
+    c = make_float4(0.0f, 1.0f - u, u, 1.0f);
+  }
+  _tex2DVec4Write(dst, x, y, c);
+}
+]]
+
+function Create()
+  InMethod = self:AddInput("Method", "Method", { LINKID_DataType = "Number", INPID_InputControl = "ComboControl",
+    INP_Default = 1, INP_Integer = true, { CCS_AddString = "0 Full frame (control)" }, { CCS_AddString = "1 Small + offsets" },
+    { CCS_AddString = "2 Small + offsets + original size" }, { CCS_AddString = "3 Full + IMG_DataWindow" },
+    { CCS_AddString = "4 Small, canvas from probe" } })
+  InCX = self:AddInput("Box Centre X", "CX", { LINKID_DataType = "Number", INPID_InputControl = "SliderControl", INP_Default = 0.5 })
+  InCY = self:AddInput("Box Centre Y", "CY", { LINKID_DataType = "Number", INPID_InputControl = "SliderControl", INP_Default = 0.5 })
+  OutImage = self:AddOutput("Output", "Output", { LINKID_DataType = "Image", LINK_Main = 1 })
+end
+
+local function dump(tag, img)
+  local dw = img.DataWindow
+  local ok, s = pcall(function() return string.format("%s: Width=%s Height=%s DW=%s,%s..%s,%s", tag, tostring(img.Width),
+    tostring(img.Height), tostring(dw and dw.left), tostring(dw and dw.bottom), tostring(dw and dw.right), tostring(dw and dw.top)) end)
+  print("[S7] " .. (ok and s or (tag .. ": dump failed " .. tostring(s))))
+  for _, k in ipairs({ "OriginalWidth", "OriginalHeight", "XOffset", "YOffset", "ImageWidth", "ImageHeight", "Depth", "DataWindowWidth" }) do
+    local ok2, v = pcall(function() return img[k] end); if ok2 and v ~= nil then print("[S7]   " .. k .. " = " .. tostring(v)) end
+  end
+end
+
+function Process(req)
+  local W, H = Width, Height
+  local m = math.floor(InMethod:GetValue(req).Value + 0.5)
+  local bw, bh = 640, 360
+  local x0 = math.floor(InCX:GetValue(req).Value * W - bw / 2)
+  local y0 = math.floor(InCY:GetValue(req).Value * H - bh / 2)
+  local out, err
+  local ok = pcall(function()
+    if m == 0 then
+      out = Image({ IMG_Width = W, IMG_Height = H, IMG_Depth = Depth, IMG_DeferAlloc = true })
+    elseif m == 1 then
+      out = Image({ IMG_Width = bw, IMG_Height = bh, IMG_XOffset = x0, IMG_YOffset = y0, IMG_Depth = Depth, IMG_DeferAlloc = true })
+    elseif m == 2 then
+      out = Image({ IMG_Width = bw, IMG_Height = bh, IMG_XOffset = x0, IMG_YOffset = y0, IMG_OriginalWidth = W,
+        IMG_OriginalHeight = H, IMG_Depth = Depth, IMG_DeferAlloc = true })
+    elseif m == 3 then
+      out = Image({ IMG_Width = W, IMG_Height = H, IMG_DataWindow = ImgRectI(x0, y0, x0 + bw, y0 + bh), IMG_Depth = Depth, IMG_DeferAlloc = true })
+    else
+      local probe = Image({ IMG_Width = W, IMG_Height = H, IMG_Depth = Depth, IMG_DeferAlloc = true })
+      out = Image({ IMG_Like = probe, IMG_Width = bw, IMG_Height = bh, IMG_XOffset = x0, IMG_YOffset = y0, IMG_DeferAlloc = true })
+    end
+  end)
+  if not ok or not out then
+    print("[S7] method " .. m .. " constructor failed"); out = Image({ IMG_Width = W, IMG_Height = H, IMG_Depth = Depth }); OutImage:Set(req, out); return
+  end
+  dump("method " .. m, out)
+  if req:IsPreCalc() then OutImage:Set(req, out) return end
+  local okg, perr = pcall(function()
+    local node = DVIPComputeNode(req, "S7Kernel", S7Source, "S7Params", S7Params)
+    local b = node:GetParamBlock(S7Params)
+    local ow, oh = out.Width, out.Height
+    b.size = { ow, oh }
+    b.origin = (m == 0) and { 0, 0 } or { x0, y0 }
+    b.box = { x0, y0, x0 + bw, y0 + bh }
+    node:SetParamBlock(b)
+    node:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR, TEX_ADDRESS_MODE_CLAMP, TEX_NORMALIZED_COORDS_TRUE)
+    node:AddOutput("dst", out)
+    if not node:RunSession(req) then error("RunSession failed") end
+  end)
+  if not okg then print("[S7] GPU failed: " .. tostring(perr)) end
+  OutImage:Set(req, out)
+end
