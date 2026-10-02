@@ -25,7 +25,7 @@ def fuse_keys(name):
     return set(lua.eval("(function() local t = {} for k in pairs(I) do t[#t+1] = k end return t end)()").values())
 KEYS = {"Fuse.SMK2_Shape": fuse_keys("SMK2_Shape"), "Fuse.SMK2_Animator": fuse_keys("SMK2_Animator")}
 KEYS["Fuse.SMK2_Shape"] |= {"Output"}; KEYS["Fuse.SMK2_Animator"] |= {"Output", "Image"}
-TEXTPLUS = {"StyledText", "Font", "Style", "Size", "Red1", "Green1", "Blue1", "Alpha1", "Center", "Output"}
+TEXTPLUS = {"StyledText", "Font", "Style", "Size", "Red1", "Green1", "Blue1", "Alpha1", "Center", "Angle", "Output"}
 KEYS["TextPlus"] = TEXTPLUS; KEYS["Merge"] = {"Output", "Background", "Foreground"}
 
 for path in sorted(os.listdir(os.path.join(ROOT, "dist/templates"))):
@@ -53,5 +53,12 @@ for path in sorted(os.listdir(os.path.join(ROOT, "dist/templates"))):
     def cyc(n, seen=()):
         return n in seen or any(cyc(d, seen + (n,)) for d in deps[n])
     check(f"{path}: acyclic graph", not any(cyc(n) for n in nodes))
+    blocks = re.findall(r"= InstanceInput \{(.*?)\n\t{4}\},", s, re.S)
+    groups = {}
+    for b in blocks:
+        g = re.search(r"ControlGroup = (\d+)", b)
+        if g: groups.setdefault(g.group(1), []).append("Name =" in b)
+    check(f"{path}: colour pickers grouped (5 groups, 3-4 channels, one Name each)", len(groups) == 5 and all(len(v) in (3, 4) and v.count(True) == 1 and v[0] for v in groups.values()))
+    check(f"{path}: label rotates with card", "UIB_Shape.Angle" in s)
     check(f"{path}: published control count > 60", len(pubs) > 60)
 print(f"macros: {passed} passed, {failed} failed"); sys.exit(1 if failed else 0)

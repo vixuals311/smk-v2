@@ -12,4 +12,5 @@
 | D2-008 | Viewer-fps measurement automation | Needs viewer access; user measures manually | OPEN |
 | D2-009 | Elastic engine: confirm feel across amplitude/period | User: feels smooth (Phase 1) | RESOLVED (Phase 1) |
 | D2-010 | Tight (bounding-box) output buffer for Shape/Look/Animator | Spike S7: no speed-up (Phase 2b) | RESOLVED: not a lever |
+| D2-012 | Font Style combo shows "--" in the published macro; label text does not rotate (fixed in 2d) | Phase 2c | OPEN (Style) |
 | D2-011 | Multi-element Shape (one Fuse, N elements: bars, grids, lists) | Fallback if S7 fails; also suits charts | OPEN |
