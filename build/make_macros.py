@@ -28,7 +28,7 @@ class Macro:
     def __init__(self, name, nodes, out_op):
         self.name, self.nodes, self.out_op, self.pub = name, nodes, out_op, []
     def publish(self, op, src, name, page, default=None, key=None):
-        self.pub.append(dict(op=op, src=src, name=name, page=page, default=default, key=key or f"{op}_{src}"))
+        self.pub.append(dict(op=op, src=src, name=name, page=page, default=default, key=key or f"{op.replace('UIB_', '')}_{src}"))
     def render(self):
         o = ["{", "\tTools = ordered() {", f"\t\t{self.name} = GroupOperator {{", "\t\t\tCtrlWZoom = false,", "\t\t\tInputs = ordered() {"]
         for p in self.pub:
@@ -54,27 +54,27 @@ COLOR = lambda k: [(k + c, c2) for c, c2 in zip("RGBA", ("Red", "Green", "Blue",
 def ui_block():
     shape_static = {f"{p}{k}": v for p in ("In", "Out") for k, v in (("Fade", 1.0), ("SlideDist", 0.0), ("Scale", 1.0), ("Rot", 0.0))}
     nodes = [
-        Node("Shape", "Fuse.SMK2_Shape", (0, 0), values=dict(shape_static, FillAR=0.16, FillAG=0.2, FillAB=0.36, FillAA=1.0, BW=2, BCR=1, BCG=1, BCB=1, BCA=0.35)),
-        Node("Label", "TextPlus", (0, 66), values=dict(UseFrameFormatSettings=1, Width=1920, Height=1080, Wrap=0, StyledText="Card", Font="Open Sans",
+        Node("UIB_Shape", "Fuse.SMK2_Shape", (0, 0), values=dict(shape_static, UseFrameFormatSettings=1, Width=1920, Height=1080, FillAR=0.16, FillAG=0.2, FillAB=0.36, FillAA=1.0, BW=2, BCR=1, BCG=1, BCB=1, BCA=0.35)),
+        Node("UIB_Label", "TextPlus", (0, 66), values=dict(UseFrameFormatSettings=1, Width=1920, Height=1080, Wrap=0, StyledText="Card", Font="Open Sans",
              Style="Bold", Size=0.04, HorizontalJustificationNew=1, VerticalJustificationNew=3, HorizontalLeftCenterRight=0,
-             Red1=1.0, Green1=1.0, Blue1=1.0, Alpha1=1.0), expr={"Center": "Point(Shape.CX, Shape.CY)"}),
-        Node("Merge", "Merge", (110, 33), links={"Background": ("Shape", "Output"), "Foreground": ("Label", "Output")}),
-        Node("Animator", "Fuse.SMK2_Animator", (220, 33), links={"Image": ("Merge", "Output")},
-             expr={"PivotX": "Shape.CX", "PivotY": "Shape.CY"}),
+             Red1=1.0, Green1=1.0, Blue1=1.0, Alpha1=1.0), expr={"Center": "Point(UIB_Shape.CX, UIB_Shape.CY)"}),
+        Node("UIB_Merge", "Merge", (110, 33), links={"Background": ("UIB_Shape", "Output"), "Foreground": ("UIB_Label", "Output")}),
+        Node("UIB_Animator", "Fuse.SMK2_Animator", (220, 33), links={"Image": ("UIB_Merge", "Output")},
+             expr={"PivotX": "UIB_Shape.CX", "PivotY": "UIB_Shape.CY"}),
     ]
-    m = Macro("SMK2_UIBlock", nodes, "Animator")
-    for k, n in (("StyledText", "Text"), ("Font", "Font"), ("Style", "Font Style"), ("Size", "Text Size")): m.publish("Label", k, n, "Card", key=f"Label_{k}")
-    for k, n in (("Red1", "Text Red"), ("Green1", "Text Green"), ("Blue1", "Text Blue")): m.publish("Label", k, n, "Card")
+    m = Macro("SMK2_UIBlock", nodes, "UIB_Animator")
+    for k, n in (("StyledText", "Text"), ("Font", "Font"), ("Style", "Font Style"), ("Size", "Text Size")): m.publish("UIB_Label", k, n, "Card", key=f"Label_{k}")
+    for k, n in (("Red1", "Text Red"), ("Green1", "Text Green"), ("Blue1", "Text Blue")): m.publish("UIB_Label", k, n, "Card")
     for k, n in (("Shape", "Shape"), ("W", "Width (frac of frame width)"), ("H", "Height (frac of frame width)"), ("Radius", "Corner Radius"),
-                 ("CX", "Center X"), ("CY", "Center Y"), ("Angle", "Angle"), ("FillMode", "Fill")): m.publish("Shape", k, n, "Card")
-    for k, n in COLOR("FillA") + COLOR("FillB"): m.publish("Shape", k, ("Fill " if "A" == k[4] else "Fill B ") + n, "Card")
-    for k, n in (("GradAngle", "Gradient Angle"), ("BW", "Border Width (px @1920)"), ("BPos", "Border Position")): m.publish("Shape", k, n, "Card")
-    for k, n in COLOR("BC"): m.publish("Shape", k, "Border " + n, "Card")
-    for k, n in COLOR("SC"): m.publish("Shape", k, "Shadow " + n, "Card")
-    for k, n in (("SX", "Shadow X"), ("SY", "Shadow Y (down)"), ("SB", "Shadow Blur")): m.publish("Shape", k, n, "Card")
-    for k, n in TIMING: m.publish("Animator", k, n, "Motion")
+                 ("CX", "Center X"), ("CY", "Center Y"), ("Angle", "Angle"), ("FillMode", "Fill")): m.publish("UIB_Shape", k, n, "Card")
+    for k, n in COLOR("FillA") + COLOR("FillB"): m.publish("UIB_Shape", k, ("Fill " if "A" == k[4] else "Fill B ") + n, "Card")
+    for k, n in (("GradAngle", "Gradient Angle"), ("BW", "Border Width (px @1920)"), ("BPos", "Border Position")): m.publish("UIB_Shape", k, n, "Card")
+    for k, n in COLOR("BC"): m.publish("UIB_Shape", k, "Border " + n, "Card")
+    for k, n in COLOR("SC"): m.publish("UIB_Shape", k, "Shadow " + n, "Card")
+    for k, n in (("SX", "Shadow X"), ("SY", "Shadow Y (down)"), ("SB", "Shadow Blur")): m.publish("UIB_Shape", k, n, "Card")
+    for k, n in TIMING: m.publish("UIB_Animator", k, n, "Motion")
     for ph in ("In", "Out"):
-        for k, n in ENGINE_KEYS: m.publish("Animator", ph + k, f"{ph} {n}", f"{ph} Motion")
+        for k, n in ENGINE_KEYS: m.publish("UIB_Animator", ph + k, f"{ph} {n}", f"{ph} Motion")
     return m
 
 MACROS = {"SMK2_UIBlock": ui_block}
