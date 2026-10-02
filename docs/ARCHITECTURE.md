@@ -32,3 +32,10 @@ so 5.1-only breakage is guarded by a grep in review, not by the runtime.
 - Inside a Fuse, `self.Comp` is a plain-field object: use `self.Comp.RenderStart/RenderEnd`, not `:GetAttrs()`.
 - Follower→Fuse modifier staggering works (S2). DoD cannot be shrunk by assigning `DataWindow` (S4): output full-frame.
 - Fuses are not loaded from a `.drfx` (S5): separate installer. Native Transform blur beats the in-kernel blur in chains (S6).
+
+## Phase 1 findings (G1–G9, G11 pass; G10 fails) → design change
+20 text cards at 1080p/60 fps: baseline 7.5 ms/frame; +20 native Transforms 27.5 ms; +20 SMK2 Animators 67 ms (≈3 ms per Fuse node).
+Conclusion: the budget is spent per node, so stacked-card products must **not add a node per element**. Products drive the
+Merge the element already has through one `SMK2 Motion Rig` modifier (Phase 1b gate). `SMK2 Animator` remains for single
+elements and for effects that need image resampling. File-level locals in a Fuse are not visible in `Process` (Resolve re-executes
+the file); share state through globals filled in `Create()`.

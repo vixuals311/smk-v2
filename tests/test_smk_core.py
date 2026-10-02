@@ -91,5 +91,6 @@ xf0 = smk.animXform(0, cfg(w=1920, h=1080, pivotX=.5, pivotY=.5, slideDist=.1, s
 check("identity at a=0", near(xf0.tx, 0) and near(xf0.ty, 0) and near(xf0.invScale, 1) and near(xf0.opacity, 1) and near(xf0.s, 0))
 xo = smk.animXform(-0.2, cfg(w=100, h=100, pivotX=.5, pivotY=.5, fadeFrom=0, scaleFrom=1)); check("overshoot clamps opacity", xo.opacity == 1)
 
+check("rigOut aspect", near(smk.rigOut(1, cfg(w=1920,h=1080,slideDist=.1,slideAngle=90,fadeFrom=0,scaleFrom=1,rotFrom=0)).dy, 0.1*1920/1080))
 print(f"smk_core: {passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

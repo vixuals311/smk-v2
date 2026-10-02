@@ -172,6 +172,17 @@ function smk.animXform(a, m)
            invScale = 1 / sc, c = math.cos(rot), s = math.sin(rot), opacity = op }
 end
 
+-- Rig outputs for driving an EXISTING Merge/Transform (no extra node): opacity, scale, angle, centre offset.
+-- Fusion Point inputs are normalised to width (x) and height (y), so y is multiplied by w/h to keep slides isotropic.
+function smk.rigOut(a, m)
+  local rad = (m.slideAngle or 0) * math.pi / 180
+  local d = (m.slideDist or 0) * a
+  local aspect = (m.h and m.h > 0) and (m.w / m.h) or (16 / 9)
+  local sc = 1 + ((m.scaleFrom or 1) - 1) * a
+  return { opacity = smk.clamp(1 + ((m.fadeFrom or 1) - 1) * a, 0, 1), scale = math.max(sc, 1e-4),
+           angle = (m.rotFrom or 0) * a, dx = math.cos(rad) * d, dy = math.sin(rad) * d * aspect }
+end
+
 -- ---------------------------------------------------------------- stagger ---
 -- Returns delay-order index (0-based) for unit i of n. mode: 1 forward,
 -- 2 reverse, 3 center-out, 4 edges-in, 5 random(seed).
