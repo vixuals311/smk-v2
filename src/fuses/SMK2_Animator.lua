@@ -35,7 +35,8 @@ __KERNEL__ void SMK2AnimKernel(__CONSTANTREF__ SMK2AnimParams *p, __TEXTURE2D__ 
 }
 ]]
 
-local I = {}
+-- P1 FIX: Process runs against a re-executed chunk where Create() has not run, so a file-level `local I`
+-- is empty there. Keep the input table in a global that Create() fills (same pattern as SMK2_Motion).
 local function num(key, name, def, lo, hi, extra)
   local t = { LINKID_DataType = "Number", INPID_InputControl = "SliderControl", INP_Default = def,
               INP_MinScale = lo, INP_MaxScale = hi }
@@ -66,6 +67,7 @@ local function phaseControls(p, label)
 end
 
 function Create()
+  I = {}
   I.Image = self:AddInput("Image", "Image", { LINKID_DataType = "Image", LINK_Main = 1 })
   self:BeginControlNest("Timing", "Timing", true)
   num("InDelay", "In Delay (s)", 0, 0, 10, { INP_MinAllowed = 0 })

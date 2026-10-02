@@ -1,0 +1,4 @@
+12:59:35 [S1] GPU OK 1920x1080 t=0
+12:59:35 [S1] GPU OK 1920x1080 t=0
+13:01:49 [PROBE] Create end I keys=45 I.Image=cdata<struct Input *>: 0x027b9fe92400
+13:01:49 [PROBE] Process I keys=0 I.Image=nil I=table: 0x027bd6d944f0
