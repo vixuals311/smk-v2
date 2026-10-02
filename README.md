@@ -8,7 +8,8 @@ pip install lupa
 python tests/test_smk_core.py && python tests/test_fuse_harness.py
 ```
 
-**Status:** Phase 0 prepared (6 spikes + checklist, `docs/PHASE0_CHECKLIST.md`); Phase 1 started (`smk_core` v2 + `SMK2_Motion`
-modifier). The Animator GPU Fuse waits for the S1/S3/S4/S6 results — no GPU production code before the gate.
+**Status:** Phase 0 passed (see `docs/PHASE0_RESULTS.md`). Phase 1 built: `smk_core` v2, `SMK2_Motion` modifier and `SMK2_Animator`
+GPU Fuse (written against the Phase 0 findings; awaiting the gate in `docs/PHASE1_GATE.md`).
+Install into Resolve: `python scripts/install.py`.
 
 This repo was split out of the v1 repo's `smk-v2/` folder.

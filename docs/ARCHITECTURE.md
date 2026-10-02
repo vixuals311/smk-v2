@@ -5,7 +5,7 @@ Four layers, five core nodes. Only core nodes render or animate; products are pr
 | Layer | Contents | Status |
 |---|---|---|
 | Library | `src/core/smk_core.lua` — seconds/clip-relative timing, easing + real-time spring, stagger, integer hash. Inlined at build. | **Done (39 tests)** |
-| Core nodes | Animator (GPU), Shape (SDF), Text, Look, Motion (modifier) | Motion modifier drafted; rest gated on Phase 0 |
+| Core nodes | Animator (GPU), Shape (SDF), Text, Look, Motion (modifier) | Motion + Animator built (Phase 1 gate pending); Shape/Text/Look not started |
 | Products | UI Block, Callout, Connector, Progress, Counter, Focus Zoom, Cursor, ... as `.drfx` presets | Not started |
 | Workflow | SMK Studio Lite | Not started (frozen until Phases 1-3 pass) |
 
@@ -26,3 +26,9 @@ Ideas only from NeoEditFX; no code or node graphs copied. The bundle was obtaine
 ## Compatibility notes
 Fusion embeds LuaJIT (Lua 5.1): core uses no bitwise operators / `goto` / integer division. Tests run it on Lua 5.5 via lupa,
 so 5.1-only breakage is guarded by a grep in review, not by the runtime.
+
+## Phase 0 findings that shape the code (2026-10, Resolve Studio 21.1, CUDA)
+- GPU Fuses must return early on `req:IsPreCalc()` (`DVIPComputeNode` is nil there).
+- Inside a Fuse, `self.Comp` is a plain-field object: use `self.Comp.RenderStart/RenderEnd`, not `:GetAttrs()`.
+- Follower→Fuse modifier staggering works (S2). DoD cannot be shrunk by assigning `DataWindow` (S4): output full-frame.
+- Fuses are not loaded from a `.drfx` (S5): separate installer. Native Transform blur beats the in-kernel blur in chains (S6).

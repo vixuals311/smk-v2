@@ -75,5 +75,21 @@ check("random deterministic", [smk.staggerIndex(i,9,5,7) for i in range(9)] == [
 check("random seed changes order", [smk.staggerIndex(i,9,5,1) for i in range(9)] != [smk.staggerIndex(i,9,5,2) for i in range(9)])
 check("hash in 32-bit range", all(0 <= smk.hash32(i) < 2**32 for i in range(1000)))
 
+# animator amount / transform
+tmA = cfg(inDelay=0, index=0, stagger=0, outOffset=0, outDur=0.5, inDur=0.5, hasOut=True)
+ei = cfg(engine=1, x1=0.25, y1=0.1, x2=0.25, y2=1); eo = cfg(engine=1, x1=0.25, y1=0.1, x2=0.25, y2=1)
+a, ph = smk.animAmount(0.0, 4.0, tmA, ei, eo); check("amount 1 at In start", near(a, 1) and ph in ("pre", "in"))
+a, ph = smk.animAmount(2.0, 4.0, tmA, ei, eo); check("amount 0 at hold", near(a, 0) and ph == "hold")
+a, ph = smk.animAmount(4.0, 4.0, tmA, ei, eo); check("amount 1 at Out end", near(a, 1) and ph == "out")
+a, _ = smk.animAmount(0.1, 4.0, cfg(inDelay=0, index=3, stagger=0.1, outOffset=0, outDur=0.5, inDur=0.5, hasOut=True), ei, eo)
+check("stagger holds amount at 1", near(a, 1))
+xf = smk.animXform(1, cfg(w=1920, h=1080, pivotX=0.5, pivotY=0.5, slideDist=0.1, slideAngle=90, scaleFrom=0.5, rotFrom=90, fadeFrom=0))
+check("xform px/py", near(xf.px, 960) and near(xf.py, 540))
+check("slide up 10% of width", near(xf.tx, 0, 1e-6) and near(xf.ty, 192))
+check("scale/rot/opacity at a=1", near(xf.invScale, 2) and near(xf.s, 1) and near(xf.c, 0, 1e-9) and near(xf.opacity, 0))
+xf0 = smk.animXform(0, cfg(w=1920, h=1080, pivotX=.5, pivotY=.5, slideDist=.1, slideAngle=90, scaleFrom=.5, rotFrom=90, fadeFrom=0))
+check("identity at a=0", near(xf0.tx, 0) and near(xf0.ty, 0) and near(xf0.invScale, 1) and near(xf0.opacity, 1) and near(xf0.s, 0))
+xo = smk.animXform(-0.2, cfg(w=100, h=100, pivotX=.5, pivotY=.5, fadeFrom=0, scaleFrom=1)); check("overshoot clamps opacity", xo.opacity == 1)
+
 print(f"smk_core: {passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

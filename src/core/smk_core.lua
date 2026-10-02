@@ -147,6 +147,31 @@ function smk.value(t, T, from, rest, to, tm, cfgIn, cfgOut)
   return smk.lerp(from, rest, e), (tin >= (tm.inDur or 0) and "hold" or "in")
 end
 
+-- Animator amount: 0 = settled at rest, 1 = fully offset (In start / Out end). May leave 0..1 for
+-- springs/overshoot (value passes through rest). Returns amount, phase ("pre"|"in"|"hold"|"out").
+function smk.animAmount(t, T, tm, cfgIn, cfgOut)
+  local tin, tout = smk.timing(t, T, tm.inDelay, tm.index, tm.stagger, tm.outOffset, tm.outDur)
+  if tm.hasOut and tout >= 0 then
+    return smk.evalEngine(cfgOut.engine, tout, tm.outDur, cfgOut), "out"
+  end
+  if tin < 0 then return 1, "pre" end
+  local e = smk.evalEngine(cfgIn.engine, tin, tm.inDur, cfgIn)
+  return 1 - e, (tin >= (tm.inDur or 0) and "hold" or "in")
+end
+
+-- Inverse-mapping coefficients for the Animator kernel (pixel space, y up, angle CCW degrees).
+-- m: {w,h,pivotX,pivotY (0..1), slideDist (fraction of width), slideAngle, scaleFrom, rotFrom, fadeFrom}
+function smk.animXform(a, m)
+  local rad = (m.slideAngle or 0) * math.pi / 180
+  local d = (m.slideDist or 0) * a * m.w
+  local sc = 1 + ((m.scaleFrom or 1) - 1) * a
+  if sc < 1e-4 then sc = 1e-4 end
+  local rot = (m.rotFrom or 0) * a * math.pi / 180
+  local op = smk.clamp(1 + ((m.fadeFrom or 1) - 1) * a, 0, 1)
+  return { px = m.pivotX * m.w, py = m.pivotY * m.h, tx = math.cos(rad) * d, ty = math.sin(rad) * d,
+           invScale = 1 / sc, c = math.cos(rot), s = math.sin(rot), opacity = op }
+end
+
 -- ---------------------------------------------------------------- stagger ---
 -- Returns delay-order index (0-based) for unit i of n. mode: 1 forward,
 -- 2 reverse, 3 center-out, 4 edges-in, 5 random(seed).
