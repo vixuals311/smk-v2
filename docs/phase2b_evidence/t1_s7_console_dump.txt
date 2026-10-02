@@ -1,0 +1,66 @@
+17:22:51 [S7] method 0: Width=1920 Height=1080 DW=0,0..1920,1080
+17:22:51 [S7]   OriginalWidth = 1920
+17:22:51 [S7]   OriginalHeight = 1080
+17:22:51 [S7]   XOffset = 0
+17:22:51 [S7]   YOffset = 0
+17:22:51 [S7]   Depth = 5
+17:22:51 [S7] method 0: Width=1920 Height=1080 DW=0,0..1920,1080
+17:22:51 [S7]   OriginalWidth = 1920
+17:22:51 [S7]   OriginalHeight = 1080
+17:22:51 [S7]   XOffset = 0
+17:22:51 [S7]   YOffset = 0
+17:22:51 [S7]   Depth = 5
+17:23:02 [S7] method 0: Width=1920 Height=1080 DW=0,0..1920,1080
+17:23:02 [S7]   OriginalWidth = 1920
+17:23:02 [S7]   OriginalHeight = 1080
+17:23:02 [S7]   XOffset = 0
+17:23:02 [S7]   YOffset = 0
+17:23:02 [S7]   Depth = 5
+17:23:03 [S7] method 1: Width=640 Height=360 DW=0,0..640,360
+17:23:03 [S7]   OriginalWidth = 640
+17:23:03 [S7]   OriginalHeight = 360
+17:23:03 [S7]   XOffset = 0
+17:23:03 [S7]   YOffset = 0
+17:23:03 [S7]   Depth = 5
+17:23:03 [S7] method 1: Width=640 Height=360 DW=0,0..640,360
+17:23:03 [S7]   OriginalWidth = 640
+17:23:03 [S7]   OriginalHeight = 360
+17:23:03 [S7]   XOffset = 0
+17:23:03 [S7]   YOffset = 0
+17:23:03 [S7]   Depth = 5
+17:23:04 [S7] method 2: Width=640 Height=360 DW=0,0..640,360
+17:23:04 [S7]   OriginalWidth = 640
+17:23:04 [S7]   OriginalHeight = 360
+17:23:04 [S7]   XOffset = 0
+17:23:04 [S7]   YOffset = 0
+17:23:04 [S7]   Depth = 5
+17:23:04 [S7] method 2: Width=640 Height=360 DW=0,0..640,360
+17:23:04 [S7]   OriginalWidth = 640
+17:23:04 [S7]   OriginalHeight = 360
+17:23:04 [S7]   XOffset = 0
+17:23:04 [S7]   YOffset = 0
+17:23:04 [S7]   Depth = 5
+17:23:14 [S7] method 3: Width=1920 Height=1080 DW=640,360..1280,720
+17:23:14 [S7]   OriginalWidth = 1920
+17:23:14 [S7]   OriginalHeight = 1080
+17:23:14 [S7]   XOffset = 0
+17:23:14 [S7]   YOffset = 0
+17:23:14 [S7]   Depth = 5
+17:23:14 [S7] method 3: Width=1920 Height=1080 DW=640,360..1280,720
+17:23:14 [S7]   OriginalWidth = 1920
+17:23:14 [S7]   OriginalHeight = 1080
+17:23:14 [S7]   XOffset = 0
+17:23:14 [S7]   YOffset = 0
+17:23:14 [S7]   Depth = 5
+17:23:15 [S7] method 4: Width=640 Height=360 DW=0,0..640,360
+17:23:15 [S7]   OriginalWidth = 640
+17:23:15 [S7]   OriginalHeight = 360
+17:23:15 [S7]   XOffset = 0
+17:23:15 [S7]   YOffset = 0
+17:23:15 [S7]   Depth = 5
+17:23:15 [S7] method 4: Width=640 Height=360 DW=0,0..640,360
+17:23:15 [S7]   OriginalWidth = 640
+17:23:15 [S7]   OriginalHeight = 360
+17:23:15 [S7]   XOffset = 0
+17:23:15 [S7]   YOffset = 0
+17:23:15 [S7]   Depth = 5
