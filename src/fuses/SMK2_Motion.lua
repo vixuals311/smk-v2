@@ -50,10 +50,10 @@ end
 local function g(req, k) return I[k]:GetValue(req).Value end
 
 function Process(req)
-  local a = self.Comp:GetAttrs() or {}
+  local c = self.Comp   -- FIX(P0): self.Comp is an ffi FusionDoc*; read RenderStart/RenderEnd as fields (no :GetAttrs())
   local rate = self.Comp:GetPrefs("Comp.FrameFormat.Rate")
   rate = (rate and rate > 0) and rate or 24
-  local rs, re = a.COMPN_RenderStart or 0, a.COMPN_RenderEnd or 0
+  local rs, re = c.RenderStart or 0, c.RenderEnd or 0
   local T = g(req, "ClipLen")
   if T <= 0 then T = smk.clipSeconds(rs, re, rate) end
   local t = smk.framesToSeconds(req.Time, rs, rate)

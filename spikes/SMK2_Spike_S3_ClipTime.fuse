@@ -21,15 +21,16 @@ function Create()
   Out = self:AddOutput("Output", "Output", { LINKID_DataType = "Number", LINK_Main = 1 })
 end
 function Process(req)
-  local a = self.Comp:GetAttrs() or {}
-  local rs, re = a.COMPN_RenderStart, a.COMPN_RenderEnd
-  local gs, ge = a.COMPN_GlobalStart, a.COMPN_GlobalEnd
+  local c = self.Comp   -- FIX(P0): in Resolve self.Comp is an ffi FusionDoc*; no :GetAttrs(), plain fields
+  local rs, re = c.RenderStart, c.RenderEnd
+  local gs, ge = c.GlobalStart, c.GlobalEnd
   local rate = self.Comp:GetPrefs("Comp.FrameFormat.Rate")
-  print(string.format("[S3] t=%s RenderStart=%s RenderEnd=%s GlobalStart=%s GlobalEnd=%s Rate=%s",
-    tostring(req.Time), tostring(rs), tostring(re), tostring(gs), tostring(ge), tostring(rate)))
+  local raw = string.format("t=%s RenderStart=%s RenderEnd=%s GlobalStart=%s GlobalEnd=%s Rate=%s",
+    tostring(req.Time), tostring(rs), tostring(re), tostring(gs), tostring(ge), tostring(rate))
   rs, re, rate = rs or 0, re or 0, (rate and rate > 0) and rate or 24
   local m = InMode:GetValue(req).Value
   local v = (req.Time - rs) / rate
   if m == 1 then v = (re - rs + 1) / rate elseif m == 2 then v = rs elseif m == 3 then v = re elseif m == 4 then v = rate end
+  print("[S3] " .. raw .. " mode=" .. tostring(m) .. " out=" .. tostring(v))   -- P0: log mode + result
   Out:Set(req, Number(v))
 end

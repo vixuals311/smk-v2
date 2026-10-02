@@ -42,7 +42,8 @@ end
 
 function Process(req)
   local out = Image({ IMG_Width = Width, IMG_Height = Height, IMG_Depth = Depth, IMG_DeferAlloc = true })
-  local ok = pcall(function()
+  if req:IsPreCalc() then OutImage:Set(req, out) return end   -- FIX(P0): DVIPComputeNode is nil on PreCalc requests
+  local ok, perr = pcall(function()
     local node = DVIPComputeNode(req, "S1Kernel", Kernel, "S1Params", S1Params)
     local p = node:GetParamBlock(S1Params)
     p.size = { out.Width, out.Height }
@@ -52,9 +53,11 @@ function Process(req)
     node:AddOutput("dst", out)
     if not node:RunSession(req) then error("RunSession failed") end
   end)
-  if ok then print("[S1] GPU OK " .. out.Width .. "x" .. out.Height)
+  if ok then print("[S1] GPU OK " .. out.Width .. "x" .. out.Height .. " t=" .. tostring(req.Time))
   else
-    print("[S1] GPU FAILED -> CPU fallback")
+    local function fl(n) local ok2, v = pcall(function() return req[n](req) end); return ok2 and tostring(v) or "n/a" end
+    print("[S1] GPU FAILED -> CPU fallback: " .. tostring(perr) .. string.format(" [t=%s precalc=%s stamp=%s quick=%s]",
+      tostring(req.Time), fl("IsPreCalc"), fl("IsStampOnly"), fl("IsQuick")))
     out = Image({ IMG_Width = Width, IMG_Height = Height, IMG_Depth = Depth })
     out:Fill(Pixel({ R = 1, G = 0, B = 1, A = 1 }))   -- magenta = fallback was used
   end

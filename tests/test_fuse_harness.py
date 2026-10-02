@@ -11,8 +11,7 @@ function FuRegisterClass(n, t, a) registry = {name=n, attrs=a} end
 function Number(v) return v end
 function ImgRectI(a,b,c,d) return {left=a,bottom=b,right=c,top=d} end
 function make_in(def) local o={default=def}; function o:GetValue(req) return {Value=(req.over and req.over[self.id]) or self.default} end return o end
-self = {Comp={}}
-function self.Comp:GetAttrs() return {COMPN_RenderStart=0, COMPN_RenderEnd=119} end
+self = {Comp={RenderStart=0, RenderEnd=119, GlobalStart=0, GlobalEnd=119}}   -- mirrors Resolve: ffi FusionDoc*, plain fields
 function self.Comp:GetPrefs() return 24 end
 function self:AddInput(name, id, t) local o=make_in(t.INP_Default); o.id=id; return o end
 function self:AddOutput(name, id, t) local o={id=id}; function o:Set(req,v) req.out[id]=v end; return o end

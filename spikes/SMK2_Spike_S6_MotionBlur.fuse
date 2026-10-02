@@ -45,9 +45,10 @@ function Process(req)
   local img = InImage:GetValue(req)
   if not img then OutImage:Set(req, nil) return end
   local out = Image({ IMG_Like = img, IMG_DeferAlloc = true })
+  if req:IsPreCalc() then OutImage:Set(req, out) return end   -- FIX(P0): DVIPComputeNode is nil on PreCalc requests
   local amp, sh = InAmp:GetValue(req).Value, InShutter:GetValue(req).Value
   local pos = function(t) return amp * math.sin(t / 12) end       -- px position at frame t
-  local ok = pcall(function()
+  local ok, perr = pcall(function()
     local node = DVIPComputeNode(req, "S6Kernel", Kernel, "S6Params", S6Params)
     local p = node:GetParamBlock(S6Params)
     p.size = { img.DataWindow:Width(), img.DataWindow:Height() }
@@ -58,6 +59,7 @@ function Process(req)
     node:AddInput("src", img); node:AddOutput("dst", out)
     if not node:RunSession(req) then error("RunSession failed") end
   end)
-  if not ok then print("[S6] GPU FAILED"); out = img end
+  if not ok then print("[S6] GPU FAILED: " .. tostring(perr)); out = img end
+  if ok then print("[S6] GPU OK t=" .. tostring(req.Time) .. " n=" .. tostring(InSamples:GetValue(req).Value)) end
   OutImage:Set(req, out)
 end
