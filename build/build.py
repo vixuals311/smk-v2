@@ -54,4 +54,5 @@ def package_spike_zip():
 if __name__ == "__main__":
     shutil.rmtree(DIST, ignore_errors=True)
     b = build_fuses(); copy_spikes(); z = package_spike_zip()
+    import subprocess; subprocess.check_call([sys.executable, os.path.join(ROOT, "build", "make_macros.py")])
     print("built:", ", ".join(b)); print("package:", os.path.relpath(z, ROOT))

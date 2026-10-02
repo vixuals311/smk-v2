@@ -11,5 +11,5 @@
 | D2-007 | CPU fallback for GPU failure in Shape | Shape outputs transparent on GPU failure (oracle is too slow for full frames) | OPEN |
 | D2-008 | Viewer-fps measurement automation | Needs viewer access; user measures manually | OPEN |
 | D2-009 | Elastic engine: confirm feel across amplitude/period | User: feels smooth (Phase 1) | RESOLVED (Phase 1) |
-| D2-010 | Tight (bounding-box) output buffer for Shape/Look/Animator | Spike S7 (Phase 2b) | OPEN |
+| D2-010 | Tight (bounding-box) output buffer for Shape/Look/Animator | Spike S7: no speed-up (Phase 2b) | RESOLVED: not a lever |
 | D2-011 | Multi-element Shape (one Fuse, N elements: bars, grids, lists) | Fallback if S7 fails; also suits charts | OPEN |

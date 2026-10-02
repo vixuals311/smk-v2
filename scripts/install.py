@@ -16,4 +16,8 @@ if __name__ == "__main__":
     for s in srcs:
         for f in sorted(os.listdir(os.path.join(ROOT, s))):
             if f.endswith(".fuse"): shutil.copy(os.path.join(ROOT, s, f), dst); print("installed", f)
-    print("->", dst, "(restart Resolve)")
+    mdst = os.path.join(os.path.dirname(fuses_dir()), "Macros", "SMK2"); os.makedirs(mdst, exist_ok=True)
+    tdir = os.path.join(ROOT, "dist", "templates")
+    for f in sorted(os.listdir(tdir)) if os.path.isdir(tdir) else []:
+        if f.endswith(".setting"): shutil.copy(os.path.join(tdir, f), mdst); print("installed macro", f)
+    print("->", dst, "and", mdst, "(restart Resolve)")

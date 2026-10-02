@@ -54,3 +54,10 @@ Shape H1–H11 pass; colour pickers fine; ring sweep clockwise from 12 o'clock; 
 Benchmark (render ms/frame, 20 cards, 1080p): Shape+Merges 50.8; Shape+Text+ 140.8; v1 UIBlock+Text+ ≈ 2,526. Viewer fps (user): Shape+Text+ 6–7,
 v1 6–8. Time is dominated by full-frame Merges (every generator output is 1080p float32) and by Text+ merges (≈4.5 ms each).
 Next lever: tight output buffers (S7). If unavailable: multi-element Shape (one Fuse draws N elements) for repeated groups.
+
+## Phase 2b results (2026-10-02) — tight buffers are not the lever
+Only `Image({IMG_DataWindow=...})` places a small image correctly (XOffset/YOffset/OriginalWidth ignored), and it gives **no speed-up**
+(20 cards: full-frame 140.8, DataWindow 145.8, small buffer 149.2 ms/frame). Cost is per-node overhead, not pixels. Realistic counts (render ms/frame):
+3 cards 32.5, 5 → 42.5, 8 → 52.5, 12 → 55.8; user viewer: 12 cards 24 fps, 20 cards 13–16 fps first play, 58 fps cached.
+**Decision: stop chasing frame-time with buffer tricks.** Keep one Fuse per element and ≤2 Fuses per product. S4/S7 closed (D2-003 resolved as "not a lever").
+Next: products as generated presets (`build/make_macros.py`), then Look, Text and Studio Lite.

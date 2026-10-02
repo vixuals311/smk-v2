@@ -1,0 +1,57 @@
+"""Generated macros: structure, wiring, and published controls checked against the REAL Fuse input lists."""
+import os, re, subprocess, sys
+from lupa import LuaRuntime
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+subprocess.check_call([sys.executable, os.path.join(ROOT, "build/build.py")], stdout=subprocess.DEVNULL)
+subprocess.check_call([sys.executable, os.path.join(ROOT, "build/make_macros.py")], stdout=subprocess.DEVNULL)
+passed = failed = 0
+def check(n, c):
+    global passed, failed
+    if c: passed += 1
+    else: failed += 1; print("FAIL:", n)
+
+MOCK = r'''
+CT_Modifier, CT_Tool, CT_SourceTool = 1, 2, 3
+function FuRegisterClass() end
+function make_in(def) return {} end
+self = {Comp={}}
+function self:AddInput(name, id, t) return {id=id} end
+function self:AddOutput(name, id, t) return {id=id} end
+function self:BeginControlNest() end; function self:EndControlNest() end
+'''
+def fuse_keys(name):
+    lua = LuaRuntime(); lua.execute(MOCK)
+    lua.execute(open(os.path.join(ROOT, f"dist/fuses/{name}.fuse")).read()); lua.execute("Create()")
+    return set(lua.eval("(function() local t = {} for k in pairs(I) do t[#t+1] = k end return t end)()").values())
+KEYS = {"Fuse.SMK2_Shape": fuse_keys("SMK2_Shape"), "Fuse.SMK2_Animator": fuse_keys("SMK2_Animator")}
+KEYS["Fuse.SMK2_Shape"] |= {"Output"}; KEYS["Fuse.SMK2_Animator"] |= {"Output", "Image"}
+TEXTPLUS = {"StyledText", "Font", "Style", "Size", "Red1", "Green1", "Blue1", "Alpha1", "Center", "Output"}
+KEYS["TextPlus"] = TEXTPLUS; KEYS["Merge"] = {"Output", "Background", "Foreground"}
+
+for path in sorted(os.listdir(os.path.join(ROOT, "dist/templates"))):
+    s = open(os.path.join(ROOT, "dist/templates", path)).read()
+    check(f"{path}: braces balanced", s.count("{") == s.count("}"))
+    check(f"{path}: no CustomData.Path leak", "CustomData" not in s and "Path =" not in s)
+    check(f"{path}: no hardcoded absolute paths", not re.search(r"[A-Za-z]:\\\\|/Users/|/home/", s))
+    nodes = {k: v for k, v in re.findall(r"^\t{4}(\w+) = ([\w.]+) \{", s, re.M) if v not in ("InstanceInput", "InstanceOutput")}
+    check(f"{path}: has nodes", len(nodes) >= 3)
+    pubs = re.findall(r'(\w+) = InstanceInput \{\s+SourceOp = "(\w+)",\s+Source = "(\w+)"', s)
+    keys = [k for k, _, _ in pubs]
+    check(f"{path}: published keys unique", len(keys) == len(set(keys)))
+    bad = [(op, src) for _, op, src in pubs if op not in nodes or src not in KEYS.get(nodes[op], set())]
+    check(f"{path}: every published control exists on its node {bad[:3]}", not bad)
+    links = re.findall(r'SourceOp = "(\w+)", Source = "(\w+)"', s)
+    check(f"{path}: every link targets an existing node/output", all(op in nodes and src in KEYS.get(nodes[op], set()) for op, src in links))
+    pos = re.findall(r"OperatorInfo \{ Pos = \{ (-?\d+), (-?\d+) \}", s)
+    check(f"{path}: nodes at distinct positions (readable graph)", len(pos) == len(set(pos)) == len(nodes))
+    check(f"{path}: expressions are short (<80 chars)", all(len(e) < 80 for e in re.findall(r'Expression = "([^"]*)"', s)))
+    # DAG: forward-only (no cycles) through links+expressions
+    deps = {n: set() for n in nodes}
+    for n in nodes:
+        block = re.search(rf"^\t{{4}}{n} = [\w.]+ \{{(.*?)^\t{{4}}\}},", s, re.M | re.S).group(1)
+        deps[n] |= set(re.findall(r'SourceOp = "(\w+)"', block)) | {m for m in nodes if re.search(rf"\b{m}\.", " ".join(re.findall(r'Expression = "([^"]*)"', block)))}
+    def cyc(n, seen=()):
+        return n in seen or any(cyc(d, seen + (n,)) for d in deps[n])
+    check(f"{path}: acyclic graph", not any(cyc(n) for n in nodes))
+    check(f"{path}: published control count > 60", len(pubs) > 60)
+print(f"macros: {passed} passed, {failed} failed"); sys.exit(1 if failed else 0)
