@@ -6,18 +6,39 @@ import os, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = os.path.join(ROOT, "dist", "templates")
 
+class Raw(str):
+    """A Lua fragment emitted verbatim (e.g. StyledText { ... })."""
+
 def lua(v):
+    if isinstance(v, Raw): return str(v)
     if isinstance(v, bool): return "1" if v else "0"
     if isinstance(v, (int, float)): return repr(float(v)) if isinstance(v, float) else str(v)
     return '"' + str(v).replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 class Node:
-    def __init__(self, name, typ, pos, values=None, expr=None, links=None):
+    def __init__(self, name, typ, pos, values=None, expr=None, links=None, user=None):
         self.name, self.typ, self.pos = name, typ, pos
         self.values, self.expr, self.links = values or {}, expr or {}, links or {}
+        self.user = user or []          # [(id, kind, default, lo, hi, page, items)]
     def render(self, ind):
         t = "\t" * ind
-        out = [f"{t}{self.name} = {self.typ} {{", f"{t}\tInputs = {{"]
+        out = [f"{t}{self.name} = {self.typ} {{"]
+        if self.user:
+            out.append(f"{t}\tUserControls = ordered() {{")
+            for uid, kind, default, lo, hi, page, items in self.user:
+                out.append(f"{t}\t\t{uid} = {{")
+                if kind == "combo":
+                    out += [f"{t}\t\t\tINP_Integer = true,", f"{t}\t\t\tLBLC_DropDownButton = true,", f'{t}\t\t\tINPID_InputControl = "ComboControl",', f"{t}\t\t\tCC_Custom = true,"]
+                elif kind == "check":
+                    out += [f"{t}\t\t\tINP_Integer = true,", f'{t}\t\t\tINPID_InputControl = "CheckboxControl",']
+                else:
+                    out += [f'{t}\t\t\tINPID_InputControl = "SliderControl",', f"{t}\t\t\tINP_MinScale = {float(lo)},", f"{t}\t\t\tINP_MaxScale = {float(hi)},"]
+                out += [f'{t}\t\t\tLINKID_DataType = "Number",', f"{t}\t\t\tINP_Default = {float(default)},", f'{t}\t\t\tICS_ControlPage = "{page}",']
+                out += [f'{t}\t\t\t{{ CCS_AddString = "{i}", }},' for i in (items or [])]
+                out.append(f"{t}\t\t}},")
+            out.append(f"{t}\t}},")
+        out.append(f"{t}\tInputs = {{")
+        for uid, kind, default, *_ in self.user: out.append(f"{t}\t\t{uid} = Input {{ Value = {float(default)}, }},")
         for k, v in self.values.items(): out.append(f"{t}\t\t{k} = Input {{ Value = {lua(v)}, }},")
         for k, e in self.expr.items(): out.append(f"{t}\t\t{k} = Input {{ Expression = {lua(e)}, }},")
         for k, (op, src) in self.links.items(): out.append(f'{t}\t\t{k} = Input {{ SourceOp = "{op}", Source = "{src}", }},')
@@ -129,7 +150,92 @@ def progress(kind):
     for k, n in ENGINE_KEYS: m.publish("UIP_Animator", "Out" + k, f"Out {n}", "Out Motion")
     return m
 
-MACROS = {"SMK2_UIBlock": ui_block, "SMK2_ProgressRing": lambda: progress("ring"), "SMK2_ProgressBar": lambda: progress("bar")}
+# ---------------------------------------------------------------------------------------------------
+# SMK Text: Text+ -> StyledTextFollower; every animated follower input is bound to a built-in Calculation
+# (or Vector) modifier whose expression reads `time`. Phase 0/S9: an expression typed directly on a follower
+# input is ignored; inside Calculation it sees each letter's own delayed time, and costs ~19 ms/frame for 12
+# letters vs 107 ms for Fuse modifiers. Everything is in seconds, clip-relative (comp.RenderStart/RenderEnd).
+# ---------------------------------------------------------------------------------------------------
+def text_amount_lua():
+    """Lua body computing `a` (0 = settled, 1 = fully offset) for the current (letter-shifted) time. Closed-form engines."""
+    U = "UIT_Ctrl."
+    return (
+        'local r=comp:GetPrefs("Comp.FrameFormat.Rate") local t=(time-comp.RenderStart)/r '
+        'local T=(comp.RenderEnd-comp.RenderStart)/r local ti=t-U.InDelay local a=1 '
+        'if ti>=0 then local p=math.min(1,ti/math.max(U.InDur,0.001)) local g=U.Engine local e=p '
+        'if g<0.5 then e=1-(1-p)^3 '
+        'elseif g<1.5 then local k=math.max(U.Stiff,1) local w=math.sqrt(k) local z=math.min(0.999,math.max(0.05,U.Damp/(2*w))) '
+        'local wd=w*math.sqrt(1-z*z) e=1-math.exp(-z*w*ti)*(math.cos(wd*ti)+z*w/wd*math.sin(wd*ti)) '
+        'elseif g<2.5 then local q=p if q<0.3636 then e=7.5625*q*q elseif q<0.7273 then q=q-0.5454 e=7.5625*q*q+0.75 '
+        'elseif q<0.9091 then q=q-0.8182 e=7.5625*q*q+0.9375 else q=q-0.9545 e=7.5625*q*q+0.984375 end '
+        'elseif g<3.5 then if p>0 and p<1 then e=2^(-10*p)*math.sin((p-0.075)*20.944)+1 end '
+        'elseif g<4.5 then local q=p-1 e=1+(U.Over+1)*q*q*q+U.Over*q*q '
+        'else e=(1-math.exp(-4*p))/(1-math.exp(-4)) end a=1-e end '
+        'if U.HasOut>0.5 then local po=math.min(1,math.max(0,(t-(T-U.OutOffset-U.OutDur-(U.Count-1)*U.Stagger))/math.max(U.OutDur,0.001))) '
+        'a=math.min(1,a+po*po*(3-2*po)) end '
+    ).replace("U.", U)
+
+def text_expr(final):
+    body = text_amount_lua()
+    return f"(function() {body}return {final} end)()"
+
+TEXT_USER = [  # (id, kind, default, lo, hi, page, items)
+    ("InDelay", "slider", 0.0, 0, 5, "Motion", None), ("InDur", "slider", 0.5, 0, 5, "Motion", None),
+    ("Stagger", "slider", 0.04, 0, 0.5, "Motion", None),
+    ("Engine", "combo", 1, 0, 0, "Motion", ["Ease", "Spring", "Bounce", "Elastic", "Overshoot", "Inertia"]),
+    ("Stiff", "slider", 180, 1, 1000, "Motion", None), ("Damp", "slider", 18, 0, 100, "Motion", None),
+    ("Over", "slider", 1.70158, 0, 5, "Motion", None),
+    ("Fade", "slider", 0.0, 0, 1, "Look", None), ("SlideDist", "slider", 0.03, -0.5, 0.5, "Look", None),
+    ("SlideAngle", "slider", -90.0, -360, 360, "Look", None), ("Scale", "slider", 1.0, 0, 3, "Look", None),
+    ("Rot", "slider", 0.0, -360, 360, "Look", None), ("Blur", "slider", 0.0, 0, 20, "Look", None),
+    ("HasOut", "check", 1, 0, 1, "Out", None), ("OutOffset", "slider", 0.0, 0, 5, "Out", None),
+    ("OutDur", "slider", 0.5, 0, 5, "Out", None), ("Count", "slider", 12, 1, 200, "Out", None),
+]
+TEXT_LABELS = {"InDelay": "In Delay (s)", "InDur": "In Duration (s)", "Stagger": "Stagger (s per character)", "Engine": "Engine",
+               "Stiff": "Spring Stiffness", "Damp": "Spring Damping", "Over": "Overshoot", "Fade": "Opacity At Start",
+               "SlideDist": "Slide Distance (frac of width)", "SlideAngle": "Slide Angle (direction of start offset)",
+               "Scale": "Scale At Start", "Rot": "Rotation At Start (deg)", "Blur": "Blur At Start", "HasOut": "Enable Out",
+               "OutOffset": "Out Offset (s)", "OutDur": "Out Duration (s)", "Count": "Letter Count (for Out timing)"}
+
+def text_macro(unit):
+    P = {"letter": "Character", "word": "Word", "line": "Line"}[unit]
+    d = {"letter": 0.04, "word": 0.08, "line": 0.15}[unit]
+    user = [(u[0], u[1], d if u[0] == "Stagger" else u[2], *u[3:]) for u in TEXT_USER]
+    N = lambda name, typ, pos, **k: Node(name, typ, pos, **k)
+    calc = lambda name, pos, final: N(name, "Calculation", pos, expr={"FirstOperand": text_expr(final)})
+    nodes = [
+        Node("UIT_Ctrl", "Background", (0, 132), user=user, values=dict(TopLeftAlpha=0.0)),
+        Node("UIT_Text", "TextPlus", (0, 0), values=dict(UseFrameFormatSettings=1, Width=1920, Height=1080, Wrap=1,
+             LayoutRotation=1, TransformRotation=1, Font="Open Sans", Style="Bold", Size=0.08, VerticalJustificationNew=3,
+             HorizontalJustificationNew=3, Red1=1.0, Green1=1.0, Blue1=1.0, Alpha1=1.0),
+             links={"StyledText": ("UIT_Follower", "StyledText")}),
+        Node("UIT_Follower", "StyledTextFollower", (110, 0), values=dict(Order=0, TransformRotation=1, TransformSize=1,
+             Text=Raw('StyledText { Value = "SMK Text" }')),
+             expr={"Delay": 'UIT_Ctrl.Stagger * comp:GetPrefs("Comp.FrameFormat.Rate")'},
+             links={P + "Offset": ("UIT_Vector", "Position"), P + "AngleZ": ("UIT_AngleZ", "Result"), P + "SizeX": ("UIT_SizeX", "Result"),
+                    P + "SizeY": ("UIT_SizeY", "Result"), "Opacity1": ("UIT_Opacity", "Result"),
+                    "SoftnessX1": ("UIT_BlurX", "Result"), "SoftnessY1": ("UIT_BlurY", "Result")}),
+        Node("UIT_Vector", "Vector", (220, 0), values=dict(Origin=Raw("{ 0, 0 }"), ImageAspect=1),
+             expr={"Angle": "UIT_Ctrl.SlideAngle"}, links={"Distance": ("UIT_Dist", "Result")}),
+        calc("UIT_Dist", (330, 0), "UIT_Ctrl.SlideDist*a"),
+        calc("UIT_Opacity", (330, 66), "math.max(0,math.min(1,1-(1-UIT_Ctrl.Fade)*a))"),
+        calc("UIT_SizeX", (330, 132), "math.max(0.0001,1+(UIT_Ctrl.Scale-1)*a)"),
+        calc("UIT_SizeY", (330, 198), "math.max(0.0001,1+(UIT_Ctrl.Scale-1)*a)"),
+        calc("UIT_AngleZ", (330, 264), "UIT_Ctrl.Rot*a"),
+        calc("UIT_BlurX", (330, 330), "UIT_Ctrl.Blur*a"),
+        calc("UIT_BlurY", (330, 396), "UIT_Ctrl.Blur*a"),
+    ]
+    m = Macro("SMK2_Text" + unit.capitalize(), nodes, "UIT_Text")
+    m.publish("UIT_Follower", "Text", "Text", "Text", key="Follower_Text")
+    m.publish("UIT_Text", "Font", "Font", "Text"); m.publish("UIT_Text", "Size", "Size", "Text")
+    for i, k in enumerate(("Red1", "Green1", "Blue1")): m.publish("UIT_Text", k, "Text Color" if i == 0 else "", "Text", group=1)
+    m.publish("UIT_Text", "Center", "Position", "Text")
+    m.publish("UIT_Follower", "Order", "Order", "Motion", key="Follower_Order")
+    for uid, *_ in TEXT_USER: m.publish("UIT_Ctrl", uid, TEXT_LABELS[uid], next(u[5] for u in TEXT_USER if u[0] == uid))
+    return m
+
+MACROS = {"SMK2_TextLetter": lambda: text_macro("letter"), "SMK2_TextWord": lambda: text_macro("word"), "SMK2_TextLine": lambda: text_macro("line"),
+          "SMK2_UIBlock": ui_block, "SMK2_ProgressRing": lambda: progress("ring"), "SMK2_ProgressBar": lambda: progress("bar")}
 
 if __name__ == "__main__":
     os.makedirs(DIST, exist_ok=True)
