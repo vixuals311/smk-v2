@@ -9,6 +9,6 @@ for t in tests/test_*.py; do python $t; done
 python scripts/install.py        # copy Fuses into Resolve
 ```
 
-**Status:** Phases 0–3 and spikes S8/S9 done. Phase 4: `SMK2_TextLetter/Word/Line` generated macros (Text+ follower + Calculation expressions), awaiting `docs/PHASE4_GATE.md`.
+**Status:** Phases 0–4 done; spikes S8–S10 done. Phase 4b: SMK Text rebuilt as a chain (28 ms/12 letters) with auto letter count, awaiting `docs/PHASE4B_GATE.md`.
 
 This repo was split out of the v1 repo's `smk-v2/` folder.

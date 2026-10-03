@@ -1,4 +1,5 @@
-"""SMK Text expressions: run the generated Lua expressions in a sandbox and compare with the tested smk_core engines."""
+"""SMK Text: evaluate the generated amount expression AND the whole linked Calculation chain in a Lua sandbox;
+compare engines with the tested smk_core library."""
 import math, os, re, subprocess, sys
 from lupa import LuaRuntime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -13,63 +14,74 @@ def near(a, b, e=1e-4): return abs(a - b) <= e
 lua = LuaRuntime(unpack_returned_tuples=True)
 core = open(os.path.join(ROOT, "src/core/smk_core.lua")).read()
 smk = lua.execute("return (function()\n" + core + "\nend)()")
+EXPR = r'Expression = "((?:[^"\\]|\\.)*)"'
+unesc = lambda e: e.replace('\\"', '"').replace("\\\\", "\\")
 
-def exprs(name):
+def load(name):
     s = open(os.path.join(ROOT, f"dist/templates/{name}.setting")).read()
-    out = {}
-    for node, body in re.findall(r"^\t{4}(UIT_\w+) = \w+ \{(.*?)^\t{4}\},", s, re.M | re.S):
-        m = re.search(r'Expression = "((?:[^"\\]|\\.)*)"', body)
-        if m: out[node] = m.group(1).replace('\\"', '"').replace("\\\\", "\\")
-    return s, out
+    nodes = {}
+    for node, body in re.findall(r"^\t{4}(UIT_\w+) = Calculation \{(.*?)^\t{4}\},", s, re.M | re.S):
+        d = {"first_link": None, "first_expr": None, "op": 0, "second_expr": None, "second_val": 0.0}
+        m = re.search(r'FirstOperand = Input \{ SourceOp = "(\w+)"', body); d["first_link"] = m.group(1) if m else None
+        m = re.search(r'FirstOperand = Input \{ Expression = "((?:[^"\\]|\\.)*)"', body); d["first_expr"] = unesc(m.group(1)) if m else None
+        m = re.search(r"Operator = Input \{ Value = (\d+)", body); d["op"] = int(m.group(1)) if m else 0
+        m = re.search(r'SecondOperand = Input \{ Expression = "((?:[^"\\]|\\.)*)"', body); d["second_expr"] = unesc(m.group(1)) if m else None
+        m = re.search(r"SecondOperand = Input \{ Value = ([-\d.]+)", body); d["second_val"] = float(m.group(1)) if m else 0.0
+        nodes[node] = d
+    return s, nodes
 
-s, E = exprs("SMK2_TextLetter")
-check("expressions found for all calc nodes", {"UIT_Dist", "UIT_Opacity", "UIT_Scale", "UIT_AngleZ", "UIT_Blur"} <= set(E))
-check("every expression within Fusion's ~2300-char limit", all(len(v) < 2300 for v in E.values()))
-check("no Fuse/.Output references", all(".Output" not in v for v in E.values()))
-
-def evaluate(expr, t_frames, rate=24, rs=0, re_=119, **ctl):
+TEXT = "SMK TEXT DEMO"
+def setup(t_frames, rate=24, rs=0, re_=119, text=TEXT, **ctl):
     d = dict(InDelay=0.0, InDur=0.5, Stagger=0.04, Engine=1.0, Stiff=180.0, Damp=18.0, Over=1.70158, Fade=0.0, SlideDist=0.03,
-             SlideAngle=-90.0, Scale=0.5, Rot=20.0, Blur=4.0, HasOut=0.0, OutOffset=0.0, OutDur=0.5, Count=12.0)
+             SlideAngle=-90.0, Scale=0.5, Rot=20.0, Blur=4.0, HasOut=0.0, OutOffset=0.0, OutDur=0.5)
     d.update(ctl)
     g = lua.globals()
-    g.UIT_Ctrl = lua.table_from(d)
+    t = lua.table_from(d); t.Text = lua.table_from({"Value": text}); g.UIT_Ctrl = t
     g.time = t_frames
     g.comp = lua.eval("function(rate, rs, re_) return { RenderStart = rs, RenderEnd = re_, GetPrefs = function(self, k) return rate end } end")(rate, rs, re_)
-    return lua.execute("return " + expr)
 
-amt = lambda t, **c: evaluate(E["UIT_Dist"], t, **c) / 0.03          # Dist = SlideDist * a
-check("pre-delay: fully offset", near(amt(-5), 1))
-check("before In (t<0)", near(amt(-1), 1))
-check("hold: settled", near(amt(60), 0, 1e-3))
-check("Opacity = Fade at start, 1 when settled", near(evaluate(E["UIT_Opacity"], -3), 0) and near(evaluate(E["UIT_Opacity"], 60), 1, 1e-3))
-check("Scale: 0.5 at start", near(evaluate(E["UIT_Scale"], -3), 0.5))
-check("Rotation: 20 at start, 0 settled", near(evaluate(E["UIT_AngleZ"], -3), 20) and near(evaluate(E["UIT_AngleZ"], 60), 0, 1e-2))
-check("Blur: 4 at start", near(evaluate(E["UIT_Blur"], -3), 4))
+def value(nodes, name, memo=None):
+    """Evaluate a Calculation node (chain of links, operators, expressions) at the current globals."""
+    n = nodes[name]
+    first = value(nodes, n["first_link"]) if n["first_link"] else float(lua.execute("return " + n["first_expr"]))
+    second = float(lua.execute("return " + n["second_expr"])) if n["second_expr"] else n["second_val"]
+    return {2: first * second, 5: second - first}.get(n["op"], first + second)
 
-# engines vs the tested core (spring is real-time; others use p = tau/dur)
+s, N = load("SMK2_TextLetter")
+check("chain nodes present", {"UIT_Amt", "UIT_Dist", "UIT_PreOp", "UIT_Opacity", "UIT_PreScale", "UIT_Scale", "UIT_AngleZ", "UIT_Blur"} <= set(N))
+amount_expr = N["UIT_Amt"]["first_expr"]
+check("only ONE long expression (amount); the rest are tiny", len(amount_expr) > 900 and all(len(e) < 40 for k, v in N.items() if k != "UIT_Amt" for e in [v["second_expr"] or ""]))
+check("amount expression within Fusion's ~2300-char limit", len(amount_expr) < 2300)
+check("auto count: no manual Count control, text length used", "#UIT_Ctrl.Text.Value" in amount_expr and "Count" not in s.split("Tools = ordered()")[0].replace("Count", "", 0) or "UIT_Ctrl_Count" not in s)
+check("follower Text is an expression on the holder text", re.search(r'Text = Input \{ Expression = "UIT_Ctrl.Text"', s) is not None)
+
+def a_at(t, **c):
+    setup(t, **c); return float(lua.execute("return " + amount_expr))
+check("pre-delay / before In: fully offset", near(a_at(-5), 1) and near(a_at(-1), 1))
+check("hold: settled", near(a_at(60), 0, 1e-3))
+# whole chain at start and settled
+setup(-3); v = {k: value(N, k) for k in ("UIT_Dist", "UIT_Opacity", "UIT_Scale", "UIT_AngleZ", "UIT_Blur")}
+check("chain at start: dist=SlideDist, opacity=Fade(0), scale=0.5, rot=20, blur=4", near(v["UIT_Dist"], 0.03) and near(v["UIT_Opacity"], 0) and near(v["UIT_Scale"], 0.5) and near(v["UIT_AngleZ"], 20) and near(v["UIT_Blur"], 4))
+setup(60); v = {k: value(N, k) for k in ("UIT_Dist", "UIT_Opacity", "UIT_Scale", "UIT_AngleZ", "UIT_Blur")}
+check("chain settled: dist 0, opacity 1, scale 1, rot 0, blur 0", near(v["UIT_Dist"], 0, 1e-3) and near(v["UIT_Opacity"], 1, 1e-3) and near(v["UIT_Scale"], 1, 1e-3) and near(v["UIT_AngleZ"], 0, 1e-2) and near(v["UIT_Blur"], 0, 5e-2))
+setup(-3, Fade=0.5); check("Fade 0.5 starts at 0.5 opacity", near(value(N, "UIT_Opacity"), 0.5))
+
 cfg = lambda **k: lua.table_from(k)
 for eng, name in ((1, "spring"), (2, "bounce"), (3, "elastic"), (4, "overshoot"), (5, "inertia")):
-    worst = 0.0
-    for f in range(0, 30):
-        tau = f / 24
-        a_expr = amt(f, Engine=float(eng))
-        a_core = 1 - smk.evalEngine(eng + 1, tau, 0.5, cfg(stiffness=180, damping=18, mass=1, amp=1, period=0.3, s=1.70158, k=4))
-        worst = max(worst, abs(a_expr - a_core))
+    worst = max(abs(a_at(f, Engine=float(eng)) - (1 - smk.evalEngine(eng + 1, f / 24, 0.5, cfg(stiffness=180, damping=18, mass=1, amp=1, period=0.3, s=1.70158, k=4)))) for f in range(30))
     check(f"engine {name} matches smk_core (max diff {worst:.1e})", worst < 2e-3)
-check("ease engine: 0 → 1 monotonic, ends at rest", near(amt(12, Engine=0.0), 0, 1e-6) and amt(3, Engine=0.0) > amt(6, Engine=0.0) > amt(9, Engine=0.0))
-
-# stagger via shifted time: follower evaluates at t - i*delay
+check("ease engine monotonic, ends at rest", near(a_at(12, Engine=0.0), 0, 1e-6) and a_at(3, Engine=0.0) > a_at(6, Engine=0.0) > a_at(9, Engine=0.0))
 d = 0.04 * 24
-vals = [amt(6 - i * d) for i in range(5)]
+vals = [a_at(6 - i * d) for i in range(5)]
 check("later letters are further from rest at the same frame", all(vals[i] <= vals[i + 1] + 1e-9 for i in range(4)))
-# Out: letters leave in order and all are gone by the last frame (shifted by index)
-n, st = 12, 0.04
-for i in (0, 5, 11):
-    last = amt(119 - i * st * 24, HasOut=1.0, Engine=0.0, Count=float(n))
-    check(f"Out: letter {i} fully offset at the last frame", near(last, 1, 1e-3))
-mid = amt(100, HasOut=1.0, Engine=0.0, Count=12.0)
-check("Out: letter 0 is mid-exit at frame 100 (leaves first)", 0 < mid < 1)
-check("fps independent (24 vs 60 at equal seconds)", near(amt(6, Engine=1.0), evaluate(E["UIT_Dist"], 15, rate=60, re_=299) / 0.03, 1e-6))
-check("clip-relative: RenderStart offset ignored", near(amt(6, Engine=1.0), evaluate(E["UIT_Dist"], 6 + 100, rs=100, re_=219) / 0.03, 1e-9))
-check("follower Delay expression is seconds→frames", "GetPrefs" in re.search(r'UIT_Follower = StyledTextFollower \{.*?Delay = Input \{ Expression = "(.*?)", \}', s, re.S).group(1))
+
+# Out with the count taken from the text: every letter fully gone on the last frame (follower shifts time by i*delay)
+for text in ("SMK TEXT DEMO", "ONE TWO THREE", "HELLO", "A"):
+    n = len(text)
+    worst = min(a_at(119 - i * d, HasOut=1.0, Engine=0.0, text=text) for i in range(n))
+    check(f"Out ('{text}'): every letter fully offset on the last frame (min a = {worst:.3f})", worst > 1 - 1e-3)
+check("Out: letter 0 is mid-exit at frame 100 (leaves first)", 0 < a_at(100, HasOut=1.0, Engine=0.0) < 1)
+check("fps independent (24 vs 60 at equal seconds)", near(a_at(6, Engine=1.0), (setup(15, rate=60, re_=299) or float(lua.execute("return " + amount_expr)))))
+check("clip-relative: RenderStart offset ignored", near(a_at(6, Engine=1.0), (setup(106, rs=100, re_=219) or float(lua.execute("return " + amount_expr))), 1e-9))
+check("follower Delay expression is seconds->frames", "GetPrefs" in re.search(r'Delay = Input \{ Expression = "(.*?)", \}', s).group(1))
 print(f"text expressions: {passed} passed, {failed} failed"); sys.exit(1 if failed else 0)
