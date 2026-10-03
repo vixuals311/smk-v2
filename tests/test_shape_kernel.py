@@ -20,7 +20,8 @@ def scen():
         ang=random.uniform(0, 6.28), gang=random.uniform(0, 6.28), trim=random.choice([1, 0.7, 0.25]), trimStart=random.choice([0, 0.3]),
         shadowOff=(random.uniform(-5, 5), random.uniform(-5, 5)), shadowBlur=random.uniform(0, 8), opacity=random.choice([1, 0.6]),
         fillA=[random.random() for _ in range(3)] + [random.choice([1, 0.7])], fillB=[random.random() for _ in range(3)] + [1],
-        borderCol=[random.random() for _ in range(3)] + [1], shadowCol=[random.random() for _ in range(3)] + [random.choice([0, 0.5])])
+        borderCol=[random.random() for _ in range(3)] + [1], shadowCol=[random.random() for _ in range(3)] + [random.choice([0, 0.5])],
+        trackCol=[random.random() for _ in range(3)] + [random.choice([0, 0.8])])
 scens = [scen() for _ in range(8)]
 import math
 def cinit(s):
@@ -29,7 +30,7 @@ def cinit(s):
     return (f"{{ {{{W},{H}}}, {s['shape']}, {s['fillMode']}, {s['borderPos']}, {f(s['center'])}, {f(s['half'])}, "
             f"{F(s['radius'])}, {F(s['thick'])}, {F(s['bw'])}, {F(math.cos(s['ang']))}, {F(math.sin(s['ang']))}, "
             f"{F(math.cos(s['gang']))}, {F(math.sin(s['gang']))}, {F(s['trim'])}, {F(s['trimStart'])}, {f(s['shadowOff'])}, "
-            f"{F(s['shadowBlur'])}, {F(s['opacity'])}, {f(s['fillA'])}, {f(s['fillB'])}, {f(s['borderCol'])}, {f(s['shadowCol'])} }}")
+            f"{F(s['shadowBlur'])}, {F(s['opacity'])}, {f(s['fillA'])}, {f(s['fillB'])}, {f(s['borderCol'])}, {f(s['shadowCol'])}, {f(s['trackCol'])} }}")
 body = re.sub(r"(\w+)\s+(\w+)\[(\d)\];", r"\1 \2[\3];", fields)
 c = f"""
 #include <math.h>
@@ -63,7 +64,7 @@ mod = re.search(r"-- SMK2_MOD_BEGIN\n(.*?)-- SMK2_MOD_END", open(os.path.join(RO
 smk = lua.execute("local smk = (function()\n" + core + "\nend)()\n" + mod + "\nreturn smk")
 def tab(s):
     t = lua.table(); t.size = lua.table_from([W, H]); t.shape = s['shape']; t.fillMode = s['fillMode']; t.borderPos = s['borderPos']
-    for k in ('center', 'half', 'shadowOff', 'fillA', 'fillB', 'borderCol', 'shadowCol'): t[k] = lua.table_from(list(s[k]))
+    for k in ('center', 'half', 'shadowOff', 'fillA', 'fillB', 'borderCol', 'shadowCol', 'trackCol'): t[k] = lua.table_from(list(s[k]))
     for k in ('radius', 'thick', 'bw', 'trim', 'trimStart', 'shadowBlur', 'opacity'): t[k] = s[k]
     t.cosA, t.sinA, t.gradC, t.gradS = math.cos(s['ang']), math.sin(s['ang']), math.cos(s['gang']), math.sin(s['gang'])
     return t

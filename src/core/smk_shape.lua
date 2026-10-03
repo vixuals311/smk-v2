@@ -74,7 +74,10 @@ function smk.shade(P, x, y) -- returns premultiplied r,g,b,a
     local t = smk.clamp((sd + blur) / (2 * blur), 0, 1)
     shadow = premul(P.shadowCol, (1 - t * t * (3 - 2 * t)) * sm)
   end
-  local out = over(border, over(fill, shadow))
+  -- track: the part of the shape removed by Trim, drawn in its own colour (progress bars / rings)
+  local track = { 0, 0, 0, 0 }
+  if P.trackCol[4] > 0 and m < 1 then track = premul(P.trackCol, cov(d) * (1 - m)) end
+  local out = over(border, over(fill, over(track, shadow)))
   return out[1] * P.opacity, out[2] * P.opacity, out[3] * P.opacity, out[4] * P.opacity
 end
 -- SMK2_MOD_END

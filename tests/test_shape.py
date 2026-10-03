@@ -18,7 +18,7 @@ smk = lua.execute("local smk = (function()\n" + core + "\nend)()\n" + mod + "\nr
 def P(**k):
     d = dict(size=(200, 100), shape=0, fillMode=0, borderPos=0, center=(100, 50), half=(60, 30), radius=0, thick=10, bw=0,
              cosA=1, sinA=0, gradC=1, gradS=0, trim=1, trimStart=0, shadowOff=(0, 0), shadowBlur=4, opacity=1,
-             fillA=(1, 0, 0, 1), fillB=(0, 0, 1, 1), borderCol=(0, 1, 0, 1), shadowCol=(0, 0, 0, 0))
+             fillA=(1, 0, 0, 1), fillB=(0, 0, 1, 1), borderCol=(0, 1, 0, 1), shadowCol=(0, 0, 0, 0), trackCol=(0, 0, 1, 0))
     d.update(k)
     t = lua.table()
     for key, v in d.items(): t[key] = lua.table_from([*v]) if isinstance(v, tuple) else v
@@ -53,6 +53,12 @@ half = P(shape=2, half=(40, 40), thick=10, trim=0.5)
 check("sweep 0.5 keeps right half only", px(half, 100 + 35, 50)[3] > 0.9 and px(half, 100 - 35, 50)[3] < 0.05)
 check("sweep starts at top", px(half, 100 + 2, 50 + 35)[3] > 0.9)
 q = P(shape=2, half=(40, 40), thick=10, trim=0.25); check("quarter = top-right only", px(q, 100 + 25, 50 + 25)[3] > 0.9 and px(q, 100 + 25, 50 - 25)[3] < 0.05)
+# track (progress remainder)
+tk = P(shape=2, half=(40, 40), thick=10, trim=0.5, trackCol=(0, 0, 1, 1))
+check("track fills the trimmed-away half", px(tk, 100 - 35, 50)[2] > 0.9 and px(tk, 100 - 35, 50)[0] < 0.05)
+check("fill stays on the swept half", px(tk, 100 + 35, 50)[0] > 0.9)
+check("no track when alpha 0", px(P(shape=2, half=(40, 40), thick=10, trim=0.5), 100 - 35, 50)[3] < 0.05)
+check("no track on untrimmed shape", px(P(trackCol=(0, 0, 1, 1)), 100, 50)[0] > 0.9)
 # line + draw-on
 ln = P(shape=3, half=(60, 0), thick=8)
 check("line capsule body", px(ln, 100, 50)[3] > 0.9 and px(ln, 100, 60)[3] == 0)

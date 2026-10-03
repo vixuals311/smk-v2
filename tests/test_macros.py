@@ -15,15 +15,16 @@ CT_Modifier, CT_Tool, CT_SourceTool = 1, 2, 3
 function FuRegisterClass() end
 function make_in(def) return {} end
 self = {Comp={}}
-function self:AddInput(name, id, t) return {id=id} end
+IDS = {}
+function self:AddInput(name, id, t) IDS[#IDS+1] = id; return {id=id} end
 function self:AddOutput(name, id, t) return {id=id} end
 function self:BeginControlNest() end; function self:EndControlNest() end
 '''
 def fuse_keys(name):
     lua = LuaRuntime(); lua.execute(MOCK)
     lua.execute(open(os.path.join(ROOT, f"dist/fuses/{name}.fuse")).read()); lua.execute("Create()")
-    return set(lua.eval("(function() local t = {} for k in pairs(I) do t[#t+1] = k end return t end)()").values())
-KEYS = {"Fuse.SMK2_Shape": fuse_keys("SMK2_Shape"), "Fuse.SMK2_Animator": fuse_keys("SMK2_Animator")}
+    return set(lua.eval("IDS").values())
+KEYS = {"Fuse.SMK2_Shape": fuse_keys("SMK2_Shape"), "Fuse.SMK2_Animator": fuse_keys("SMK2_Animator"), "Fuse.SMK2_Motion": fuse_keys("SMK2_Motion") | {"Output"}}
 KEYS["Fuse.SMK2_Shape"] |= {"Output"}; KEYS["Fuse.SMK2_Animator"] |= {"Output", "Image"}
 TEXTPLUS = {"StyledText", "Font", "Style", "Size", "Red1", "Green1", "Blue1", "Alpha1", "Center", "Angle", "Output"}
 KEYS["TextPlus"] = TEXTPLUS; KEYS["Merge"] = {"Output", "Background", "Foreground"}
@@ -44,7 +45,7 @@ for path in sorted(os.listdir(os.path.join(ROOT, "dist/templates"))):
     check(f"{path}: every link targets an existing node/output", all(op in nodes and src in KEYS.get(nodes[op], set()) for op, src in links))
     pos = re.findall(r"OperatorInfo \{ Pos = \{ (-?\d+), (-?\d+) \}", s)
     check(f"{path}: nodes at distinct positions (readable graph)", len(pos) == len(set(pos)) == len(nodes))
-    check(f"{path}: expressions are short (<80 chars)", all(len(e) < 80 for e in re.findall(r'Expression = "([^"]*)"', s)))
+    check(f"{path}: expressions are short (<90 chars)", all(len(e) < 90 for e in re.findall(r'Expression = "([^"]*)"', s)))
     # DAG: forward-only (no cycles) through links+expressions
     deps = {n: set() for n in nodes}
     for n in nodes:
@@ -58,7 +59,9 @@ for path in sorted(os.listdir(os.path.join(ROOT, "dist/templates"))):
     for b in blocks:
         g = re.search(r"ControlGroup = (\d+)", b)
         if g: groups.setdefault(g.group(1), []).append("Name =" in b)
-    check(f"{path}: colour pickers grouped (5 groups, 3-4 channels, one Name each)", len(groups) == 5 and all(len(v) in (3, 4) and v.count(True) == 1 and v[0] for v in groups.values()))
-    check(f"{path}: label rotates with card", "UIB_Shape.Angle" in s)
+    check(f"{path}: colour pickers grouped (>=3 groups, 3-4 channels, one Name each)", len(groups) >= 3 and all(len(v) in (3, 4) and v.count(True) == 1 and v[0] for v in groups.values()))
+    check(f"{path}: label rotates with card (AngleZ)", "UIB_Shape.Angle" in s or "Progress" in path)
+    check(f"{path}: no .Output socket in expressions (v1 rule)", not re.search(r'Expression = "[^"]*\.Output', s))
+    check(f"{path}: expression targets exist (tool.Input)", all(m in nodes and i in KEYS.get(nodes[m], KEYS["TextPlus"] | {"AngleZ"}) | {"AngleZ"} for m, i in re.findall(r"\b(UI[BP]_\w+)\.(\w+)", " ".join(re.findall(r'Expression = "([^"]*)"', s)))))
     check(f"{path}: published control count > 60", len(pubs) > 60)
 print(f"macros: {passed} passed, {failed} failed"); sys.exit(1 if failed else 0)

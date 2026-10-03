@@ -31,6 +31,7 @@ SMK2ShapeParams = [[
   float fillB[4];
   float borderCol[4];
   float shadowCol[4];
+  float trackCol[4];
 ]]
 
 -- GPU port of smk.shade() (src/core/smk_shape.lua). Keep both in sync; tests render the Lua oracle.
@@ -108,6 +109,11 @@ __KERNEL__ void SMK2ShapeKernel(__CONSTANTREF__ SMK2ShapeParams *p, __TEXTURE2D_
     sa = p->shadowCol[3] * (1.0f - t * t * (3.0f - 2.0f * t)) * res[1][1];
   }
   float sr = p->shadowCol[0] * sa, sg = p->shadowCol[1] * sa, sb = p->shadowCol[2] * sa;
+  float ta = 0.0f;
+  if (p->trackCol[3] > 0.0f && m < 1.0f) ta = p->trackCol[3] * fminf(fmaxf(0.5f - d, 0.0f), 1.0f) * (1.0f - m);
+  float tr = p->trackCol[0] * ta, tg = p->trackCol[1] * ta, tb = p->trackCol[2] * ta;
+  float kt = 1.0f - ta;
+  sr = tr + sr * kt; sg = tg + sg * kt; sb = tb + sb * kt; sa = ta + sa * kt;      // track over shadow
   float k1 = 1.0f - fa;
   float orr = fr + sr * k1, og = fg + sg * k1, ob = fb + sb * k1, oa = fa + sa * k1;
   float k2 = 1.0f - ba;
@@ -168,6 +174,7 @@ function Create()
   combo("BPos", "Border Position", 0, { "Inside", "Center", "Outside" })
   color("BC", "Border Color", 3, 1, 1, 1, 1)
   color("SC", "Shadow Color", 4, 0, 0, 0, 0.35)
+  color("TC", "Track Color (Trim remainder)", 6, 1, 1, 1, 0)
   num("SX", "Shadow X (px @1920)", 0, -200, 200); num("SY", "Shadow Y, down (px @1920)", 12, -200, 200)
   num("SB", "Shadow Blur (px @1920)", 16, 0, 200)
   num("InDelay", "In Delay (s)", 0, 0, 10, { INP_MinAllowed = 0 })
@@ -217,7 +224,7 @@ function SMK2_ShapePrep(req, w, h)
     cosA = math.cos(rot), sinA = math.sin(rot), gradC = math.cos(ga), gradS = math.sin(ga),
     trim = g(req, "Trim"), trimStart = g(req, "TrimStart"),
     shadowOff = { g(req, "SX") * px * k, -g(req, "SY") * px * k }, shadowBlur = g(req, "SB") * px * k,
-    opacity = r.opacity, fillA = col(req, "FillA"), fillB = col(req, "FillB"), borderCol = col(req, "BC"), shadowCol = col(req, "SC"),
+    opacity = r.opacity, fillA = col(req, "FillA"), fillB = col(req, "FillB"), borderCol = col(req, "BC"), shadowCol = col(req, "SC"), trackCol = col(req, "TC"),
   }
   if shape == 2 then P.half = { hx, hx }; P.radius = 0 end          -- ring: Width = diameter
   if shape == 3 then P.half = { hx, 0 } end                          -- line: Width = length

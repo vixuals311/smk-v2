@@ -29,7 +29,7 @@ class Macro:
         self.name, self.nodes, self.out_op, self.pub = name, nodes, out_op, []
     def publish(self, op, src, name, page, default=None, key=None, group=None):
         self.pub.append(dict(op=op, src=src, name=name, page=page, default=default, group=group,
-                             key=key or f"{op.replace('UIB_', '')}_{src}"))
+                             key=key or f"{re.sub(r'^UI[BP]_', '', op)}_{src}"))
     def publish_color(self, op, base, label, page, group, alpha=True):
         """One colour picker: channels share a ControlGroup; only the first carries the Name (v1 pattern)."""
         for i, ch in enumerate(("R", "G", "B", "A") if alpha else ("R", "G", "B")):
@@ -70,7 +70,7 @@ def ui_block():
              expr={"PivotX": "UIB_Shape.CX", "PivotY": "UIB_Shape.CY"}),
     ]
     m = Macro("SMK2_UIBlock", nodes, "UIB_Animator")
-    for k, n in (("StyledText", "Text"), ("Font", "Font"), ("Style", "Font Style"), ("Size", "Text Size")): m.publish("UIB_Label", k, n, "Card", key=f"Label_{k}")
+    for k, n in (("StyledText", "Text"), ("Font", "Font"), ("Size", "Text Size")): m.publish("UIB_Label", k, n, "Card", key=f"Label_{k}")
     for i, (k, ch) in enumerate((("Red1", "R"), ("Green1", "G"), ("Blue1", "B"))):
         m.publish("UIB_Label", k, "Text Color" if i == 0 else "", "Card", group=1)
     for k, n in (("Shape", "Shape"), ("W", "Width (frac of frame width)"), ("H", "Height (frac of frame width)"), ("Radius", "Corner Radius"),
@@ -85,7 +85,51 @@ def ui_block():
         for k, n in ENGINE_KEYS: m.publish("UIB_Animator", ph + k, f"{ph} {n}", f"{ph} Motion")
     return m
 
-MACROS = {"SMK2_UIBlock": ui_block}
+# Counter engine: the Motion modifier is UPSTREAM of everything (Shape.Trim is bound to its output), so it owns the
+# In timing/engine controls and the Animator (downstream) mirrors them with short expressions. Never the other way
+# round: upstream-reading-downstream is the v1 "DAG recursion" trap.
+MIRROR = {"InDelay": "InDelay", "InDur": "InDur", "InEngine": "EngineIn", "InStiff": "Stiffness", "InDamp": "Damping",
+          "InMass": "Mass", "InAmp": "ElasticAmp", "InPeriod": "ElasticPeriod", "InBack": "Overshoot", "InDecay": "InertiaK",
+          "InX1": "X1", "InY1": "Y1", "InX2": "X2", "InY2": "Y2", "Index": "Index", "Stagger": "Stagger", "ClipLen": "ClipLength"}
+MOTION_PUB = [("InDelay", "In Delay (s)"), ("InDur", "In Duration (s)"), ("Index", "Index"), ("Stagger", "Stagger (s)"),
+              ("ClipLength", "Clip Length (s, 0=auto)"), ("EngineIn", "In Engine"), ("Stiffness", "In Spring Stiffness"),
+              ("Damping", "In Spring Damping"), ("Mass", "In Spring Mass"), ("X1", "In Bezier x1"), ("Y1", "In Bezier y1"),
+              ("X2", "In Bezier x2"), ("Y2", "In Bezier y2"), ("ElasticAmp", "In Elastic Amplitude"),
+              ("ElasticPeriod", "In Elastic Period"), ("Overshoot", "In Overshoot"), ("InertiaK", "In Inertia Decay")]
+
+def progress(kind):
+    ring = kind == "ring"
+    static = {f"{p}{k}": v for p in ("In", "Out") for k, v in (("Fade", 1.0), ("SlideDist", 0.0), ("Scale", 1.0), ("Rot", 0.0))}
+    shape_vals = dict(static, UseFrameFormatSettings=1, Width=1920, Height=1080, Shape=2 if ring else 3, W=0.16 if ring else 0.4,
+                      Thick=26 if ring else 18, FillAR=0.3, FillAG=0.55, FillAB=1.0, FillAA=1.0, TCR=1.0, TCG=1.0, TCB=1.0, TCA=0.14,
+                      SCA=0.0, BW=0)
+    nodes = [
+        Node("UIP_Motion", "Fuse.SMK2_Motion", (0, 0), values=dict(From=0.0, Rest=0.75, To=0.75, HasOut=0)),
+        Node("UIP_Shape", "Fuse.SMK2_Shape", (110, 0), values=shape_vals, links={"Trim": ("UIP_Motion", "Output")}),
+        Node("UIP_Label", "TextPlus", (110, 66), values=dict(UseFrameFormatSettings=1, Width=1920, Height=1080, Wrap=0, StyledText="75%",
+             Font="Open Sans", Style="Bold", Size=0.06 if ring else 0.04, HorizontalJustificationNew=1, VerticalJustificationNew=3,
+             HorizontalLeftCenterRight=0, Red1=1.0, Green1=1.0, Blue1=1.0, Alpha1=1.0),
+             expr={"Center": "Point(UIP_Shape.CX, UIP_Shape.CY)" if ring else "Point(UIP_Shape.CX, UIP_Shape.CY + 0.07)",
+                   "StyledText": 'math.max(0, math.min(100, math.floor(UIP_Shape.Trim * 100 + 0.5))) .. "%"'}),
+        Node("UIP_Merge", "Merge", (220, 33), links={"Background": ("UIP_Shape", "Output"), "Foreground": ("UIP_Label", "Output")}),
+        Node("UIP_Animator", "Fuse.SMK2_Animator", (330, 33), links={"Image": ("UIP_Merge", "Output")},
+             expr=dict({"PivotX": "UIP_Shape.CX", "PivotY": "UIP_Shape.CY"}, **{k: f"UIP_Motion.{v}" for k, v in MIRROR.items()})),
+    ]
+    m = Macro("SMK2_Progress" + ("Ring" if ring else "Bar"), nodes, "UIP_Animator")
+    m.publish("UIP_Motion", "Rest", "Progress (0-1)", "Progress", key="Progress")
+    for k, n in (("Font", "Font"), ("Size", "Label Size")): m.publish("UIP_Label", k, n, "Progress")
+    for i, (k, ch) in enumerate((("Red1", "R"), ("Green1", "G"), ("Blue1", "B"))): m.publish("UIP_Label", k, "Label Color" if i == 0 else "", "Progress", group=1)
+    for k, n in (("W", "Diameter" if ring else "Length"), ("Thick", "Thickness (px @1920)"), ("CX", "Center X"), ("CY", "Center Y"), ("Angle", "Angle")):
+        m.publish("UIP_Shape", k, n, "Progress")
+    m.publish_color("UIP_Shape", "FillA", "Progress Color", "Progress", 2); m.publish_color("UIP_Shape", "TC", "Track Color", "Progress", 3)
+    for k, n in MOTION_PUB: m.publish("UIP_Motion", k, n, "Motion")
+    for k, n in (("HasOut", "Enable Out"), ("OutOffset", "Out Offset (s)"), ("OutDur", "Out Duration (s)")): m.publish("UIP_Animator", k, n, "Motion")
+    for k, n in (("Fade", "Opacity At Offset"), ("SlideDist", "Slide Distance"), ("SlideAngle", "Slide Angle"), ("Scale", "Scale At Offset"), ("Rot", "Rotation At Offset (deg)")):
+        m.publish("UIP_Animator", "In" + k, "In " + n, "In Motion")
+    for k, n in ENGINE_KEYS: m.publish("UIP_Animator", "Out" + k, f"Out {n}", "Out Motion")
+    return m
+
+MACROS = {"SMK2_UIBlock": ui_block, "SMK2_ProgressRing": lambda: progress("ring"), "SMK2_ProgressBar": lambda: progress("bar")}
 
 if __name__ == "__main__":
     os.makedirs(DIST, exist_ok=True)
