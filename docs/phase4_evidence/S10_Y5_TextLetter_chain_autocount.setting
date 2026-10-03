@@ -1,0 +1,529 @@
+{
+	Tools = ordered() {
+		S10_Y5_AutoCount_TextLetter1 = GroupOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				Follower_Text = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "Text",
+					Page = "Text",
+				},
+				UIT_Text_Font = InstanceInput {
+					SourceOp = "UIT_Text",
+					Source = "Font",
+					Page = "Text",
+				},
+				UIT_Text_Size = InstanceInput {
+					SourceOp = "UIT_Text",
+					Source = "Size",
+					Page = "Text",
+				},
+				UIT_Text_Red1 = InstanceInput {
+					SourceOp = "UIT_Text",
+					Source = "Red1",
+					Page = "Text",
+					Name = "Text Color",
+					ControlGroup = 1,
+				},
+				UIT_Text_Green1 = InstanceInput {
+					SourceOp = "UIT_Text",
+					Source = "Green1",
+					Page = "Text",
+					ControlGroup = 1,
+				},
+				UIT_Text_Blue1 = InstanceInput {
+					SourceOp = "UIT_Text",
+					Source = "Blue1",
+					Page = "Text",
+					ControlGroup = 1,
+				},
+				UIT_Text_Center = InstanceInput {
+					SourceOp = "UIT_Text",
+					Source = "Center",
+					Page = "Text",
+					Name = "Position",
+				},
+				Follower_Order = InstanceInput {
+					SourceOp = "UIT_Follower",
+					Source = "Order",
+					Page = "Motion",
+				},
+				UIT_Ctrl_InDelay = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "InDelay",
+					Page = "Motion",
+					Name = "In Delay (s)",
+				},
+				UIT_Ctrl_InDur = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "InDur",
+					Page = "Motion",
+					Name = "In Duration (s)",
+				},
+				UIT_Ctrl_Stagger = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "Stagger",
+					Page = "Motion",
+					Name = "Stagger (s per character)",
+				},
+				UIT_Ctrl_Engine = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "Engine",
+					Page = "Motion",
+				},
+				UIT_Ctrl_Stiff = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "Stiff",
+					Page = "Motion",
+					Name = "Spring Stiffness",
+				},
+				UIT_Ctrl_Damp = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "Damp",
+					Page = "Motion",
+					Name = "Spring Damping",
+				},
+				UIT_Ctrl_Over = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "Over",
+					Page = "Motion",
+					Name = "Overshoot",
+				},
+				UIT_Ctrl_Fade = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "Fade",
+					Page = "Look",
+					Name = "Opacity At Start",
+				},
+				UIT_Ctrl_SlideDist = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "SlideDist",
+					Page = "Look",
+					Name = "Slide Distance (frac of width)",
+				},
+				UIT_Ctrl_SlideAngle = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "SlideAngle",
+					Page = "Look",
+					Name = "Slide Angle (direction of start offset)",
+				},
+				UIT_Ctrl_Scale = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "Scale",
+					Page = "Look",
+					Name = "Scale At Start",
+				},
+				UIT_Ctrl_Rot = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "Rot",
+					Page = "Look",
+					Name = "Rotation At Start (deg)",
+				},
+				UIT_Ctrl_Blur = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "Blur",
+					Page = "Look",
+					Name = "Blur At Start",
+				},
+				UIT_Ctrl_HasOut = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "HasOut",
+					Page = "Out",
+					Name = "Enable Out",
+				},
+				UIT_Ctrl_OutOffset = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "OutOffset",
+					Page = "Out",
+					Name = "Out Offset (s)",
+				},
+				UIT_Ctrl_OutDur = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "OutDur",
+					Page = "Out",
+					Name = "Out Duration (s)",
+				},
+				UIT_Ctrl_Count = InstanceInput {
+					SourceOp = "UIT_Ctrl",
+					Source = "Count",
+					Page = "Out",
+					Name = "Letter Count (for Out timing)",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "UIT_Text",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { 495, 16.5 },
+				Flags = {
+					AllowPan = false,
+					GridSnap = true,
+					AutoSnap = true,
+					RemoveRouters = true
+				},
+				Size = { 447.938, 328.773, 223.969, 24.2424 },
+				Direction = "Horizontal",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { 0, 0 }
+			},
+			Tools = ordered() {
+				UIT_Ctrl = Background {
+					CtrlWShown = false,
+					Inputs = {
+						GlobalOut = Input { Value = 299, },
+						TopLeftAlpha = Input { Value = 0, },
+						Text = Input { Value = "SMK TEXT DEMO", },
+						Blur = Input { Value = 4, }
+					},
+					ViewInfo = OperatorInfo { Pos = { -165.969, 139.758 } },
+					UserControls = ordered() {
+						Text = {
+							LINKID_DataType = "Text",
+							INPID_InputControl = "TextEditControl",
+							ICS_ControlPage = "Text",
+							TEC_Lines = 3,
+							INP_Default = "SMK TEXT DEMO",
+						},
+						InDelay = {
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Motion",
+							INP_MaxScale = 5,
+							INP_Default = 0,
+						},
+						InDur = {
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Motion",
+							INP_MaxScale = 5,
+							INP_Default = 0.5,
+						},
+						Stagger = {
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Motion",
+							INP_MaxScale = 0.5,
+							INP_Default = 0.04,
+						},
+						Engine = {
+							{ CCS_AddString = "Ease" },
+							{ CCS_AddString = "Spring" },
+							{ CCS_AddString = "Bounce" },
+							{ CCS_AddString = "Elastic" },
+							{ CCS_AddString = "Overshoot" },
+							{ CCS_AddString = "Inertia" },
+							INP_Integer = true,
+							LBLC_DropDownButton = true,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "ComboControl",
+							ICS_ControlPage = "Motion",
+							INP_Default = 1,
+							CC_Custom = true,
+						},
+						Stiff = {
+							INP_MinScale = 1,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Motion",
+							INP_MaxScale = 1000,
+							INP_Default = 180,
+						},
+						Damp = {
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Motion",
+							INP_MaxScale = 100,
+							INP_Default = 18,
+						},
+						Over = {
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Motion",
+							INP_MaxScale = 5,
+							INP_Default = 1.70158,
+						},
+						Fade = {
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Look",
+							INP_MaxScale = 1,
+							INP_Default = 0,
+						},
+						SlideDist = {
+							INP_MinScale = -0.5,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Look",
+							INP_MaxScale = 0.5,
+							INP_Default = 0.03,
+						},
+						SlideAngle = {
+							INP_MinScale = -360,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Look",
+							INP_MaxScale = 360,
+							INP_Default = -90,
+						},
+						Scale = {
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Look",
+							INP_MaxScale = 3,
+							INP_Default = 1,
+						},
+						Rot = {
+							INP_MinScale = -360,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Look",
+							INP_MaxScale = 360,
+							INP_Default = 0,
+						},
+						Blur = {
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Look",
+							INP_MaxScale = 20,
+							INP_Default = 0,
+						},
+						HasOut = {
+							INP_Integer = true,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "CheckboxControl",
+							ICS_ControlPage = "Out",
+							INP_Default = 1,
+						},
+						OutOffset = {
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Out",
+							INP_MaxScale = 5,
+							INP_Default = 0,
+						},
+						OutDur = {
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Out",
+							INP_MaxScale = 5,
+							INP_Default = 0.5,
+						},
+						Count = {
+							INP_MinScale = 1,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Out",
+							INP_MaxScale = 200,
+							INP_Default = 12,
+						}
+					}
+				},
+				UIT_Text = TextPlus {
+					CtrlWShown = false,
+					Inputs = {
+						GlobalOut = Input { Value = 299, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Wrap = Input { Value = 1, },
+						LayoutRotation = Input { Value = 1, },
+						TransformRotation = Input { Value = 1, },
+						StyledText = Input {
+							SourceOp = "UIT_Follower",
+							Source = "StyledText",
+						},
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalJustificationNew = Input { Value = 3, }
+					},
+					ViewInfo = OperatorInfo { Pos = { -165.969, 7.75757 } },
+					Version = 1
+				},
+				UIT_Follower = StyledTextFollower {
+					CtrlWZoom = false,
+					Inputs = {
+						Delay = Input {
+							Value = 2.4,
+							Expression = "UIT_Ctrl.Stagger * comp:GetPrefs(\"Comp.FrameFormat.Rate\")",
+						},
+						Text = Input {
+							Value = "SMK TEXT DEMO",
+							Expression = "UIT_Ctrl.Text",
+						},
+						CharacterOffset = Input {
+							SourceOp = "UIT_Vector",
+							Source = "Position",
+						},
+						TransformRotation = Input { Value = 1, },
+						CharacterAngleZ = Input {
+							SourceOp = "UIT_AngleZ",
+							Source = "Result",
+						},
+						TransformSize = Input { Value = 1, },
+						CharacterSizeX = Input {
+							SourceOp = "UIT_Scale",
+							Source = "Result",
+						},
+						CharacterSizeY = Input {
+							SourceOp = "UIT_Scale",
+							Source = "Result",
+						},
+						Opacity1 = Input {
+							SourceOp = "UIT_Opacity",
+							Source = "Result",
+						},
+						MiterLimit1 = Input {
+							SourceOp = "Calculation1",
+							Source = "Result",
+						},
+						SoftnessX1 = Input {
+							SourceOp = "UIT_Blur",
+							Source = "Result",
+						},
+						SoftnessY1 = Input {
+							SourceOp = "UIT_Blur",
+							Source = "Result",
+						},
+						MiterLimit2 = Input {
+							SourceOp = "Calculation2",
+							Source = "Result",
+						},
+						MiterLimit3 = Input {
+							SourceOp = "Calculation3",
+							Source = "Result",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -55.9688, 7.75757 } },
+				},
+				UIT_Vector = Vector {
+					CtrlWZoom = false,
+					Inputs = {
+						Origin = Input { Value = { 0, 0 }, },
+						Distance = Input {
+							SourceOp = "UIT_Dist",
+							Source = "Result",
+						},
+						Angle = Input {
+							Value = -90,
+							Expression = "UIT_Ctrl.SlideAngle",
+						},
+						ImageAspect = Input { Value = 1, }
+					},
+					ViewInfo = OperatorInfo { Pos = { 54.0312, 7.75757 } },
+				},
+				UIT_Dist = Calculation {
+					CtrlWZoom = false,
+					Inputs = {
+						FirstOperand = Input {
+							SourceOp = "Calculation1",
+							Source = "Result",
+						},
+						Operator = Input { Value = 2, },
+						SecondOperand = Input {
+							Value = 0.03,
+							Expression = "UIT_Ctrl.SlideDist",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 164.031, 7.75757 } },
+				},
+				UIT_Opacity = Calculation {
+					CtrlWZoom = false,
+					Inputs = {
+						FirstOperand = Input {
+							SourceOp = "Calculation2",
+							Source = "Result",
+						},
+						Operator = Input { Value = 5, },
+						SecondOperand = Input { Value = 1, }
+					},
+					ViewInfo = OperatorInfo { Pos = { 164.031, 73.7576 } },
+				},
+				UIT_Scale = Calculation {
+					CtrlWZoom = false,
+					Inputs = {
+						FirstOperand = Input {
+							SourceOp = "Calculation3",
+							Source = "Result",
+						},
+						SecondOperand = Input { Value = 1, }
+					},
+					ViewInfo = OperatorInfo { Pos = { 164.031, 139.758 } },
+				},
+				UIT_AngleZ = Calculation {
+					CtrlWZoom = false,
+					Inputs = {
+						FirstOperand = Input {
+							SourceOp = "Calculation1",
+							Source = "Result",
+						},
+						Operator = Input { Value = 2, },
+						SecondOperand = Input { Expression = "UIT_Ctrl.Rot", }
+					},
+					ViewInfo = OperatorInfo { Pos = { 164.031, 205.758 } },
+				},
+				UIT_Blur = Calculation {
+					CtrlWZoom = false,
+					Inputs = {
+						FirstOperand = Input {
+							SourceOp = "Calculation1",
+							Source = "Result",
+						},
+						Operator = Input { Value = 2, },
+						SecondOperand = Input {
+							Value = 4,
+							Expression = "UIT_Ctrl.Blur",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 164.031, 271.758 } },
+				}
+			},
+		},
+		Calculation1 = Calculation {
+			Inputs = {
+				FirstOperand = Input {
+					Value = 1,
+					Expression = "(function() local r=comp:GetPrefs(\"Comp.FrameFormat.Rate\") local t=(time-comp.RenderStart)/r local T=(comp.RenderEnd-comp.RenderStart)/r local ti=t-UIT_Ctrl.InDelay local a=1 if ti>=0 then local p=math.min(1,ti/math.max(UIT_Ctrl.InDur,0.001)) local g=UIT_Ctrl.Engine local e=p if g<0.5 then e=1-(1-p)^3 elseif g<1.5 then local k=math.max(UIT_Ctrl.Stiff,1) local w=math.sqrt(k) local z=math.min(0.999,math.max(0.05,UIT_Ctrl.Damp/(2*w))) local wd=w*math.sqrt(1-z*z) e=1-math.exp(-z*w*ti)*(math.cos(wd*ti)+z*w/wd*math.sin(wd*ti)) elseif g<2.5 then local q=p if q<0.3636 then e=7.5625*q*q elseif q<0.7273 then q=q-0.5454 e=7.5625*q*q+0.75 elseif q<0.9091 then q=q-0.8182 e=7.5625*q*q+0.9375 else q=q-0.9545 e=7.5625*q*q+0.984375 end elseif g<3.5 then if p>0 and p<1 then e=2^(-10*p)*math.sin((p-0.075)*20.944)+1 end elseif g<4.5 then local q=p-1 e=1+(UIT_Ctrl.Over+1)*q*q*q+UIT_Ctrl.Over*q*q else e=(1-math.exp(-4*p))/(1-math.exp(-4)) end a=1-e end if UIT_Ctrl.HasOut>0.5 then local po=math.min(1,math.max(0,(t-(T-UIT_Ctrl.OutOffset-UIT_Ctrl.OutDur-(#UIT_Ctrl.Text.Value-1)*UIT_Ctrl.Stagger))/math.max(UIT_Ctrl.OutDur,0.001))) a=math.min(1,a+po*po*(3-2*po)) end return a end)()",
+				}
+			},
+		},
+		Calculation3 = Calculation {
+			CtrlWZoom = false,
+			Inputs = {
+				FirstOperand = Input {
+					SourceOp = "Calculation1",
+					Source = "Result",
+				},
+				Operator = Input { Value = 2, },
+				SecondOperand = Input { Expression = "(UIT_Ctrl.Scale-1)", }
+			},
+		},
+		Calculation2 = Calculation {
+			Inputs = {
+				FirstOperand = Input {
+					SourceOp = "Calculation1",
+					Source = "Result",
+				},
+				Operator = Input { Value = 2, },
+				SecondOperand = Input {
+					Value = 1,
+					Expression = "(1-UIT_Ctrl.Fade)",
+				}
+			},
+		}
+	}
+}
