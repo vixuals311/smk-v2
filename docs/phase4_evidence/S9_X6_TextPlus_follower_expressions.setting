@@ -1,0 +1,137 @@
+{
+	Tools = ordered() {
+		S9_X6_AllTogether_Text1 = TextPlus {
+			Inputs = {
+				GlobalOut = Input { Value = 299, },
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				UseFrameFormatSettings = Input { Value = 1, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Wrap = Input { Value = 1, },
+				LayoutRotation = Input { Value = 1, },
+				TransformRotation = Input { Value = 1, },
+				Softness1 = Input { Value = 1, },
+				StyledText = Input {
+					SourceOp = "Follower1",
+					Source = "StyledText",
+				},
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalJustificationNew = Input { Value = 3, }
+			},
+			ViewInfo = OperatorInfo { Pos = { 495, 16.5 } },
+			Version = 1
+		},
+		Follower1 = StyledTextFollower {
+			Inputs = {
+				Delay = Input {
+					Value = 3,
+					Expression = "0.05 * comp:GetPrefs(\"Comp.FrameFormat.Rate\")",
+				},
+				Text = Input {
+					Value = StyledText {
+						Value = "ABCDEFGHIJKL"
+					},
+				},
+				CharacterOffset = Input {
+					SourceOp = "Vector1",
+					Source = "Position",
+				},
+				TransformRotation = Input { Value = 1, },
+				CharacterAngleZ = Input {
+					SourceOp = "Calculation3",
+					Source = "Result",
+				},
+				TransformSize = Input { Value = 1, },
+				CharacterSizeX = Input {
+					SourceOp = "Calculation1",
+					Source = "Result",
+				},
+				CharacterSizeY = Input {
+					SourceOp = "Calculation2",
+					Source = "Result",
+				},
+				Opacity1 = Input {
+					SourceOp = "Calculation4",
+					Source = "Result",
+				},
+				Softness1 = Input { Value = 1, },
+				SoftnessX1 = Input {
+					SourceOp = "Calculation5",
+					Source = "Result",
+				},
+				SoftnessY1 = Input {
+					SourceOp = "Calculation6",
+					Source = "Result",
+				},
+				Softness2 = Input { Value = 1, },
+				Softness3 = Input { Value = 1, },
+				Softness4 = Input { Value = 1, },
+				Softness5 = Input { Value = 1, },
+				Softness6 = Input { Value = 1, },
+				Softness7 = Input { Value = 1, },
+				Softness8 = Input { Value = 1, }
+			},
+		},
+		Vector1 = Vector {
+			Inputs = {
+				Origin = Input { Value = { 0, 0 }, },
+				Distance = Input {
+					SourceOp = "Calculation7",
+					Source = "Result",
+				},
+				Angle = Input { Value = 90, },
+				ImageAspect = Input { Value = 1, }
+			},
+		},
+		Calculation7 = Calculation {
+			CtrlWZoom = false,
+			Inputs = {
+				FirstOperand = Input {
+					Value = 0.03,
+					Expression = "0.03 * (1 - math.min(1, math.max(0, time / comp:GetPrefs(\"Comp.FrameFormat.Rate\") / 0.5)))",
+				}
+			},
+		},
+		Calculation3 = Calculation {
+			Inputs = {
+				FirstOperand = Input {
+					Value = -45,
+					Expression = "-45 * (1 - math.min(1, math.max(0, time / comp:GetPrefs(\"Comp.FrameFormat.Rate\") / 0.5)))",
+				}
+			},
+		},
+		Calculation1 = Calculation {
+			Inputs = {
+				FirstOperand = Input { Expression = "math.min(1, math.max(0, time / comp:GetPrefs(\"Comp.FrameFormat.Rate\") / 0.5))", }
+			},
+		},
+		Calculation2 = Calculation {
+			Inputs = {
+				FirstOperand = Input { Expression = "math.min(1, math.max(0, time / comp:GetPrefs(\"Comp.FrameFormat.Rate\") / 0.5))", }
+			},
+		},
+		Calculation4 = Calculation {
+			Inputs = {
+				FirstOperand = Input { Expression = "math.min(1, math.max(0, time / comp:GetPrefs(\"Comp.FrameFormat.Rate\") / 0.5))", }
+			},
+		},
+		Calculation5 = Calculation {
+			Inputs = {
+				FirstOperand = Input {
+					Value = 3,
+					Expression = "3 * (1 - math.min(1, math.max(0, time / comp:GetPrefs(\"Comp.FrameFormat.Rate\") / 0.5)))",
+				}
+			},
+		},
+		Calculation6 = Calculation {
+			Inputs = {
+				FirstOperand = Input {
+					Value = 3,
+					Expression = "3 * (1 - math.min(1, math.max(0, time / comp:GetPrefs(\"Comp.FrameFormat.Rate\") / 0.5)))",
+				}
+			},
+		}
+	}
+}
