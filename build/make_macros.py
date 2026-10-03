@@ -212,18 +212,16 @@ def text_macro(unit):
         Node("UIT_Follower", "StyledTextFollower", (110, 0), values=dict(Order=0, TransformRotation=1, TransformSize=1,
              Text=Raw('StyledText { Value = "SMK Text" }')),
              expr={"Delay": 'UIT_Ctrl.Stagger * comp:GetPrefs("Comp.FrameFormat.Rate")'},
-             links={P + "Offset": ("UIT_Vector", "Position"), P + "AngleZ": ("UIT_AngleZ", "Result"), P + "SizeX": ("UIT_SizeX", "Result"),
-                    P + "SizeY": ("UIT_SizeY", "Result"), "Opacity1": ("UIT_Opacity", "Result"),
-                    "SoftnessX1": ("UIT_BlurX", "Result"), "SoftnessY1": ("UIT_BlurY", "Result")}),
+             links={P + "Offset": ("UIT_Vector", "Position"), P + "AngleZ": ("UIT_AngleZ", "Result"), P + "SizeX": ("UIT_Scale", "Result"),
+                    P + "SizeY": ("UIT_Scale", "Result"), "Opacity1": ("UIT_Opacity", "Result"),
+                    "SoftnessX1": ("UIT_Blur", "Result"), "SoftnessY1": ("UIT_Blur", "Result")}),
         Node("UIT_Vector", "Vector", (220, 0), values=dict(Origin=Raw("{ 0, 0 }"), ImageAspect=1),
              expr={"Angle": "UIT_Ctrl.SlideAngle"}, links={"Distance": ("UIT_Dist", "Result")}),
         calc("UIT_Dist", (330, 0), "UIT_Ctrl.SlideDist*a"),
         calc("UIT_Opacity", (330, 66), "math.max(0,math.min(1,1-(1-UIT_Ctrl.Fade)*a))"),
-        calc("UIT_SizeX", (330, 132), "math.max(0.0001,1+(UIT_Ctrl.Scale-1)*a)"),
-        calc("UIT_SizeY", (330, 198), "math.max(0.0001,1+(UIT_Ctrl.Scale-1)*a)"),
-        calc("UIT_AngleZ", (330, 264), "UIT_Ctrl.Rot*a"),
-        calc("UIT_BlurX", (330, 330), "UIT_Ctrl.Blur*a"),
-        calc("UIT_BlurY", (330, 396), "UIT_Ctrl.Blur*a"),
+        calc("UIT_Scale", (330, 132), "math.max(0.0001,1+(UIT_Ctrl.Scale-1)*a)"),     # feeds both Size X and Size Y
+        calc("UIT_AngleZ", (330, 198), "UIT_Ctrl.Rot*a"),
+        calc("UIT_Blur", (330, 264), "UIT_Ctrl.Blur*a"),                                # feeds both Softness X and Y
     ]
     m = Macro("SMK2_Text" + unit.capitalize(), nodes, "UIT_Text")
     m.publish("UIT_Follower", "Text", "Text", "Text", key="Follower_Text")

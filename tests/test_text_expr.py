@@ -23,7 +23,7 @@ def exprs(name):
     return s, out
 
 s, E = exprs("SMK2_TextLetter")
-check("expressions found for all calc nodes", {"UIT_Dist", "UIT_Opacity", "UIT_SizeX", "UIT_SizeY", "UIT_AngleZ", "UIT_BlurX", "UIT_BlurY"} <= set(E))
+check("expressions found for all calc nodes", {"UIT_Dist", "UIT_Opacity", "UIT_Scale", "UIT_AngleZ", "UIT_Blur"} <= set(E))
 check("every expression within Fusion's ~2300-char limit", all(len(v) < 2300 for v in E.values()))
 check("no Fuse/.Output references", all(".Output" not in v for v in E.values()))
 
@@ -42,9 +42,9 @@ check("pre-delay: fully offset", near(amt(-5), 1))
 check("before In (t<0)", near(amt(-1), 1))
 check("hold: settled", near(amt(60), 0, 1e-3))
 check("Opacity = Fade at start, 1 when settled", near(evaluate(E["UIT_Opacity"], -3), 0) and near(evaluate(E["UIT_Opacity"], 60), 1, 1e-3))
-check("Scale: 0.5 at start", near(evaluate(E["UIT_SizeX"], -3), 0.5) and near(evaluate(E["UIT_SizeY"], -3), 0.5))
+check("Scale: 0.5 at start", near(evaluate(E["UIT_Scale"], -3), 0.5))
 check("Rotation: 20 at start, 0 settled", near(evaluate(E["UIT_AngleZ"], -3), 20) and near(evaluate(E["UIT_AngleZ"], 60), 0, 1e-2))
-check("Blur: 4 at start", near(evaluate(E["UIT_BlurX"], -3), 4) and near(evaluate(E["UIT_BlurY"], -3), 4))
+check("Blur: 4 at start", near(evaluate(E["UIT_Blur"], -3), 4))
 
 # engines vs the tested core (spring is real-time; others use p = tau/dur)
 cfg = lambda **k: lua.table_from(k)
