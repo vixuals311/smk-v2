@@ -69,3 +69,8 @@ unconnected holder (`UIT_Ctrl`, a Background with UserControls) so the graph is 
 Word/Line: stagger is per unit (follower delay scaled by units ÷ characters); Out compensation uses the last character, so every character is gone on the
 last frame (last-frame alpha 0.00 in all tested cases). Cost: ≈ 25 ms/frame for 12 letters, ≈ 75 ms for 40 (cold, 60 fps).
 User-verified in the UI: Text control layout, trim-handle drag updates the animation, razor-cutting a Fusion clip keeps In and Out on both parts.
+
+## User-verified (Phase 4 close)
+Expanded group readable; emoji renders as a real glyph; viewer playback of 12–40 letters: 6–8 fps on the first pass, 24 fps once cached (first-pass limit is
+the ~3 ms per node/modifier Fuse cost plus Calculation parsing; render ms/frame is the regression metric). Open Sans weight combo does not change the weight
+(see Phase 5 gate B).

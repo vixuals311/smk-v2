@@ -9,6 +9,6 @@ for t in tests/test_*.py; do python $t; done
 python scripts/install.py        # copy Fuses into Resolve
 ```
 
-**Status:** Phases 0–4d done (SMK Text complete; UTF-8 character count fix pending a Resolve re-check). Next: Callout, Connector, Look, Cursor, Studio Lite.
+**Status:** Phases 0–4 done (text complete). Phase 5: `SMK2_Cursor` Fuse (path, press, ripples), font-weight fix and UTF-8 re-check, awaiting `docs/PHASE5_GATE.md`.
 
 This repo was split out of the v1 repo's `smk-v2/` folder.

@@ -15,4 +15,5 @@
 | D2-012 | Font Style combo shows "--" in the published macro; label text does not rotate (fixed in 2d) | Phase 2c | OPEN (Style) |
 | D3-001 | Counter variants: currency, K/M, decimals, prefix/suffix (Text modifier or Text+ expression formats) | After Phase 3 ring/bar | OPEN |
 | D4-001 | SMK Text: per-phase effects (different In and Out look), exact per-unit count for Word/Line Out (character count used; auto count for letters done in 4b), per-word stagger for the Word variant, text presets (defaults only), Cursor/typewriter reveal | After Phase 4 gate | OPEN |
+| D5-001 | Cursor: trail, hover/highlight states, scroll, text-select drag, hand/I-beam cursor shapes, per-waypoint easing | Beyond first cursor slice | OPEN |
 | D2-011 | Multi-element Shape (one Fuse, N elements: bars, grids, lists) | Fallback if S7 fails; also suits charts | OPEN |
