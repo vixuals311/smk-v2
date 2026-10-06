@@ -76,7 +76,7 @@ vals = [a_at(6 - i * d) for i in range(5)]
 check("later letters are further from rest at the same frame", all(vals[i] <= vals[i + 1] + 1e-9 for i in range(4)))
 
 # Out with the count taken from the text: every letter fully gone on the last frame (follower shifts time by i*delay)
-for text in ("SMK TEXT DEMO", "ONE TWO THREE", "HELLO", "A"):
+for text in ("SMK TEXT DEMO", "ONE TWO THREE", "HELLO", "A", "éüÈ ÀBC", "A😀B"):
     n = len(text)
     worst = min(a_at(119 - i * d, HasOut=1.0, Engine=0.0, text=text) for i in range(n))
     check(f"Out ('{text}'): every letter fully offset on the last frame (min a = {worst:.3f})", worst > 1 - 1e-3)
@@ -106,6 +106,6 @@ def unit_checks(macro, texts, unit):
         first = len(text) - len((text.split()[-1] if unit == "word" else text.split("\n")[-1]))
         lag_frames = (L - first) * d_exp * 24
         check(f"{macro} '{text[:12]!r}': last unit's slide finishes at most 7 frames early ({lag_frames:.1f})", lag_frames <= 7)
-unit_checks("SMK2_TextWord", ["ONE TWO THREE", "HELLO", "A", "ONE TWO"], "word")
-unit_checks("SMK2_TextLine", ["LINE ONE\nLINE TWO\nLINE THREE", "HELLO", "A", "AB\nCD"], "line")
+unit_checks("SMK2_TextWord", ["ONE TWO THREE", "HELLO", "A", "ONE TWO", "éüÈ ÀBC", "A😀B"], "word")
+unit_checks("SMK2_TextLine", ["LINE ONE\nLINE TWO\nLINE THREE", "HELLO", "A", "AB\nCD", "éü\nÈ À😀"], "line")
 print(f"text expressions: {passed} passed, {failed} failed"); sys.exit(1 if failed else 0)

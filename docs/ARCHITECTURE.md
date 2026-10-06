@@ -61,3 +61,11 @@ Only `Image({IMG_DataWindow=...})` places a small image correctly (XOffset/YOffs
 3 cards 32.5, 5 → 42.5, 8 → 52.5, 12 → 55.8; user viewer: 12 cards 24 fps, 20 cards 13–16 fps first play, 58 fps cached.
 **Decision: stop chasing frame-time with buffer tricks.** Keep one Fuse per element and ≤2 Fuses per product. S4/S7 closed (D2-003 resolved as "not a lever").
 Next: products as generated presets (`build/make_macros.py`), then Look, Text and Studio Lite.
+
+## Phase 4 results (2026-10): SMK Text
+Final text design: Text+ → StyledTextFollower; one long **amount** Calculation (closed-form engines, seconds, clip-relative) feeds tiny linked Calculations
+(Multiply / Second−First / Add) for slide (Vector), opacity, scale (X and Y from one node), rotation and blur (X and Y from one node). Controls live on an
+unconnected holder (`UIT_Ctrl`, a Background with UserControls) so the graph is acyclic. Letter count comes from the text (UTF-8 characters).
+Word/Line: stagger is per unit (follower delay scaled by units ÷ characters); Out compensation uses the last character, so every character is gone on the
+last frame (last-frame alpha 0.00 in all tested cases). Cost: ≈ 25 ms/frame for 12 letters, ≈ 75 ms for 40 (cold, 60 fps).
+User-verified in the UI: Text control layout, trim-handle drag updates the animation, razor-cutting a Fusion clip keeps In and Out on both parts.

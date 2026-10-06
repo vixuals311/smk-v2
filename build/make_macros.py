@@ -163,14 +163,14 @@ def progress(kind):
 # letters vs 107 ms for Fuse modifiers. Everything is in seconds, clip-relative (comp.RenderStart/RenderEnd).
 # ---------------------------------------------------------------------------------------------------
 UNIT_DEF = {  # Lua prelude: L = 0-based index of the LAST CHARACTER (opacity is per character, so Out must finish for it), d = follower delay per character (s)
-    "letter": 'local s=U.Text.Value local L=#s-1 local d=U.Stagger ',
-    "word": 'local s=U.Text.Value local L=#s-1 local d=U.Stagger*select(2,s:gsub("%S+",""))/math.max(1,#s) ',
-    "line": 'local s=U.Text.Value local L=#s-1 local d=U.Stagger*math.max(1,select(2,s:gsub("[^\\n]+","")))/math.max(1,#s) ',
+    "letter": 'local s=U.Text.Value local c=select(2,s:gsub("[^\\128-\\191]","")) local L=c-1 local d=U.Stagger ',
+    "word": 'local s=U.Text.Value local c=select(2,s:gsub("[^\\128-\\191]","")) local L=c-1 local d=U.Stagger*select(2,s:gsub("%S+",""))/math.max(1,c) ',
+    "line": 'local s=U.Text.Value local c=select(2,s:gsub("[^\\128-\\191]","")) local L=c-1 local d=U.Stagger*math.max(1,select(2,s:gsub("[^\\n]+","")))/math.max(1,c) ',
 }
 DELAY_EXPR = {  # follower Delay (frames) = d * frame rate; same d as in the amount expression
     "letter": 'UIT_Ctrl.Stagger * comp:GetPrefs("Comp.FrameFormat.Rate")',
-    "word": 'UIT_Ctrl.Stagger * comp:GetPrefs("Comp.FrameFormat.Rate") * select(2, UIT_Ctrl.Text.Value:gsub("%S+", "")) / math.max(1, #UIT_Ctrl.Text.Value)',
-    "line": 'UIT_Ctrl.Stagger * comp:GetPrefs("Comp.FrameFormat.Rate") * math.max(1, select(2, UIT_Ctrl.Text.Value:gsub("[^\\n]+", ""))) / math.max(1, #UIT_Ctrl.Text.Value)',
+    "word": 'UIT_Ctrl.Stagger * comp:GetPrefs("Comp.FrameFormat.Rate") * select(2, UIT_Ctrl.Text.Value:gsub("%S+", "")) / math.max(1, select(2, UIT_Ctrl.Text.Value:gsub("[^\\128-\\191]", "")))',
+    "line": 'UIT_Ctrl.Stagger * comp:GetPrefs("Comp.FrameFormat.Rate") * math.max(1, select(2, UIT_Ctrl.Text.Value:gsub("[^\\n]+", ""))) / math.max(1, select(2, UIT_Ctrl.Text.Value:gsub("[^\\128-\\191]", "")))',
 }
 
 def text_amount_lua(unit="letter"):
