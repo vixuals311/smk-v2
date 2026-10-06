@@ -12,9 +12,9 @@ def load(d):
     return bg,[Image.open(f).convert('RGB').load() for f in fs]
 def units(fr,bg,unit,cy,half,ref=60):
     px=fr[ref]; d=lambda p:p[0]-bg[0]>40
-    if unit=="word":
+    if unit in ("word","letter"):
         cols=[x for x in range(300,1700) if any(d(px[x,y]) for y in range(cy-half,cy+half,2))]
-        return [((a,b),(cy-half,cy+half)) for a,b in segs(cols,9)]
+        return [((a,b),(cy-half,cy+half)) for a,b in segs(cols,9 if unit=="word" else 1)]
     rows=[y for y in range(cy-half,cy+half) if any(d(px[x,y]) for x in range(300,1700,3))]
     cols=[x for x in range(300,1700) if any(d(px[x,y]) for y in range(cy-half,cy+half,2))]
     return [((min(cols),max(cols)),(a-4,b+4)) for a,b in segs(rows,8)]

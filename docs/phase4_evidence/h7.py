@@ -8,3 +8,9 @@ def mkq(name, note, kind, texts, ys, params=None, fps=None, size=0.04, per=None)
         for k,v in ((per or [{}]*len(texts))[i]).items(): g.SetInput("UIT_Ctrl_"+k,v,0)
     bg.TopLeftRed=0.1
     return comp,gs
+
+FONTS=[("Open Sans","Bold"),("Open Sans","Regular"),("Open Sans","Light"),("Arial","Bold"),("Times New Roman","Bold"),("Impact","Regular"),("Verdana","Bold"),("Georgia","Bold")]
+def cfg_fonts(comp,name,kind_short,fonts=FONTS):
+    for i,(f,s) in enumerate(fonts):
+        g=comp.FindTool("%s_%s%d"%(name,kind_short,i+1)); g.SetInput("UIT_Text_Font",f,0)
+        t=comp.FindTool("UIT_Text"+("" if i==0 else "_%d"%i)); t.Style=s
