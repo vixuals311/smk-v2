@@ -84,4 +84,26 @@ check("Out: letter 0 is mid-exit at frame 100 (leaves first)", 0 < a_at(100, Has
 check("fps independent (24 vs 60 at equal seconds)", near(a_at(6, Engine=1.0), (setup(15, rate=60, re_=299) or float(lua.execute("return " + amount_expr)))))
 check("clip-relative: RenderStart offset ignored", near(a_at(6, Engine=1.0), (setup(106, rs=100, re_=219) or float(lua.execute("return " + amount_expr))), 1e-9))
 check("follower Delay expression is seconds->frames", "GetPrefs" in re.search(r'Delay = Input \{ Expression = "(.*?)", \}', s).group(1))
+
+# ---- Word / Line macros: stagger per unit, Out finishes at the last frame based on the LAST UNIT's own start index ----
+def unit_checks(macro, texts, unit):
+    s2, N2 = load(macro)
+    amt = N2["UIT_Amt"]["first_expr"]
+    delay = re.search(r'Delay = Input \{ Expression = "((?:[^"\\]|\\.)*)"', s2); delay = unesc(delay.group(1))
+    check(f"{macro}: expressions contain no raw newline characters", "\n" not in amt and "\n" not in delay)
+    for text in texts:
+        setup(0, text=text, HasOut=1.0, Engine=0.0, Stagger=0.1)
+        d_lua = float(lua.execute("return " + delay)) / 24                      # follower delay per character, seconds
+        if unit == "word":
+            n = len(text.split()); L = (re.search(r"\S+\s*$", text).start()) if text.strip() else 0
+        else:
+            n = max(1, len([x for x in text.split("\n") if x])); L = text.rfind("\n") + 1
+        d_exp = 0.1 * n / max(1, len(text))
+        check(f"{macro} '{text[:12]!r}': per-character delay = Stagger*units/chars ({d_lua:.4f}s)", near(d_lua, d_exp, 1e-6))
+        sh = L * d_exp * 24
+        setup(119 - sh, text=text, HasOut=1.0, Engine=0.0, Stagger=0.1); end = float(lua.execute("return " + amt))
+        setup(116 - sh, text=text, HasOut=1.0, Engine=0.0, Stagger=0.1); early = float(lua.execute("return " + amt))
+        check(f"{macro} '{text[:12]!r}': last {unit} fully out on the last frame, not before frame ~117 (a={end:.3f}, a@-3f={early:.3f})", end > 0.999 and early < 0.999)
+unit_checks("SMK2_TextWord", ["ONE TWO THREE", "HELLO", "A", "ONE TWO"], "word")
+unit_checks("SMK2_TextLine", ["LINE ONE\nLINE TWO\nLINE THREE", "HELLO", "A", "AB\nCD"], "line")
 print(f"text expressions: {passed} passed, {failed} failed"); sys.exit(1 if failed else 0)

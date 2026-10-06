@@ -162,10 +162,22 @@ def progress(kind):
 # input is ignored; inside Calculation it sees each letter's own delayed time, and costs ~19 ms/frame for 12
 # letters vs 107 ms for Fuse modifiers. Everything is in seconds, clip-relative (comp.RenderStart/RenderEnd).
 # ---------------------------------------------------------------------------------------------------
-def text_amount_lua():
+UNIT_DEF = {  # Lua prelude: L = 0-based char index where the LAST unit starts, d = follower delay per character (s)
+    "letter": 'local s=U.Text.Value local L=#s-1 local d=U.Stagger ',
+    "word": 'local s=U.Text.Value local L=(s:find("%S+%s*$") or 1)-1 local d=U.Stagger*select(2,s:gsub("%S+",""))/math.max(1,#s) ',
+    "line": 'local s=U.Text.Value local L=(s:find("[^\\n]*$") or 1)-1 local d=U.Stagger*math.max(1,select(2,s:gsub("[^\\n]+","")))/math.max(1,#s) ',
+}
+DELAY_EXPR = {  # follower Delay (frames) = d * frame rate; same d as in the amount expression
+    "letter": 'UIT_Ctrl.Stagger * comp:GetPrefs("Comp.FrameFormat.Rate")',
+    "word": 'UIT_Ctrl.Stagger * comp:GetPrefs("Comp.FrameFormat.Rate") * select(2, UIT_Ctrl.Text.Value:gsub("%S+", "")) / math.max(1, #UIT_Ctrl.Text.Value)',
+    "line": 'UIT_Ctrl.Stagger * comp:GetPrefs("Comp.FrameFormat.Rate") * math.max(1, select(2, UIT_Ctrl.Text.Value:gsub("[^\\n]+", ""))) / math.max(1, #UIT_Ctrl.Text.Value)',
+}
+
+def text_amount_lua(unit="letter"):
     """Lua body computing `a` (0 = settled, 1 = fully offset) for the current (letter-shifted) time. Closed-form engines."""
     U = "UIT_Ctrl."
     return (
+        UNIT_DEF[unit] +
         'local r=comp:GetPrefs("Comp.FrameFormat.Rate") local t=(time-comp.RenderStart)/r '
         'local T=(comp.RenderEnd-comp.RenderStart)/r local ti=t-U.InDelay local a=1 '
         'if ti>=0 then local p=math.min(1,ti/math.max(U.InDur,0.001)) local g=U.Engine local e=p '
@@ -177,12 +189,12 @@ def text_amount_lua():
         'elseif g<3.5 then if p>0 and p<1 then e=2^(-10*p)*math.sin((p-0.075)*20.944)+1 end '
         'elseif g<4.5 then local q=p-1 e=1+(U.Over+1)*q*q*q+U.Over*q*q '
         'else e=(1-math.exp(-4*p))/(1-math.exp(-4)) end a=1-e end '
-        'if U.HasOut>0.5 then local po=math.min(1,math.max(0,(t-(T-U.OutOffset-U.OutDur-(#U.Text.Value-1)*U.Stagger))/math.max(U.OutDur,0.001))) '
+        'if U.HasOut>0.5 then local po=math.min(1,math.max(0,(t-(T-U.OutOffset-U.OutDur-L*d))/math.max(U.OutDur,0.001))) '
         'a=math.min(1,a+po*po*(3-2*po)) end '
     ).replace("U.", U)
 
-def text_expr(final):
-    body = text_amount_lua()
+def text_expr(final, unit="letter"):
+    body = text_amount_lua(unit)
     return f"(function() {body}return {final} end)()"
 
 TEXT_USER = [  # (id, kind, default, lo, hi, page, items)
@@ -198,7 +210,7 @@ TEXT_USER = [  # (id, kind, default, lo, hi, page, items)
     ("HasOut", "check", 1, 0, 1, "Out", None), ("OutOffset", "slider", 0.0, 0, 5, "Out", None),
     ("OutDur", "slider", 0.5, 0, 5, "Out", None),
 ]
-TEXT_LABELS = {"InDelay": "In Delay (s)", "InDur": "In Duration (s)", "Stagger": "Stagger (s per character)", "Engine": "Engine",
+TEXT_LABELS = {"InDelay": "In Delay (s)", "InDur": "In Duration (s)", "Stagger": "Stagger (s per letter / word / line)", "Engine": "Engine",
                "Stiff": "Spring Stiffness", "Damp": "Spring Damping", "Over": "Overshoot", "Fade": "Opacity At Start",
                "SlideDist": "Slide Distance (frac of width)", "SlideAngle": "Slide Angle (direction of start offset)",
                "Scale": "Scale At Start", "Rot": "Rotation At Start (deg)", "Blur": "Blur At Start", "HasOut": "Enable Out",
@@ -206,7 +218,7 @@ TEXT_LABELS = {"InDelay": "In Delay (s)", "InDur": "In Duration (s)", "Stagger":
 
 def text_macro(unit):
     P = {"letter": "Character", "word": "Word", "line": "Line"}[unit]
-    d = {"letter": 0.04, "word": 0.08, "line": 0.15}[unit]
+    d = {"letter": 0.04, "word": 0.1, "line": 0.2}[unit]
     user = [(u[0], u[1], d if u[0] == "Stagger" else u[2], *u[3:]) for u in TEXT_USER]
     N = lambda name, typ, pos, **k: Node(name, typ, pos, **k)
     N = lambda name, typ, pos, **k: Node(name, typ, pos, **k)
@@ -218,7 +230,7 @@ def text_macro(unit):
              HorizontalJustificationNew=3, Red1=1.0, Green1=1.0, Blue1=1.0, Alpha1=1.0),
              links={"StyledText": ("UIT_Follower", "StyledText")}),
         Node("UIT_Follower", "StyledTextFollower", (110, 0), values=dict(Order=0, TransformRotation=1, TransformSize=1),
-             expr={"Delay": 'UIT_Ctrl.Stagger * comp:GetPrefs("Comp.FrameFormat.Rate")', "Text": "UIT_Ctrl.Text"},
+             expr={"Delay": DELAY_EXPR[unit], "Text": "UIT_Ctrl.Text"},
              links={P + "Offset": ("UIT_Vector", "Position"), P + "AngleZ": ("UIT_AngleZ", "Result"), P + "SizeX": ("UIT_Scale", "Result"),
                     P + "SizeY": ("UIT_Scale", "Result"), "Opacity1": ("UIT_Opacity", "Result"),
                     "SoftnessX1": ("UIT_Blur", "Result"), "SoftnessY1": ("UIT_Blur", "Result")}),
@@ -226,7 +238,7 @@ def text_macro(unit):
              expr={"Angle": "UIT_Ctrl.SlideAngle"}, links={"Distance": ("UIT_Dist", "Result")}),
         # ONE long expression (the amount a: 0 settled .. 1 fully offset); everything else is a tiny linked Calculation,
         # so Fusion parses the long text once per letter instead of five times (S10: 57 -> 28 ms for 12 letters).
-        N("UIT_Amt", "Calculation", (330, 0), expr={"FirstOperand": text_expr("a")}),
+        N("UIT_Amt", "Calculation", (330, 0), expr={"FirstOperand": text_expr("a", unit)}),
         mul("UIT_Dist", (440, 0), "UIT_Amt", "UIT_Ctrl.SlideDist"),
         mul("UIT_PreOp", (440, 66), "UIT_Amt", "(1-UIT_Ctrl.Fade)"),
         N("UIT_Opacity", "Calculation", (550, 66), values={"Operator": 5, "SecondOperand": 1}, links={"FirstOperand": ("UIT_PreOp", "Result")}),   # Second - First = 1 - a*(1-Fade)

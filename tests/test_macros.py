@@ -58,6 +58,7 @@ for path in sorted(os.listdir(os.path.join(ROOT, "dist/templates"))):
     check(f"{path}: every link targets an existing node/output", all(op in nodes and src in kk(op) for op, src in links))
     pos = re.findall(r"OperatorInfo \{ Pos = \{ (-?\d+), (-?\d+) \}", s)
     is_text = "Text" in path
+    check(f"{path}: no raw newline inside any expression string", not [l for l in s.split("\n") if "Expression = " in l and l.count('"') - l.count('\\"') % 2 and (l.count('"') - l.count('\\"')) % 2])
     check(f"{path}: nodes at distinct positions (readable graph)", len(pos) == len(set(pos)) == len(nodes))
     check(f"{path}: expression length within limits (<90 chars, text <2300)", all(len(e) < (2300 if is_text else 90) for e in re.findall(EXPR, s)))
     # DAG: forward-only (no cycles) through links+expressions
