@@ -94,16 +94,18 @@ def unit_checks(macro, texts, unit):
     for text in texts:
         setup(0, text=text, HasOut=1.0, Engine=0.0, Stagger=0.1)
         d_lua = float(lua.execute("return " + delay)) / 24                      # follower delay per character, seconds
-        if unit == "word":
-            n = len(text.split()); L = (re.search(r"\S+\s*$", text).start()) if text.strip() else 0
-        else:
-            n = max(1, len([x for x in text.split("\n") if x])); L = text.rfind("\n") + 1
+        n = len(text.split()) if unit == "word" else max(1, len([q for q in text.split("\n") if q]))
+        L = len(text) - 1                                                        # last CHARACTER: opacity is per character
         d_exp = 0.1 * n / max(1, len(text))
         check(f"{macro} '{text[:12]!r}': per-character delay = Stagger*units/chars ({d_lua:.4f}s)", near(d_lua, d_exp, 1e-6))
         sh = L * d_exp * 24
         setup(119 - sh, text=text, HasOut=1.0, Engine=0.0, Stagger=0.1); end = float(lua.execute("return " + amt))
         setup(116 - sh, text=text, HasOut=1.0, Engine=0.0, Stagger=0.1); early = float(lua.execute("return " + amt))
-        check(f"{macro} '{text[:12]!r}': last {unit} fully out on the last frame, not before frame ~117 (a={end:.3f}, a@-3f={early:.3f})", end > 0.999 and early < 0.999)
+        check(f"{macro} '{text[:12]!r}': LAST CHARACTER fully out on the last frame (a={end:.3f}) and not before frame ~117 (a@-3f={early:.3f})", end > 0.999 and early < 0.999)
+        # the last unit's own motion may finish early by (unit length - 1) * d at most
+        first = len(text) - len((text.split()[-1] if unit == "word" else text.split("\n")[-1]))
+        lag_frames = (L - first) * d_exp * 24
+        check(f"{macro} '{text[:12]!r}': last unit's slide finishes at most 7 frames early ({lag_frames:.1f})", lag_frames <= 7)
 unit_checks("SMK2_TextWord", ["ONE TWO THREE", "HELLO", "A", "ONE TWO"], "word")
 unit_checks("SMK2_TextLine", ["LINE ONE\nLINE TWO\nLINE THREE", "HELLO", "A", "AB\nCD"], "line")
 print(f"text expressions: {passed} passed, {failed} failed"); sys.exit(1 if failed else 0)

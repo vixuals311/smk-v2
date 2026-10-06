@@ -162,10 +162,10 @@ def progress(kind):
 # input is ignored; inside Calculation it sees each letter's own delayed time, and costs ~19 ms/frame for 12
 # letters vs 107 ms for Fuse modifiers. Everything is in seconds, clip-relative (comp.RenderStart/RenderEnd).
 # ---------------------------------------------------------------------------------------------------
-UNIT_DEF = {  # Lua prelude: L = 0-based char index where the LAST unit starts, d = follower delay per character (s)
+UNIT_DEF = {  # Lua prelude: L = 0-based index of the LAST CHARACTER (opacity is per character, so Out must finish for it), d = follower delay per character (s)
     "letter": 'local s=U.Text.Value local L=#s-1 local d=U.Stagger ',
-    "word": 'local s=U.Text.Value local L=(s:find("%S+%s*$") or 1)-1 local d=U.Stagger*select(2,s:gsub("%S+",""))/math.max(1,#s) ',
-    "line": 'local s=U.Text.Value local L=(s:find("[^\\n]*$") or 1)-1 local d=U.Stagger*math.max(1,select(2,s:gsub("[^\\n]+","")))/math.max(1,#s) ',
+    "word": 'local s=U.Text.Value local L=#s-1 local d=U.Stagger*select(2,s:gsub("%S+",""))/math.max(1,#s) ',
+    "line": 'local s=U.Text.Value local L=#s-1 local d=U.Stagger*math.max(1,select(2,s:gsub("[^\\n]+","")))/math.max(1,#s) ',
 }
 DELAY_EXPR = {  # follower Delay (frames) = d * frame rate; same d as in the amount expression
     "letter": 'UIT_Ctrl.Stagger * comp:GetPrefs("Comp.FrameFormat.Rate")',
