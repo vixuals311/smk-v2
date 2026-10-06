@@ -60,12 +60,13 @@ for path in sorted(os.listdir(os.path.join(ROOT, "dist/templates"))):
     is_text = "Text" in path
     check(f"{path}: no raw newline inside any expression string", not [l for l in s.split("\n") if "Expression = " in l and l.count('"') - l.count('\\"') % 2 and (l.count('"') - l.count('\\"')) % 2])
     check(f"{path}: nodes at distinct positions (readable graph)", len(pos) == len(set(pos)) == len(nodes))
-    check(f"{path}: expression length within limits (<90 chars, text <2300)", all(len(e) < (2300 if is_text else 90) for e in re.findall(EXPR, s)))
+    check(f"{path}: expression length within limits (<90 chars; text and UI Block <2300)", all(len(e) < (2300 if (is_text or "UIBlock" in path) else 90) for e in re.findall(EXPR, s)))
     # DAG: forward-only (no cycles) through links+expressions
     deps = {n: set() for n in nodes}
     for n in nodes:
         block = re.search(rf"^\t{{4}}{n} = [\w.]+ \{{(.*?)^\t{{4}}\}},", s, re.M | re.S).group(1)
         deps[n] |= set(re.findall(r'SourceOp = "(\w+)"', block)) | {m for m in nodes if re.search(rf"\b{m}\.", " ".join(re.findall(EXPR, block)))}
+    for n in deps: deps[n].discard(n)   # a tool's Style expression may read its own Font input (another input of the same tool; verified in Resolve in Phase 5 F2)
     def cyc(n, seen=()):
         return n in seen or any(cyc(d, seen + (n,)) for d in deps[n])
     check(f"{path}: acyclic graph", not any(cyc(n) for n in nodes))

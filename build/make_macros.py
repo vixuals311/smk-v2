@@ -85,19 +85,38 @@ TIMING = [("InDelay", "In Delay (s)"), ("InDur", "In Duration (s)"), ("HasOut", 
           ("OutDur", "Out Duration (s)"), ("Index", "Index"), ("Stagger", "Stagger (s)"), ("ClipLen", "Clip Length (s, 0=auto)")]
 COLOR = lambda k: [(k + c, c2) for c, c2 in zip("RGBA", ("Red", "Green", "Blue", "Alpha"))]
 
+# Font weight. The Inspector's Style combo on a published Font control writes nothing useful (the macro's real `Style` input is not what
+# it edits), and an invalid font/style pair makes the render FAIL. So the weight is an ordinary Weight combo on the holder node and
+# the tool's Style is an expression of it. For Open Sans every weight is a real style; for common system families that only ship
+# Regular / Bold / Italic / Bold Italic the weight is mapped to the nearest valid style; every other font gets "Regular" (always safe).
+WEIGHT_ITEMS = ["Light", "Regular", "Medium", "SemiBold", "Bold", "ExtraBold", "Italic", "Bold Italic"]
+WEIGHT_DEFAULT = 4   # Bold
+FOUR_STYLE_FAMILIES = ["Arial", "Times New Roman", "Verdana", "Georgia", "Consolas", "Comic Sans MS", "Segoe UI", "Tahoma", "Calibri",
+                       "Cambria", "Courier New", "Trebuchet MS"]
+def style_expr(weight_ref, font_ref):
+    items = ",".join('"%s"' % i for i in WEIGHT_ITEMS)
+    fam = ",".join('["%s"]=1' % f for f in FOUR_STYLE_FAMILIES)
+    return ("(function() local w={%s} local s=w[math.floor(%s+0.5)+1] or \"Regular\" local f=%s "
+            'if f=="Open Sans" then return s end local fam={%s} '
+            'if fam[f] then if s=="Light" or s=="Regular" or s=="Medium" then return "Regular" elseif s=="Italic" or s=="Bold Italic" then return s else return "Bold" end end '
+            'return "Regular" end)()') % (items, weight_ref, font_ref, fam)
+
 def ui_block():
     shape_static = {f"{p}{k}": v for p in ("In", "Out") for k, v in (("Fade", 1.0), ("SlideDist", 0.0), ("Scale", 1.0), ("Rot", 0.0))}
     nodes = [
+        Node("UIB_Ctrl", "Background", (0, 132), user=[("Weight", "combo", WEIGHT_DEFAULT, 0, 0, "Card", WEIGHT_ITEMS)], values=dict(TopLeftAlpha=0.0)),
         Node("UIB_Shape", "Fuse.SMK2_Shape", (0, 0), values=dict(shape_static, UseFrameFormatSettings=1, Width=1920, Height=1080, FillAR=0.16, FillAG=0.2, FillAB=0.36, FillAA=1.0, BW=2, BCR=1, BCG=1, BCB=1, BCA=0.35)),
         Node("UIB_Label", "TextPlus", (0, 66), values=dict(UseFrameFormatSettings=1, Width=1920, Height=1080, Wrap=0, StyledText="Card", Font="Open Sans",
-             Style="Bold", Size=0.04, HorizontalJustificationNew=1, VerticalJustificationNew=3, HorizontalLeftCenterRight=0,
-             Red1=1.0, Green1=1.0, Blue1=1.0, Alpha1=1.0), expr={"Center": "Point(UIB_Shape.CX, UIB_Shape.CY)", "AngleZ": "UIB_Shape.Angle"}),
+             Size=0.04, HorizontalJustificationNew=1, VerticalJustificationNew=3, HorizontalLeftCenterRight=0,
+             Red1=1.0, Green1=1.0, Blue1=1.0, Alpha1=1.0), expr={"Center": "Point(UIB_Shape.CX, UIB_Shape.CY)", "AngleZ": "UIB_Shape.Angle", "Style": style_expr("UIB_Ctrl.Weight", "UIB_Label.Font.Value")}),
         Node("UIB_Merge", "Merge", (110, 33), links={"Background": ("UIB_Shape", "Output"), "Foreground": ("UIB_Label", "Output")}),
         Node("UIB_Animator", "Fuse.SMK2_Animator", (220, 33), links={"Image": ("UIB_Merge", "Output")},
              expr={"PivotX": "UIB_Shape.CX", "PivotY": "UIB_Shape.CY"}),
     ]
     m = Macro("SMK2_UIBlock", nodes, "UIB_Animator")
-    for k, n in (("StyledText", "Text"), ("Font", "Font"), ("Size", "Text Size")): m.publish("UIB_Label", k, n, "Card", key=f"Label_{k}")
+    for k, n in (("StyledText", "Text"), ("Font", "Font")): m.publish("UIB_Label", k, n, "Card", key=f"Label_{k}")
+    m.publish("UIB_Ctrl", "Weight", "Weight", "Card")
+    m.publish("UIB_Label", "Size", "Text Size", "Card", key="Label_Size")
     for i, (k, ch) in enumerate((("Red1", "R"), ("Green1", "G"), ("Blue1", "B"))):
         m.publish("UIB_Label", k, "Text Color" if i == 0 else "", "Card", group=1)
     for k, n in (("Shape", "Shape"), ("W", "Width (frac of frame width)"), ("H", "Height (frac of frame width)"), ("Radius", "Corner Radius"),
@@ -199,6 +218,7 @@ def text_expr(final, unit="letter"):
 
 TEXT_USER = [  # (id, kind, default, lo, hi, page, items)
     ("Text", "text", "SMK Text", 0, 0, "Text", None),
+    ("Weight", "combo", WEIGHT_DEFAULT, 0, 0, "Text", WEIGHT_ITEMS),
     ("InDelay", "slider", 0.0, 0, 5, "Motion", None), ("InDur", "slider", 0.5, 0, 5, "Motion", None),
     ("Stagger", "slider", 0.04, 0, 0.5, "Motion", None),
     ("Engine", "combo", 1, 0, 0, "Motion", ["Ease", "Spring", "Bounce", "Elastic", "Overshoot", "Inertia"]),
@@ -214,7 +234,7 @@ TEXT_LABELS = {"InDelay": "In Delay (s)", "InDur": "In Duration (s)", "Stagger":
                "Stiff": "Spring Stiffness", "Damp": "Spring Damping", "Over": "Overshoot", "Fade": "Opacity At Start",
                "SlideDist": "Slide Distance (frac of width)", "SlideAngle": "Slide Angle (direction of start offset)",
                "Scale": "Scale At Start", "Rot": "Rotation At Start (deg)", "Blur": "Blur At Start", "HasOut": "Enable Out",
-               "OutOffset": "Out Offset (s)", "OutDur": "Out Duration (s)", "Text": "Text"}
+               "OutOffset": "Out Offset (s)", "OutDur": "Out Duration (s)", "Text": "Text", "Weight": "Weight"}
 
 def text_macro(unit):
     P = {"letter": "Character", "word": "Word", "line": "Line"}[unit]
@@ -226,8 +246,9 @@ def text_macro(unit):
     nodes = [
         Node("UIT_Ctrl", "Background", (0, 132), user=user, values=dict(TopLeftAlpha=0.0)),
         Node("UIT_Text", "TextPlus", (0, 0), values=dict(UseFrameFormatSettings=1, Width=1920, Height=1080, Wrap=1,
-             LayoutRotation=1, TransformRotation=1, Font="Open Sans", Style="Bold", Size=0.08, VerticalJustificationNew=3,
+             LayoutRotation=1, TransformRotation=1, Font="Open Sans", Size=0.08, VerticalJustificationNew=3,
              HorizontalJustificationNew=3, Red1=1.0, Green1=1.0, Blue1=1.0, Alpha1=1.0),
+             expr={"Style": style_expr("UIT_Ctrl.Weight", "UIT_Text.Font.Value")},
              links={"StyledText": ("UIT_Follower", "StyledText")}),
         Node("UIT_Follower", "StyledTextFollower", (110, 0), values=dict(Order=0, TransformRotation=1, TransformSize=1),
              expr={"Delay": DELAY_EXPR[unit], "Text": "UIT_Ctrl.Text"},
@@ -249,11 +270,11 @@ def text_macro(unit):
     ]
     m = Macro("SMK2_Text" + unit.capitalize(), nodes, "UIT_Text")
     m.publish("UIT_Ctrl", "Text", "Text", "Text")
-    m.publish("UIT_Text", "Font", "Font", "Text"); m.publish("UIT_Text", "Size", "Size", "Text")
+    m.publish("UIT_Text", "Font", "Font", "Text"); m.publish("UIT_Ctrl", "Weight", "Weight", "Text"); m.publish("UIT_Text", "Size", "Size", "Text")
     for i, k in enumerate(("Red1", "Green1", "Blue1")): m.publish("UIT_Text", k, "Text Color" if i == 0 else "", "Text", group=1)
     m.publish("UIT_Text", "Center", "Position", "Text")
     m.publish("UIT_Follower", "Order", "Order", "Motion", key="Follower_Order")
-    for uid, *_ in [u for u in TEXT_USER if u[0] != "Text"]: m.publish("UIT_Ctrl", uid, TEXT_LABELS[uid], next(u[5] for u in TEXT_USER if u[0] == uid))
+    for uid, *_ in [u for u in TEXT_USER if u[0] not in ("Text", "Weight")]: m.publish("UIT_Ctrl", uid, TEXT_LABELS[uid], next(u[5] for u in TEXT_USER if u[0] == uid))
     return m
 
 MACROS = {"SMK2_TextLetter": lambda: text_macro("letter"), "SMK2_TextWord": lambda: text_macro("word"), "SMK2_TextLine": lambda: text_macro("line"),
