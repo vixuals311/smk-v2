@@ -56,7 +56,7 @@ __KERNEL__ void SMK2CurlKernel(__CONSTANTREF__ SMK2CurlParams *p, __TEXTURE2D__ 
       SMK_OVER(c, k, cvg);
     }
   }
-  if (t >= 0.0f && t <= p->R) {
+  if (t >= 0.0f && t <= p->R + 0.5f) {
     float phi = asinf(fminf(fmaxf(t / p->R, 0.0f), 1.0f));
     float edge = fminf(fmaxf(p->R - t + 0.5f, 0.0f), 1.0f);
     float s1 = p->R * phi;

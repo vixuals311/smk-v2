@@ -29,7 +29,7 @@ function smk.curlShade(P, x, y, src, bg)
     end
   end
   -- B / C: on the cylinder
-  if t >= 0 and t <= P.R then
+  if t >= 0 and t <= P.R + 0.5 then
     local phi = math.asin(smk.clamp(t / P.R, 0, 1))
     local edge = smk.clamp(P.R - t + 0.5, 0, 1)
     local s1 = P.R * phi

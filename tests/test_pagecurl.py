@@ -20,6 +20,9 @@ curlpx = [px(P(), x, 36) for x in range(64, 75)]
 check("cylinder region is opaque (away from the rim)", all(c[3] > 0.99 for c in curlpx[:8]))
 check("cylinder shading varies along the roll", len({round(c[0], 3) for c in curlpx[:9]}) > 4)
 check("past the roll radius the page is gone (transparent without a reveal)", px(P(), 90, 36)[3] == 0 and px(P(), 125, 36)[3] == 0)
+# roll silhouette is anti-aliased on the far side too: a pixel centre 0.25 px beyond t = R gets partial coverage (was cut by t <= R)
+aa = px(P(u0=64.25, R=10), 74, 36)    # centre x = 74.5 -> t = 10.25 -> coverage 0.25
+check("roll crest is anti-aliased beyond the radius (partial alpha, not a hard step)", 0.05 < aa[3] < 0.95 and px(P(u0=64.25, R=10), 76, 36)[3] == 0)
 check("reveal image shows where the page is gone", px(P(hasBG=1), 90, 36)[0] > 0.99 and px(P(hasBG=1), 90, 36)[3] > 0.99)
 te = min(0, math.pi * 10 - 64)   # flap leading edge at t = -33.4 -> x = 30.6
 check("drop shadow darkens the page next to the flap's leading edge, fading away", px(P(), 29, 36)[2] < px(P(), 12, 36)[2] and abs(px(P(), 2, 36)[2] - 0.8 * (1 - 0.5 * math.exp((2.5 - 64 - te) / 12))) < 1e-3)

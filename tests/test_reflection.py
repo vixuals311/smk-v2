@@ -44,6 +44,13 @@ check("blur growth is a ratio (resolution independent)", abs(frame(0, BlurGrow=4
 check("ripple phase advances in seconds, clip-relative", abs(frame(0, RippleSpeed=1.0)[0].phase) < 1e-9 and abs(frame(24, RippleSpeed=1.0)[0].phase - 2 * math.pi) < 1e-6 and abs(frame(12, RippleSpeed=1.0)[0].phase - math.pi) < 1e-6)
 check("quality maps to taps", [frame(0, Quality=float(i))[0].samples for i in range(3)] == [16, 32, 64])
 check("one input texture", list(added.values()) == ["src"])
+lua2.execute("IMG.DataWindow = {left=0,bottom=0,right=1920,top=200}")
+b, out, _ = frame(0, Base=0.05)
+check("DoD padding: window grows below the baseline reach and sideways by blur", out.DataWindow is not None and out.DataWindow.bottom == -348 and out.DataWindow.top == 200 and out.DataWindow.left == -18 and out.DataWindow.right == 1938)
+check("DoD padding: kernel origin/size follow the window", b.off[1] == -18 and b.off[2] == -348 and b.osize[1] == 1956 and b.osize[2] == 548)
+b, out, _ = frame(0, Base=0.5, BlurGrow=0.0)
+check("reflection fits inside the window: no padding", out.DataWindow is None and b.off[1] == 0 and b.osize[1] == 1920)
+lua2.execute("IMG.DataWindow = nil")
 check("PreCalc skips the GPU", frame(0, pre=True)[0] is None)
 check("GPU failure passes the input through", frame(0, fail=True)[1] is not None)
 check("no input: nil output", frame(0, noimg=True)[1] is None)
@@ -58,7 +65,7 @@ def scen():
                 phase=random.uniform(0, 6.28), opacity=random.choice([1, 0.7]), tint=[random.random() for _ in range(3)] + [random.choice([1, 0.8])])
 scens = [scen() for _ in range(5)]
 order = ["keepOrig", "samples"]; forder = ["baseY", "gap", "fadeLen", "fadePow", "reflOpacity", "blur0", "blurGrow", "rippleAmp", "rippleFreq", "phase", "opacity"]
-init = lambda s: "{ {%d,%d}, " % (W, H) + ", ".join(str(s[k]) for k in order) + ", " + ", ".join(kparity.F(s[k]) for k in forder) + ", " + kparity.A(s["tint"]) + " }"
+init = lambda s: "{ {%d,%d}, {0,0}, {%d,%d}, " % (W, H, W, H) + ", ".join(str(s[k]) for k in order) + ", " + ", ".join(kparity.F(s[k]) for k in forder) + ", " + kparity.A(s["tint"]) + " }"
 sfn = ft.src_fn(lua, bimg, W, H)
 res = kparity.run(fuse, "SMK2ReflectSource", "SMK2ReflectParams", "SMK2ReflectKernel", scens, init, W, H, {"IMG0": bimg}, ["IMG0"],
                   lambda i, x, y: tuple(smk.reflectShade(ft.table(lua, scens[i], size=[W, H]), x, y, sfn)))

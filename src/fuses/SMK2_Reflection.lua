@@ -9,6 +9,8 @@ FuRegisterClass("SMK2_Reflection", CT_Tool, {
 
 SMK2ReflectParams = [[
   int size[2];
+  int off[2];
+  int osize[2];
   int keepOrig;
   int samples;
   float baseY;
@@ -30,11 +32,11 @@ SMK2ReflectSource = [[
 __KERNEL__ void SMK2ReflectKernel(__CONSTANTREF__ SMK2ReflectParams *p, __TEXTURE2D__ src, __TEXTURE2D_WRITE__ dst)
 {
   DEFINE_KERNEL_ITERATORS_XY(x, y);
-  if (x >= p->size[0] || y >= p->size[1]) return;
+  if (x >= p->osize[0] || y >= p->osize[1]) return;
   float W = (float)p->size[0], H = (float)p->size[1];
-  float px = (float)x + 0.5f, py = (float)y + 0.5f;
+  float px = (float)(x + p->off[0]) + 0.5f, py = (float)(y + p->off[1]) + 0.5f;
   float or_ = 0.0f, og = 0.0f, ob = 0.0f, oa = 0.0f;
-  if (p->keepOrig > 0) { float4 s0 = _tex2DVecN(src, px / W, py / H, 15); or_ = s0.x; og = s0.y; ob = s0.z; oa = s0.w; }
+  if (p->keepOrig > 0 && px >= 0.0f && py >= 0.0f && px <= W && py <= H) { float4 s0 = _tex2DVecN(src, px / W, py / H, 15); or_ = s0.x; og = s0.y; ob = s0.z; oa = s0.w; }
   float rr_ = 0.0f, rg_ = 0.0f, rb_ = 0.0f, ra_ = 0.0f;
   float d = (p->baseY - p->gap) - py;
   if (d > 0.0f && d < p->fadeLen) {
@@ -112,19 +114,45 @@ function SMK2_ReflectPrep(req, w, h)
   local t = smk.framesToSeconds(req.Time, rs, rate)
   local px = w / 1920
   local samples = ({ 16, 32, 64 })[math.floor(g(req, "Quality") + 0.5) + 1] or 32
-  return { size = { w, h }, keepOrig = g(req, "KeepOrig") > 0.5 and 1 or 0, samples = samples,
+  return { size = { w, h }, off = { 0, 0 }, osize = { w, h }, keepOrig = g(req, "KeepOrig") > 0.5 and 1 or 0, samples = samples,
     baseY = g(req, "Base") * h, gap = g(req, "Gap") * px, fadeLen = g(req, "Length") * px, fadePow = g(req, "FadePow"), reflOpacity = g(req, "ReflOpacity"),
     blur0 = g(req, "Blur0") * px, blurGrow = g(req, "BlurGrow") / 100,                                           -- growth is a ratio (px per px): resolution independent
     rippleAmp = g(req, "RippleAmp") * px, rippleFreq = g(req, "RippleFreq") / (100 * px), phase = 2 * math.pi * g(req, "RippleSpeed") * t,
     opacity = g(req, "Opacity"), tint = { g(req, "TintCR"), g(req, "TintCG"), g(req, "TintCB"), g(req, "TintCA") } }
 end
 
+-- How far the reflection reaches beyond the input window (px): below the lowest mirrored row, and sideways by ripple + blur.
+function SMK2_ReflectPad(req, w, h, dw)
+  local px = w / 1920
+  local base, gap, len = g(req, "Base") * h, g(req, "Gap") * px, g(req, "Length") * px
+  local dmax = math.min(len, math.max(h - base, 0))
+  local lowest = base - gap - dmax
+  local side = g(req, "RippleAmp") * px + g(req, "Blur0") * px + g(req, "BlurGrow") / 100 * dmax
+  side = side > 0 and (math.ceil(side) + 2) or 0
+  local bottom = math.max(0, math.ceil(dw.bottom - lowest) + 2)
+  if bottom <= 2 then bottom = (side > 0) and (side) or 0 end
+  return side, bottom
+end
+
 function Process(req)
   local img = I.Image:GetValue(req)
   if not img then OutImage:Set(req, nil) return end
-  local out = Image({ IMG_Like = img, IMG_DeferAlloc = true })
+  local out
+  local dw = img.DataWindow
+  local side, bottom = 0, 0
+  if dw then side, bottom = SMK2_ReflectPad(req, img.Width, img.Height, dw) end
+  if side > 0 or bottom > 0 then
+    -- output window = input data window grown below / sideways by the reflection reach (only IMG_DataWindow places an image, Phase 0 / 2b)
+    out = Image({ IMG_Like = img, IMG_DeferAlloc = true, IMG_DataWindow = ImgRectI(dw.left - side, dw.bottom - bottom, dw.right + side, dw.top) })
+  else
+    out = Image({ IMG_Like = img, IMG_DeferAlloc = true })
+  end
   if req:IsPreCalc() then OutImage:Set(req, out) return end        -- P0: DVIPComputeNode is nil on PreCalc requests
   local P = SMK2_ReflectPrep(req, img.Width, img.Height)
+  if side > 0 or bottom > 0 then
+    local ow = out.DataWindow
+    P.off = { ow.left, ow.bottom }; P.osize = { ow.right - ow.left, ow.top - ow.bottom }
+  end
   local ok, perr = pcall(function()
     local node = DVIPComputeNode(req, "SMK2ReflectKernel", SMK2ReflectSource, "SMK2ReflectParams", SMK2ReflectParams)
     local b = node:GetParamBlock(SMK2ReflectParams)
