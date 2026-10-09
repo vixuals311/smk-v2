@@ -1,4 +1,9 @@
-# Two-agent plan (parallel work without fighting over Resolve)
+# Agent plan — DECISION: one Resolve agent only (user, 2026-10)
+
+**Update:** we run a single agent (Agent A, Resolve QA). Agent B below is optional and NOT being run now; its repo-only tasks (manual generator, packaging, installer, stagger tool, licence review)
+will be done by the lead session between Resolve rounds instead. The section is kept for reference.
+
+# (reference) Two-agent plan
 
 Resolve can only be driven by **one** agent at a time (one app, one project database, UI focus) — two agents in Resolve crash it or corrupt each other's comps.
 So the split is by *what needs Resolve*:
