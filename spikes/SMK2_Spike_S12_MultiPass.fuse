@@ -1,0 +1,116 @@
+--[[--
+SMK2_Spike_S12_MultiPass.fuse — Phase 8, Spike S12
+QUESTION: Can ONE Fuse run several DVIPComputeNode sessions in sequence, feeding the output Image of one pass into the next (downsample -> blur -> upsample)?
+          If yes we can build pyramid glows / bloom / long shadows with a fixed small cost per pixel at any radius.
+HOW: Input image in, image out. "Method" picks the pipeline:
+       0 Control       one kernel, copy the input (must equal the input)
+       1 Down/Up       pass 1: box-downsample by 4 into an intermediate Image (W/4 x H/4); pass 2: bilinear upsample to full size (a soft 4x4-block image)
+       2 Down/Down/Up  as 1 with two downsample passes (by 4 then by 4 = 16x) and one upsample
+       3 Down/Blur/Up  pass 1 down by 4, pass 2 a 9-tap blur at the small size (second intermediate), pass 3 upsample
+     Every method prints [S12] timing-free diagnostics: intermediate Width/Height/Depth and whether each RunSession returned true.
+PASS: method 1 output looks like a blurred (blocky-soft) copy of the input; method 3 is visibly softer than 1; no console errors; the same result after the intermediate
+      Image is created with IMG_DeferAlloc = true (DEFERRED) or false (EAGER) — report which of the two works.
+Report: works per method (Y/N + error text), whether PreCalc needs guarding, ms/frame at 1080p and 4K cold for methods 0 / 1 / 3, and whether an intermediate Image can have a different size than the output.
+STATUS: UNVERIFIED — API names follow the Fuse SDK (Image(), DVIPComputeNode, AddInput/AddOutput); a failing method prints the error and falls back to the input.
+--]]--
+FuRegisterClass("SMK2_Spike_S12_MultiPass", CT_Tool, {
+  REGS_Name = "SMK2 Spike S12 MultiPass", REGS_Category = "Fuses\\SMK v2\\Spikes", REGS_OpIconString = "S12",
+  REG_NoPreCalcProcess = true, REG_Version = 1,
+})
+
+S12Params = [[
+  int size[2];
+  int outSize[2];
+  int factor;
+]]
+S12Copy = [[
+__KERNEL__ void S12CopyKernel(__CONSTANTREF__ S12Params *p, __TEXTURE2D__ src, __TEXTURE2D_WRITE__ dst)
+{
+  DEFINE_KERNEL_ITERATORS_XY(x, y);
+  if (x >= p->outSize[0] || y >= p->outSize[1]) return;
+  _tex2DVec4Write(dst, x, y, _tex2DVecN(src, ((float)x + 0.5f) / (float)p->outSize[0], ((float)y + 0.5f) / (float)p->outSize[1], 15));
+}
+]]
+S12Down = [[
+__KERNEL__ void S12DownKernel(__CONSTANTREF__ S12Params *p, __TEXTURE2D__ src, __TEXTURE2D_WRITE__ dst)
+{
+  DEFINE_KERNEL_ITERATORS_XY(x, y);
+  if (x >= p->outSize[0] || y >= p->outSize[1]) return;
+  float4 acc = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+  int f = p->factor;
+  for (int j = 0; j < f; ++j) for (int i = 0; i < f; ++i) {
+    float u = ((float)(x * f + i) + 0.5f) / (float)p->size[0], v = ((float)(y * f + j) + 0.5f) / (float)p->size[1];
+    float4 c = _tex2DVecN(src, u, v, 15);
+    acc.x += c.x; acc.y += c.y; acc.z += c.z; acc.w += c.w;
+  }
+  float k = 1.0f / (float)(f * f);
+  _tex2DVec4Write(dst, x, y, make_float4(acc.x * k, acc.y * k, acc.z * k, acc.w * k));
+}
+]]
+S12Blur = [[
+__KERNEL__ void S12BlurKernel(__CONSTANTREF__ S12Params *p, __TEXTURE2D__ src, __TEXTURE2D_WRITE__ dst)
+{
+  DEFINE_KERNEL_ITERATORS_XY(x, y);
+  if (x >= p->outSize[0] || y >= p->outSize[1]) return;
+  float4 acc = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+  for (int j = -1; j <= 1; ++j) for (int i = -1; i <= 1; ++i) {
+    float u = ((float)(x + i) + 0.5f) / (float)p->outSize[0], v = ((float)(y + j) + 0.5f) / (float)p->outSize[1];
+    float4 c = _tex2DVecN(src, u, v, 15);
+    acc.x += c.x; acc.y += c.y; acc.z += c.z; acc.w += c.w;
+  }
+  _tex2DVec4Write(dst, x, y, make_float4(acc.x / 9.0f, acc.y / 9.0f, acc.z / 9.0f, acc.w / 9.0f));
+}
+]]
+
+function Create()
+  InImage = self:AddInput("Image", "Image", { LINKID_DataType = "Image", LINK_Main = 1 })
+  InMethod = self:AddInput("Method", "Method", { LINKID_DataType = "Number", INPID_InputControl = "ComboControl", INP_Default = 1, INP_Integer = true,
+    { CCS_AddString = "0 Control (copy)" }, { CCS_AddString = "1 Down / Up" }, { CCS_AddString = "2 Down / Down / Up" }, { CCS_AddString = "3 Down / Blur / Up" } })
+  InDefer = self:AddInput("Deferred Intermediates", "Defer", { LINKID_DataType = "Number", INPID_InputControl = "CheckboxControl", INP_Default = 1 })
+  OutImage = self:AddOutput("Output", "Output", { LINKID_DataType = "Image", LINK_Main = 1 })
+end
+
+local function pass(req, name, src, kernel, sw, sh, dst, dw, dh, factor)
+  local node = DVIPComputeNode(req, name, kernel, "S12Params", S12Params)
+  local b = node:GetParamBlock(S12Params)
+  b.size = { sw, sh }; b.outSize = { dw, dh }; b.factor = factor or 1
+  node:SetParamBlock(b)
+  node:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR, TEX_ADDRESS_MODE_CLAMP, TEX_NORMALIZED_COORDS_TRUE)
+  node:AddInput("src", src); node:AddOutput("dst", dst)
+  local ok = node:RunSession(req)
+  print(string.format("[S12] pass %s %dx%d -> %dx%d RunSession=%s", name, sw, sh, dw, dh, tostring(ok)))
+  if not ok then error("RunSession failed: " .. name) end
+end
+
+function Process(req)
+  local img = InImage:GetValue(req)
+  if not img then OutImage:Set(req, nil) return end
+  local W, H = img.Width, img.Height
+  local out = Image({ IMG_Like = img, IMG_DeferAlloc = true })
+  if req:IsPreCalc() then OutImage:Set(req, out) return end
+  local m = math.floor(InMethod:GetValue(req).Value + 0.5)
+  local defer = InDefer:GetValue(req).Value > 0.5
+  local function mid(w, h) return Image({ IMG_Width = w, IMG_Height = h, IMG_Depth = img.Depth, IMG_DeferAlloc = defer }) end
+  local ok, err = pcall(function()
+    if m == 0 then pass(req, "S12CopyKernel", img, S12Copy, W, H, out, W, H, 1)
+    elseif m == 1 then
+      local w4, h4 = math.floor(W / 4), math.floor(H / 4); local a = mid(w4, h4)
+      pass(req, "S12DownKernel", img, S12Down, W, H, a, w4, h4, 4)
+      pass(req, "S12CopyKernel", a, S12Copy, w4, h4, out, W, H, 1)
+    elseif m == 2 then
+      local w4, h4 = math.floor(W / 4), math.floor(H / 4); local w16, h16 = math.floor(w4 / 4), math.floor(h4 / 4)
+      local a, b = mid(w4, h4), mid(w16, h16)
+      pass(req, "S12DownKernel", img, S12Down, W, H, a, w4, h4, 4)
+      pass(req, "S12DownKernel", a, S12Down, w4, h4, b, w16, h16, 4)
+      pass(req, "S12CopyKernel", b, S12Copy, w16, h16, out, W, H, 1)
+    else
+      local w4, h4 = math.floor(W / 4), math.floor(H / 4)
+      local a, b = mid(w4, h4), mid(w4, h4)
+      pass(req, "S12DownKernel", img, S12Down, W, H, a, w4, h4, 4)
+      pass(req, "S12BlurKernel", a, S12Blur, w4, h4, b, w4, h4, 1)
+      pass(req, "S12CopyKernel", b, S12Copy, w4, h4, out, W, H, 1)
+    end
+  end)
+  if not ok then print("[S12] method " .. m .. " FAILED: " .. tostring(err)); out = img end
+  OutImage:Set(req, out)
+end

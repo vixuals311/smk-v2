@@ -19,7 +19,7 @@ function Pixel(t) return t end
 function Image(a) local o={Width=a.IMG_Width, Height=a.IMG_Height}; function o:Fill() end; return o end
 LAST = nil
 function DVIPComputeNode(req, k, src, pname, pdef)
-  assert(pdef:find("float pts%[192%]") and src:find("__KERNEL__"))
+  assert(pdef:find("float pts%[384%]") and src:find("__KERNEL__"))
   local n = {block={}}
   function n:GetParamBlock() return self.block end
   function n:SetParamBlock(b) LAST = b end
@@ -94,16 +94,16 @@ else:
         ka, ma = mk(); kb, mb = mk()
         pul = []
         for _ in range(3): pul += [random.uniform(10, 118), random.uniform(8, 64), random.uniform(2, 8), random.choice([0, 0.5, 1.0])]
-        flat = [v for q in P for v in q] + [0.0] * (192 - 2 * n)
+        flat = [v for q in P for v in q] + [0.0] * (384 - 2 * n)
         return dict(n=n, kindA=ka, kindB=kb, total=tot, thick=random.uniform(1, 8), trim=random.choice([1, 0.7, 0.3, 1]), dash=random.choice([0, 0, 12]),
-                    dgap=random.uniform(4, 10), gradOn=random.choice([0, 1]), opacity=random.choice([1, 0.6]), pts=flat, cum=cum + [tot] * (96 - n),
+                    dgap=random.uniform(4, 10), gradOn=random.choice([0, 1]), opacity=random.choice([1, 0.6]), pts=flat, cum=cum + [tot] * (192 - n),
                     mkA=ma, mkB=mb, pul=pul, pulCol=[random.random() for _ in range(3)] + [random.choice([1, 0.8])],
                     colA=[random.random() for _ in range(3)] + [1], colB=[random.random() for _ in range(3)] + [random.choice([1, 0.7])])
     scens = [scen() for _ in range(8)]
     F = lambda v: (lambda s: s if ("." in s or "e" in s) else s + ".0")(f"{float(v):.9g}") + "f"
     A = lambda a: "{" + ",".join(F(v) for v in a) + "}"
     ci = lambda s: (f"{{ {{{W},{H}}}, {s['n']}, {s['kindA']}, {s['kindB']}, {F(s['total'])}, {F(s['thick'])}, {F(s['trim'])}, {F(s['dash'])}, {F(s['dgap'])}, "
-                    f"{F(s['gradOn'])}, {F(s['opacity'])}, {A(s['pts'])}, {A(s['cum'])}, {A(s['mkA'])}, {A(s['mkB'])}, {A(s['pul'])}, {A(s['pulCol'])}, {A(s['colA'])}, {A(s['colB'])} }}")
+                    f"{F(s['gradOn'])}, {F(s['opacity'])}, 1.0f, {A(s['pts'])}, {A(s['cum'])}, {A(s['mkA'])}, {A(s['mkB'])}, {A(s['pul'])}, {A(s['pulCol'])}, {A(s['colA'])}, {A(s['colB'])} }}")
     fields = re.search(r"SMK2ConnParams = \[\[(.*?)\]\]", fuse, re.S).group(1).replace("\n", " ")
     c = f"""
 #include <math.h>

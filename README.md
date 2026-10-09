@@ -9,6 +9,6 @@ for t in tests/test_*.py; do python $t; done
 python scripts/install.py        # copy Fuses into Resolve
 ```
 
-**Status:** Phases 0–6 done (Callout parked). Phase 7: `SMK2_Connector` (handles, spline points, magnets) and `SMK2_Look` (glow, outline, shine, gradient) built and unit-tested, awaiting `docs/PHASE7_GATE.md`. Two-agent plan: `docs/AGENTS_PLAN.md`.
+**Status:** Phases 0–7 done (Callout parked). Phase 8 built and unit-tested, awaiting `docs/PHASE8_GATE.md`: `SMK2_Relief` (bevel/emboss), `SMK2_Reflection`, `SMK2_PageCurl`, Look upgrades (glow only, spread, adaptive quality), Connector 192-point paths, spike S12 (multi-pass GPU). Two-agent plan: `docs/AGENTS_PLAN.md`.
 
 This repo was split out of the v1 repo's `smk-v2/` folder.

@@ -1,7 +1,7 @@
 -- smk_connector: connector path builder (CPU) + reference pixel function (oracle for the GPU kernel).
--- Pixel space, y up. Needs smk_core. Paths are polylines of <= 96 points with cumulative arclength (px).
+-- Pixel space, y up. Needs smk_core. Paths are polylines of <= 192 points with cumulative arclength (px).
 -- SMK2_MOD_BEGIN
-smk.CONN_MAXP = 96
+smk.CONN_MAXP = 192
 local function hyp(a, b) return math.sqrt(a * a + b * b) end
 local function cov(d) return smk.clamp(0.5 - d, 0, 1) end
 
@@ -50,15 +50,17 @@ function smk.connPath(S)
     local da = na or { (pb[1] - pa[1]) / dist, (pb[2] - pa[2]) / dist }
     local db = nb or { (pa[1] - pb[1]) / dist, (pa[2] - pb[2]) / dist }
     local c1, c2 = { pa[1] + da[1] * k, pa[2] + da[2] * k }, { pb[1] + db[1] * k, pb[2] + db[2] * k }
-    for i = 0, 63 do add(bez(pa, c1, c2, pb, i / 63)) end
+    local N = (dist > 800) and 127 or 63                                           -- long paths (4K) need more points to stay smooth
+    for i = 0, N do add(bez(pa, c1, c2, pb, i / N)) end
   elseif S.mode == 4 then
-    for i = 0, 63 do add(bez(pa, S.h1, S.h2, pb, i / 63)) end
+    local N = (dist > 800) and 127 or 63
+    for i = 0, N do add(bez(pa, S.h1, S.h2, pb, i / N)) end
   elseif S.mode == 5 then
     local P = { pa }
     for _, m in ipairs(S.mid) do P[#P + 1] = m end
     P[#P + 1] = pb
     local segs = #P - 1
-    local per = math.max(3, math.floor(90 / segs))
+    local per = math.max(3, math.floor(((dist > 800) and 180 or 90) / segs))
     local tn = (S.tension or 1) / 6
     for i = 1, segs do
       local p0, p1, p2, p3 = P[math.max(i - 1, 1)], P[i], P[i + 1], P[math.min(i + 2, #P)]

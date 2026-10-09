@@ -22,8 +22,8 @@ SMK2ConnParams = [[
   float gradOn;
   float opacity;
   float visA;
-  float pts[192];
-  float cum[96];
+  float pts[384];
+  float cum[192];
   float mkA[9];
   float mkB[9];
   float pul[12];
@@ -204,7 +204,7 @@ function SMK2_ConnPrep(req, w, h)
   local es = g(req, "EndSize") * px
   local colA = col(req, "LCA"); local colB = (g(req, "GradOn") > 0.5) and col(req, "LCB") or colA
   local flat, cum = {}, {}
-  for i = 1, 96 do
+  for i = 1, 192 do
     local q = path.pts[i] or path.pts[path.n]
     flat[2 * i - 1], flat[2 * i] = q[1], q[2]; cum[i] = path.cum[i] or path.total
   end

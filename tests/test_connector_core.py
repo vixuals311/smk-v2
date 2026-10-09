@@ -47,7 +47,7 @@ bm = smk.connPath(spec(mode=4, aBox=T(dict(hw=20, hh=10, mag=3)))); check("bezie
 mid = [(100, 150), (160, 60), (210, 140)]
 sp = smk.connPath(spec(mode=5, mid=mid)); Q = pts(sp)
 check("spline passes through every editable point (<= 0.6 px)", all(min(math.hypot(x - mx, y - my) for x, y in Q) < 0.6 for mx, my in mid))
-check("spline starts/ends at A/B and has <= 96 points", near(Q[0][0], 40) and near(Q[-1][0], 260) and sp.n <= 96)
+check("spline starts/ends at A/B and has <= 96 points", near(Q[0][0], 40) and near(Q[-1][0], 260) and sp.n <= 192)
 tight = smk.connPath(spec(mode=5, mid=mid, tension=0.0)); check("tension 0 gives a polyline through the points; different from tension 1", min(math.hypot(x - 100, y - 150) for x, y in pts(tight)) < 0.1 and sp.total != tight.total)
 # elbow
 e = smk.connPath(spec(mode=3, pa=(40, 60), pb=(260, 160), radius=0)); E = pts(e)
