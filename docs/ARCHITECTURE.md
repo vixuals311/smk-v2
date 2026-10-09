@@ -87,3 +87,10 @@ and falls back to Regular for unknown fonts. UTF-8: the text macros now count ch
   target) or a side port, with an outward gap, and the curve's end tangents follow the edge normal. Ends follow other elements through expressions on the Point inputs (to be confirmed in K6).
 * **Look**: single pass; glow = golden-angle spiral gather with a Gaussian-like weight (24–160 samples), outline = 3 rings × 16 taps of the neighbourhood alpha, shine = smoothstep band masked by alpha, gradient overlay masked by alpha.
   Multi-pass (pyramid) glow and long shadow are deferred until a multi-pass DVIP spike.
+
+## Phase 7–8 results (2026-10)
+- Connector (magnets, Bezier handles, spline points) and Look passed; Look pads its output with `IMG_DataWindow` (glow/outline are not clipped). Polyline cap is now 192 points (4K spline deviation 0.35 px, cost unchanged).
+- Relief, Reflection, Page Curl passed (clean-room, inspired by NeoEdit-style effects). Reflection pads its data window; Page Curl accepts two source textures (`AddInput("src")` + `AddInput("bg")`) and anti-aliases the crest.
+- **S12 passed: a Fuse may chain several `DVIPComputeNode` sessions, feeding an intermediate `Image` (e.g. W/4 x H/4, deferred or eager) into the next pass; cost is about one pass.** Multi-pass is now the route for pyramid glow, bloom, long shadow and large blurs (D8-001).
+- Gotcha: a Shape source is empty on frame 0 and the last frames (its Out), so single-frame checks on Shape-fed effects must avoid those frames.
+- Each pixel Fuse ships a Lua reference pixel function and a GPU kernel compared pixel-for-pixel in `tests/` (`tests/kparity.py`); results in Resolve are measured with scripting only.
