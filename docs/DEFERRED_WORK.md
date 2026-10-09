@@ -6,7 +6,7 @@
 | D2-002 | In-kernel motion blur | Phase 0 S6: native Transform blur is faster/cleaner in chains | DEFERRED (use native Transform) |
 | D2-003 | DoD shrink | Phase 0 S4: `DataWindow` assignment ignored | DEFERRED |
 | D2-004 | Merge Pivot via script/Rig | Phase 1b R5: Merge has no scriptable Pivot input | OPEN |
-| D2-005 | Shape: arrow, glass/backdrop blur, inverted (spotlight) mode, gradient stops > 2 | Not in first slice | OPEN |
+| D2-005 | Shape: arrow (line end dot done in Phase 6), glass/backdrop blur, inverted (spotlight) mode, gradient stops > 2 | Not in first slice | OPEN |
 | D2-006 | SMK Look (glow, outline, shine, long shadow) | Phase 2 second slice | OPEN |
 | D2-007 | CPU fallback for GPU failure in Shape | Shape outputs transparent on GPU failure (oracle is too slow for full frames) | OPEN |
 | D2-008 | Viewer-fps measurement automation | Needs viewer access; user measures manually | OPEN |

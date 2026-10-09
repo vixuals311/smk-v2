@@ -35,6 +35,11 @@ function smk.shapeSdf(P, qx, qy)
       m = smk.clamp(P.trim * 2 * hx - u + 0.5, 0, 1)
       if P.trimStart > 0.0001 then m = m * smk.clamp(u - P.trimStart * 2 * hx + 0.5, 0, 1) end
     end
+    if (P.dotR or 0) > 0 then                 -- end dot at the drawing front (callout targets)
+      local xe = (P.trim < 0.9999) and (-hx + P.trim * 2 * hx) or hx
+      local dd = hyp(qx - xe, qy) - P.dotR
+      m = math.max(m, cov(dd)); d = math.min(d, dd)
+    end
   end
   return d, m
 end

@@ -277,7 +277,48 @@ def text_macro(unit):
     for uid, *_ in [u for u in TEXT_USER if u[0] not in ("Text", "Weight")]: m.publish("UIT_Ctrl", uid, TEXT_LABELS[uid], next(u[5] for u in TEXT_USER if u[0] == uid))
     return m
 
-MACROS = {"SMK2_TextLetter": lambda: text_macro("letter"), "SMK2_TextWord": lambda: text_macro("word"), "SMK2_TextLine": lambda: text_macro("line"),
+# ---------------------------------------------------------------------------------------------------
+# Callout: card + label (moved together by one Animator) and a leader line (one Shape, draw-on with its own motion) ending in a dot at the target.
+# The leader reads the Animator's inputs (the Animator does not depend on the leader, so the graph stays acyclic) and starts its draw-on at 60 % of In.
+# ---------------------------------------------------------------------------------------------------
+def callout():
+    static = {f"{p}{k}": v for p in ("In", "Out") for k, v in (("Fade", 1.0), ("SlideDist", 0.0), ("Scale", 1.0), ("Rot", 0.0))}
+    A = "UIC_Animator."
+    leader_expr = {"InDelay": A + "InDelay + " + A + "InDur * 0.6", "HasOut": A + "HasOut", "OutOffset": A + "OutOffset", "OutDur": A + "OutDur",
+                   "Index": A + "Index", "Stagger": A + "Stagger", "ClipLen": A + "ClipLen"}
+    nodes = [
+        Node("UIC_Card", "Fuse.SMK2_Shape", (0, 0), values=dict(static, UseFrameFormatSettings=1, Width=1920, Height=1080, FillAR=0.16, FillAG=0.2,
+             FillAB=0.36, FillAA=1.0, BW=2, BCR=1, BCG=1, BCB=1, BCA=0.35)),
+        Node("UIC_Label", "TextPlus", (0, 66), values=dict(UseFrameFormatSettings=1, Width=1920, Height=1080, Wrap=0, StyledText="Callout",
+             Font="Open Sans", Style="Bold", Size=0.04, HorizontalJustificationNew=1, VerticalJustificationNew=3, HorizontalLeftCenterRight=0,
+             Red1=1.0, Green1=1.0, Blue1=1.0, Alpha1=1.0), expr={"Center": "Point(UIC_Card.CX, UIC_Card.CY)", "AngleZ": "UIC_Card.Angle"}),
+        Node("UIC_Merge", "Merge", (110, 33), links={"Background": ("UIC_Card", "Output"), "Foreground": ("UIC_Label", "Output")}),
+        Node("UIC_Animator", "Fuse.SMK2_Animator", (220, 33), links={"Image": ("UIC_Merge", "Output")},
+             expr={"PivotX": "UIC_Card.CX", "PivotY": "UIC_Card.CY"}),
+        Node("UIC_Leader", "Fuse.SMK2_Shape", (110, 132), values=dict(static, UseFrameFormatSettings=1, Width=1920, Height=1080, Shape=3, UseEnd=1,
+             TrimAnim=1, LF=Raw("{ 0.65, 0.5 }"), LT=Raw("{ 0.82, 0.28 }"), Thick=3, DotR=7, InEngine=0, OutEngine=0, InDur=0.45, FillAR=1.0, FillAG=1.0, FillAB=1.0, FillAA=1.0, SCA=0.0, BW=0),
+             expr=leader_expr),
+        Node("UIC_Over", "Merge", (330, 66), links={"Background": ("UIC_Animator", "Output"), "Foreground": ("UIC_Leader", "Output")}),
+    ]
+    m = Macro("SMK2_Callout", nodes, "UIC_Over")
+    for k, n in (("StyledText", "Text"), ("Font", "Font"), ("Size", "Text Size")): m.publish("UIC_Label", k, n, "Callout", key=f"Label_{k}")
+    for i, k in enumerate(("Red1", "Green1", "Blue1")): m.publish("UIC_Label", k, "Text Color" if i == 0 else "", "Callout", group=1)
+    for k, n in (("W", "Width (frac of frame width)"), ("H", "Height (frac of frame width)"), ("Radius", "Corner Radius"), ("CX", "Center X"),
+                 ("CY", "Center Y"), ("Angle", "Angle")): m.publish("UIC_Card", k, n, "Callout", key=f"Card_{k}")
+    m.publish_color("UIC_Card", "FillA", "Card Color", "Callout", 2); m.publish_color("UIC_Card", "BC", "Border Color", "Callout", 3)
+    m.publish("UIC_Card", "BW", "Border Width (px @1920)", "Callout", key="Card_BW")
+    m.publish_color("UIC_Card", "SC", "Shadow Color", "Callout", 4)
+    for k, n in (("SX", "Shadow X"), ("SY", "Shadow Y (down)"), ("SB", "Shadow Blur")): m.publish("UIC_Card", k, n, "Callout", key=f"Card_{k}")
+    m.publish("UIC_Leader", "LF", "Line Start (drag in viewer)", "Leader"); m.publish("UIC_Leader", "LT", "Target Point (drag in viewer)", "Leader")
+    m.publish("UIC_Leader", "Thick", "Line Thickness (px @1920)", "Leader"); m.publish("UIC_Leader", "DotR", "Target Dot Radius (px @1920)", "Leader")
+    m.publish_color("UIC_Leader", "FillA", "Line Color", "Leader", 5)
+    m.publish("UIC_Leader", "InDur", "Line Draw Time (s)", "Leader")
+    for k, n in TIMING: m.publish("UIC_Animator", k, n, "Motion")
+    for ph in ("In", "Out"):
+        for k, n in ENGINE_KEYS: m.publish("UIC_Animator", ph + k, f"{ph} {n}", f"{ph} Motion")
+    return m
+
+MACROS = {"SMK2_Callout": callout, "SMK2_TextLetter": lambda: text_macro("letter"), "SMK2_TextWord": lambda: text_macro("word"), "SMK2_TextLine": lambda: text_macro("line"),
           "SMK2_UIBlock": ui_block, "SMK2_ProgressRing": lambda: progress("ring"), "SMK2_ProgressBar": lambda: progress("bar")}
 
 if __name__ == "__main__":

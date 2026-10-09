@@ -32,6 +32,7 @@ SMK2ShapeParams = [[
   float borderCol[4];
   float shadowCol[4];
   float trackCol[4];
+  float dotR;
 ]]
 
 -- GPU port of smk.shade() (src/core/smk_shape.lua). Keep both in sync; tests render the Lua oracle.
@@ -74,6 +75,12 @@ __KERNEL__ void SMK2ShapeKernel(__CONSTANTREF__ SMK2ShapeParams *p, __TEXTURE2D_
         float u = qx + hx;
         m = fminf(fmaxf(p->trim * 2.0f * hx - u + 0.5f, 0.0f), 1.0f);
         if (p->trimStart > 0.0001f) m = m * fminf(fmaxf(u - p->trimStart * 2.0f * hx + 0.5f, 0.0f), 1.0f);
+      }
+      if (p->dotR > 0.0f) {
+        float xe = (p->trim < 0.9999f) ? (-hx + p->trim * 2.0f * hx) : hx;
+        float ex = qx - xe;
+        float dd = sqrtf(ex * ex + qy * qy) - p->dotR;
+        m = fmaxf(m, fminf(fmaxf(0.5f - dd, 0.0f), 1.0f)); d = fminf(d, dd);
       }
     }
     res[pass][0] = d; res[pass][1] = m;
@@ -165,6 +172,11 @@ function Create()
   num("Radius", "Corner Radius (0.5 = pill)", 0.15, 0, 0.5)
   num("Thick", "Ring / Line Thickness (px @1920)", 24, 0.5, 400)
   num("Trim", "Trim / Sweep", 1, 0, 1); num("TrimStart", "Trim Start", 0, 0, 1)
+  I.TrimAnim = self:AddInput("Draw On With Motion", "TrimAnim", { LINKID_DataType = "Number", INPID_InputControl = "CheckboxControl", INP_Default = 0 })
+  num("DotR", "Line End Dot Radius (px @1920)", 0, 0, 60)
+  I.UseEnd = self:AddInput("Line Uses End Points", "UseEnd", { LINKID_DataType = "Number", INPID_InputControl = "CheckboxControl", INP_Default = 0 })
+  I.LF = self:AddInput("Line From", "LF", { LINKID_DataType = "Point", INPID_InputControl = "OffsetControl", INPID_PreviewControl = "CrosshairControl", INP_DefaultX = 0.3, INP_DefaultY = 0.5 })
+  I.LT = self:AddInput("Line To", "LT", { LINKID_DataType = "Point", INPID_InputControl = "OffsetControl", INPID_PreviewControl = "CrosshairControl", INP_DefaultX = 0.7, INP_DefaultY = 0.5 })
   num("Angle", "Angle (deg, CCW)", 0, -360, 360)
   num("CX", "Center X", 0.5, -2, 3); num("CY", "Center Y", 0.5, -2, 3)
   combo("FillMode", "Fill", 0, { "Solid", "Linear Gradient", "Radial Gradient" })
@@ -225,9 +237,21 @@ function SMK2_ShapePrep(req, w, h)
     trim = g(req, "Trim"), trimStart = g(req, "TrimStart"),
     shadowOff = { g(req, "SX") * px * k, -g(req, "SY") * px * k }, shadowBlur = g(req, "SB") * px * k,
     opacity = r.opacity, fillA = col(req, "FillA"), fillB = col(req, "FillB"), borderCol = col(req, "BC"), shadowCol = col(req, "SC"), trackCol = col(req, "TC"),
+    dotR = g(req, "DotR") * px * k,
   }
+  if g(req, "TrimAnim") > 0.5 then P.trim = P.trim * (1 - math.max(0, math.min(1, a))) end   -- draw on with the In/Out amount
   if shape == 2 then P.half = { hx, hx }; P.radius = 0 end          -- ring: Width = diameter
   if shape == 3 then P.half = { hx, 0 } end                          -- line: Width = length
+  if shape == 3 and g(req, "UseEnd") > 0.5 then                      -- line between two Point controls (on-screen crosshairs)
+    local f, t = I.LF:GetValue(req), I.LT:GetValue(req)
+    local fx, fy, tx, ty = f.X * w, f.Y * h, t.X * w, t.Y * h
+    local len = math.sqrt((tx - fx) ^ 2 + (ty - fy) ^ 2)
+    local ang = math.atan2 and math.atan2(ty - fy, tx - fx) or math.atan(ty - fy, tx - fx)
+    P.half = { len * 0.5 * k, 0 }
+    P.center = { (fx + tx) * 0.5 + r.dx * w, (fy + ty) * 0.5 + r.dy * h }
+    local rr = ang + r.angle * math.pi / 180
+    P.cosA, P.sinA = math.cos(rr), math.sin(rr)
+  end
   return P, a, phase
 end
 

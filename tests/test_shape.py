@@ -18,7 +18,7 @@ smk = lua.execute("local smk = (function()\n" + core + "\nend)()\n" + mod + "\nr
 def P(**k):
     d = dict(size=(200, 100), shape=0, fillMode=0, borderPos=0, center=(100, 50), half=(60, 30), radius=0, thick=10, bw=0,
              cosA=1, sinA=0, gradC=1, gradS=0, trim=1, trimStart=0, shadowOff=(0, 0), shadowBlur=4, opacity=1,
-             fillA=(1, 0, 0, 1), fillB=(0, 0, 1, 1), borderCol=(0, 1, 0, 1), shadowCol=(0, 0, 0, 0), trackCol=(0, 0, 1, 0))
+             fillA=(1, 0, 0, 1), fillB=(0, 0, 1, 1), borderCol=(0, 1, 0, 1), shadowCol=(0, 0, 0, 0), trackCol=(0, 0, 1, 0), dotR=0)
     d.update(k)
     t = lua.table()
     for key, v in d.items(): t[key] = lua.table_from([*v]) if isinstance(v, tuple) else v
@@ -64,6 +64,11 @@ ln = P(shape=3, half=(60, 0), thick=8)
 check("line capsule body", px(ln, 100, 50)[3] > 0.9 and px(ln, 100, 60)[3] == 0)
 lt = P(shape=3, half=(60, 0), thick=8, trim=0.5)
 check("line trim draws left half", px(lt, 70, 50)[3] > 0.9 and px(lt, 130, 50)[3] < 0.05)
+# end dot at the drawing front
+dl = P(shape=3, half=(60, 0), thick=6, trim=0.5, dotR=9)
+check("end dot sits at the drawing front", px(dl, 100, 50)[3] > 0.95 and px(dl, 100, 50 + 7)[3] > 0.5)
+check("no dot beyond the front / no dot when radius 0", px(dl, 130, 57)[3] < 0.05 and px(P(shape=3, half=(60, 0), thick=6, trim=0.5), 100, 57)[3] < 0.05)
+check("full-length line ends with the dot at the tip", px(P(shape=3, half=(60, 0), thick=6, dotR=9), 160, 57)[3] > 0.5)
 # animation transforms already pre-applied: scale smaller => less coverage
 small = P(half=(30, 15)); check("scaled-down shape", px(small, 100 + 45, 50)[3] == 0 and px(small, 100, 50)[3] == 1)
 
@@ -86,10 +91,10 @@ function DVIPComputeNode(req, k, src, pname, pdef)
   function n:RunSession() return not FAIL end
   return n
 end
-function make_in(def) local o={default=def}; function o:GetValue(req) return {Value=(req.over and req.over[self.id]) or self.default} end return o end
+function make_in(def, t) local o={default=def, t=t}; function o:GetValue(req) local ov=req.over and req.over[self.id]; if self.t and self.t.LINKID_DataType=="Point" then return ov or {X=self.t.INP_DefaultX, Y=self.t.INP_DefaultY} end return {Value=ov or self.default} end return o end
 self = {Comp={RenderStart=0, RenderEnd=119}}
 function self.Comp:GetPrefs() return 24 end
-function self:AddInput(name, id, t) local o=make_in(t.INP_Default); o.id=id; return o end
+function self:AddInput(name, id, t) local o=make_in(t.INP_Default, t); o.id=id; return o end
 function self:AddOutput(name, id, t) local o={id=id}; function o:Set(req,v) req.out=v end; return o end
 '''
 src = open(os.path.join(ROOT, "dist/fuses/SMK2_Shape.fuse")).read()
@@ -110,4 +115,13 @@ check("last frame fades via Out", frame(119, OutEngine=0.0)[0].opacity < 0.05)
 check("PreCalc skips GPU", frame(10, pre=True)[0] is None)
 check("GPU failure => transparent, no crash", frame(10, fail=True)[1] is not None)
 check("stagger delays", frame(10, InEngine=0.0, Index=5.0, Stagger=0.1)[0].opacity < frame(10, InEngine=0.0)[0].opacity)
+b, _ = frame(60, Shape=3.0, UseEnd=1.0)
+check("line endpoints: centre = midpoint, half = distance/2 (defaults 0.3,0.5 -> 0.7,0.5)", near(b.center[1], 960, 0.5) and near(b.center[2], 540, 0.5) and near(b.half[1], 0.2 * 1920, 0.5) and near(b.cosA, 1, 1e-6))
+import math as _m
+b, _ = frame(60, Shape=3.0, UseEnd=1.0, LT={"X": 0.3, "Y": 0.9})
+check("vertical line: angle 90 deg, length = dy in px", near(b.sinA, 1, 1e-6) and near(b.half[1], 0.4 * 1080 / 2, 0.5) and near(b.center[1], 0.3 * 1920, 0.5) and near(b.center[2], 0.7 * 1080, 0.5))
+b, _ = frame(0, Shape=3.0, TrimAnim=1.0, InEngine=0.0); check("draw-on: trim 0 at the start of In", near(b.trim, 0, 1e-6))
+b, _ = frame(60, Shape=3.0, TrimAnim=1.0); check("draw-on: full trim when settled", near(b.trim, 1, 1e-3))
+check("draw-on off keeps Trim", near(frame(0, Shape=3.0, InEngine=0.0)[0].trim, 1, 1e-6))
+check("dot radius in px@1920 scales", near(frame(60, DotR=10.0)[0].dotR, 10, 1e-6))
 print(f"shape: {passed} passed, {failed} failed"); sys.exit(1 if failed else 0)

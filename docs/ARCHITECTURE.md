@@ -74,3 +74,9 @@ User-verified in the UI: Text control layout, trim-handle drag updates the anima
 Expanded group readable; emoji renders as a real glyph; viewer playback of 12–40 letters: 6–8 fps on the first pass, 24 fps once cached (first-pass limit is
 the ~3 ms per node/modifier Fuse cost plus Calculation parsing; render ms/frame is the regression metric). Open Sans weight combo does not change the weight
 (see Phase 5 gate B).
+
+## Phase 5 results (2026-10): Cursor, font weight, UTF-8
+`SMK2_Cursor` passes (hot spot within ±1 px, path/click timing exact, cost ≈ 9–12 ms for one cursor, ≈ 15 ms for three). Font weight: the visible Style combo was
+never wired to the real `Style` input; fixed with a **Weight** combo (Light, Regular, Medium, SemiBold, Bold, ExtraBold, Italic, Bold Italic) that computes `Style`
+and falls back to Regular for unknown fonts. UTF-8: the text macros now count characters; the Line macro's last slide still ends 3–5 frames before the last frame
+(designed tolerance ≤ 7; last-frame alpha is 0.00).
