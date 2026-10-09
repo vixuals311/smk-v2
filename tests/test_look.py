@@ -27,7 +27,7 @@ def src_fn(img):
     return lua.eval("function(img, W, H) return function(sx, sy) local ix = math.min(math.max(math.floor(sx), 0), W - 1) local iy = math.min(math.max(math.floor(sy), 0), H - 1) local p = img[iy + 1][ix + 1] return p[1], p[2], p[3], p[4] end end")(
         T([T([T(list(p)) for p in row]) for row in img]), W, H)
 def P(**k):
-    d = dict(size=[W, H], glowOn=0, glowSamples=48, glowSrc=0, glowBehind=0, outOn=0, shineOn=0, gradOn=0, glowR=20, glowI=1, glowThr=0.6, outW=4,
+    d = dict(size=[W, H], glowOn=0, glowOnly=0, outRings=3, glowGamma=1, glowSamples=48, glowSrc=0, glowBehind=0, outOn=0, shineOn=0, gradOn=0, glowR=20, glowI=1, glowThr=0.6, outW=4,
              shC=1, shS=0, shPos=0, shW=6, shSoft=4, shI=1, gC=1, gS=0, gExt=64, gAmt=1, opacity=1,
              glowCol=[0.2, 0.4, 1, 1], outCol=[1, 0, 0, 1], shCol=[1, 1, 1, 1], gA=[1, 0, 0, 1], gB=[0, 0, 1, 1])
     d.update(k); t = lua.table()
@@ -56,6 +56,9 @@ check("shine position moves the band", px(P(shineOn=1, shPos=-16, shCol=[1, 0.5,
 gr = P(gradOn=1, gC=1, gS=0, gExt=64); l_, r_ = px(gr, 46, 36), px(gr, 82, 36)
 check("gradient overlay: left reddish, right bluish, alpha unchanged, outside untouched", l_[0] > l_[2] and r_[2] > r_[0] and near(l_[3], 1) and px(gr, 5, 5)[3] == 0)
 check("gradient amount 0 = no change", px(P(gradOn=1, gAmt=0), 60, 36) == (1.0, 1.0, 1.0, 1.0))
+check("glow only: object removed, halo kept", px(P(glowOn=1, glowOnly=1), 60, 36)[3] > 0 and px(P(glowOn=1, glowOnly=1), 60, 36) != (1.0, 1.0, 1.0, 1.0) and px(P(glowOn=1, glowOnly=1), 40, 36)[3] > 0.02)
+check("glow spread (gamma < 1) makes the tails brighter", px(P(glowOn=1, glowGamma=0.5), 30, 36)[3] > px(P(glowOn=1, glowGamma=1.5), 30, 36)[3])
+check("wide outline with more rings stays solid at the full width", px(P(outOn=1, outW=20, outRings=7), 44 - 18, 36)[3] > 0.9)
 check("opacity multiplies all channels", near(px(P(opacity=0.5), 60, 36)[3], 0.5) and near(px(P(opacity=0.5), 60, 36)[0], 0.5))
 
 # ---------------- Fuse CPU stage
@@ -107,7 +110,7 @@ check("DoD padding: kernel origin/size follow the window", b.off[1] == 652 and b
 b, out = frame(12, GlowOn=0.0)
 check("no glow/outline: no padding, window untouched", out.DataWindow is None and b.off[1] == 0 and b.osize[1] == 1920)
 lua.execute("IMG.DataWindow = nil")
-check("glow quality maps to sample counts", [frame(12, GlowQ=float(i))[0].glowSamples for i in range(4)] == [24, 48, 96, 160])
+check("glow quality maps to sample counts (Draft is raised to 0.8 x radius px = 32 at R=40)", [frame(12, GlowQ=float(i))[0].glowSamples for i in range(4)] == [32, 48, 96, 160])
 check("sizes are px@1920 (outline 6 -> 6; at 3840 would double)", near(frame(12, OutW=6.0)[0].outW, 6, 1e-6))
 # shine auto sweep: before the delay off-screen, half time centred, after the sweep off-screen
 ext = abs(math.cos(math.radians(25))) * 960 + abs(math.sin(math.radians(25))) * 540
@@ -120,6 +123,9 @@ check("shine sweeps left -> right along its axis (position increases)", b_b.shPo
 b_r1, _ = frame(24, ShineOn=1.0, ShineDelay=0.5, ShineDur=1.0, ShineRepeat=2.0); b_r2, _ = frame(24 + 48, ShineOn=1.0, ShineDelay=0.5, ShineDur=1.0, ShineRepeat=2.0)
 check("repeat: second sweep passes the centre again", abs(b_r1.shPos) < 0.01 * ext and abs(b_r2.shPos) < 0.01 * ext)
 check("manual shine position scales with the frame", near(frame(12, ShineOn=1.0, ShineAuto=0.0, ShinePos=0.0)[0].shPos, 0, 1e-6))
+b, _ = frame(12, GlowR=120.0, GlowQ=0.0); check("wide glow raises the sample count (R=120, Draft -> >= 96 samples)", b.glowSamples >= 96)
+b, _ = frame(12, OutOn=1.0, OutW=24.0); check("wide outline uses more rings", b.outRings >= 8)
+check("glow spread input", near(frame(12, GlowGamma=0.6)[0].glowGamma, 0.6, 1e-6) and frame(12, GlowOnly=1.0)[0].glowOnly == 1)
 check("PreCalc skips the GPU", frame(10, pre=True)[0] is None)
 check("GPU failure passes the input through", frame(10, fail=True)[1] is not None)
 check("no input image: nil output", frame(10, noimg=True)[1] is None)
@@ -145,7 +151,7 @@ else:
     def scen():
         gq = random.choice([24, 48, 96])
         ang = random.uniform(0, 6.28); ga = random.uniform(0, 6.28)
-        return dict(glowOn=random.choice([0, 1, 1]), glowSamples=gq, glowSrc=random.choice([0, 1]), glowBehind=random.choice([0, 1]), outOn=random.choice([0, 1]),
+        return dict(glowOnly=random.choice([0, 0, 0, 1]), outRings=random.randint(3, 8), glowGamma=random.uniform(0.5, 2), glowOn=random.choice([0, 1, 1]), glowSamples=gq, glowSrc=random.choice([0, 1]), glowBehind=random.choice([0, 1]), outOn=random.choice([0, 1]),
                     shineOn=random.choice([0, 1]), gradOn=random.choice([0, 1]), glowR=random.uniform(6, 30), glowI=random.uniform(0.5, 2), glowThr=random.uniform(0.2, 0.7),
                     outW=random.uniform(1, 8), shC=math.cos(ang), shS=math.sin(ang), shPos=random.uniform(-60, 60), shW=random.uniform(2, 14), shSoft=random.uniform(0, 10),
                     shI=random.uniform(0.3, 1.5), gC=math.cos(ga), gS=math.sin(ga), gExt=abs(math.cos(ga)) * 64 + abs(math.sin(ga)) * 36 + 1e-4, gAmt=random.uniform(0.3, 1),
@@ -154,8 +160,8 @@ else:
     scens = [scen() for _ in range(6)]
     F = lambda v: (lambda s: s if ("." in s or "e" in s) else s + ".0")(f"{float(v):.9g}") + "f"
     A = lambda a: "{" + ",".join(F(v) for v in a) + "}"
-    order = ["glowOn", "glowSamples", "glowSrc", "glowBehind", "outOn", "shineOn", "gradOn"]
-    forder = ["glowR", "glowI", "glowThr", "outW", "shC", "shS", "shPos", "shW", "shSoft", "shI", "gC", "gS", "gExt", "gAmt", "opacity"]
+    order = ["glowOn", "glowSamples", "glowSrc", "glowBehind", "outOn", "shineOn", "gradOn", "glowOnly", "outRings"]
+    forder = ["glowR", "glowI", "glowThr", "glowGamma", "outW", "shC", "shS", "shPos", "shW", "shSoft", "shI", "gC", "gS", "gExt", "gAmt", "opacity"]
     ci = lambda s: ("{ {%d,%d}, {0,0}, {%d,%d}, " % (W, H, W, H) + ", ".join(str(s[k]) for k in order) + ", " + ", ".join(F(s[k]) for k in forder) + ", " +
                     ", ".join(A(s[k]) for k in ["glowCol", "outCol", "shCol", "gA", "gB"]) + " }")
     fields = re.search(r"SMK2LookParams = \[\[(.*?)\]\]", fuse, re.S).group(1).replace("\n", " ")

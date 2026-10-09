@@ -18,9 +18,12 @@ SMK2LookParams = [[
   int outOn;
   int shineOn;
   int gradOn;
+  int glowOnly;
+  int outRings;
   float glowR;
   float glowI;
   float glowThr;
+  float glowGamma;
   float outW;
   float shC;
   float shS;
@@ -84,7 +87,8 @@ __KERNEL__ void SMK2LookKernel(__CONSTANTREF__ SMK2LookParams *p, __TEXTURE2D__ 
       }
       acc += v * w; norm += w;
     }
-    float v = (norm > 0.0f) ? (acc / norm) * p->glowI : 0.0f;
+    float v0 = (norm > 0.0f) ? (acc / norm) : 0.0f;
+    float v = ((v0 > 0.0f) ? powf(v0, p->glowGamma) : 0.0f) * p->glowI;
     float ga = fminf(fmaxf(v * p->glowCol[3], 0.0f), 1.0f);
     gl[0] = p->glowCol[0] * ga; gl[1] = p->glowCol[1] * ga; gl[2] = p->glowCol[2] * ga; gl[3] = ga;
   }
@@ -92,10 +96,10 @@ __KERNEL__ void SMK2LookKernel(__CONSTANTREF__ SMK2LookParams *p, __TEXTURE2D__ 
   if (p->glowOn > 0 && p->glowBehind > 0) { br = gl[0]; bg = gl[1]; bb = gl[2]; ba = gl[3]; }
   if (p->outOn > 0 && p->outW > 0.25f) {
     float m = a;
-    for (int k = 1; k <= 3; ++k) {
-      float rad = p->outW * (float)k / 3.0f;
-      for (int i = 0; i < 16; ++i) {
-        float ang = (float)i * 0.39269908f + (float)k * 0.3f;
+    for (int k = 1; k <= p->outRings; ++k) {
+      float rad = p->outW * (float)k / (float)p->outRings;
+      for (int i = 0; i < 24; ++i) {
+        float ang = (float)i * 0.26179939f + (float)k * 0.3f;
         float sx = px + cosf(ang) * rad, sy = py + sinf(ang) * rad;
         float4 sc = (sx < 0.0f || sy < 0.0f || sx > W || sy > H) ? make_float4(0.0f, 0.0f, 0.0f, 0.0f) : _tex2DVecN(src, sx / W, sy / H, 15);
         if (sc.w > m) m = sc.w;
@@ -104,6 +108,11 @@ __KERNEL__ void SMK2LookKernel(__CONSTANTREF__ SMK2LookParams *p, __TEXTURE2D__ 
     float oc = fminf(fmaxf(m - a, 0.0f), 1.0f);
     float oa = oc * p->outCol[3], kk = 1.0f - oa;
     br = p->outCol[0] * oa + br * kk; bg = p->outCol[1] * oa + bg * kk; bb = p->outCol[2] * oa + bb * kk; ba = oa + ba * kk;
+  }
+  if (p->glowOn > 0 && p->glowOnly > 0) {
+    float O0 = p->opacity;
+    _tex2DVec4Write(dst, x, y, make_float4(gl[0] * O0, gl[1] * O0, gl[2] * O0, gl[3] * O0));
+    return;
   }
   float k2 = 1.0f - a;
   float rr2 = r + br * k2, rg = g + bg * k2, rb = b + bb * k2, ra = a + ba * k2;
@@ -141,6 +150,8 @@ function Create()
   check("GlowOn", "Glow", 1); combo("GlowSrc", "Glow From", 0, { "Alpha", "Brightness" })
   num("GlowR", "Glow Radius (px @1920)", 40, 1, 300); num("GlowI", "Glow Intensity", 1.2, 0, 6); num("GlowThr", "Brightness Threshold", 0.6, 0, 0.99)
   combo("GlowQ", "Glow Quality", 1, { "Draft (24)", "Normal (48)", "High (96)", "Max (160)" })
+  num("GlowGamma", "Glow Spread (gamma; <1 wider and brighter tails)", 1, 0.3, 3); check("GlowOnly", "Glow Only (no object)", 0)
+  num("GlowGamma", "Glow Spread (gamma; below 1 = wider, brighter tails)", 1, 0.3, 3); check("GlowOnly", "Glow Only (no object)", 0)
   check("GlowBehind", "Glow Behind Object (off = additive)", 0); color("GlowC", "Glow Color", 1, 0.45, 0.65, 1, 1)
   check("OutOn", "Outline", 0); num("OutW", "Outline Width (px @1920)", 6, 0.5, 60); color("OutC", "Outline Color", 2, 1, 1, 1, 1)
   check("ShineOn", "Shine", 0); num("ShineAngle", "Shine Angle (deg)", 25, -180, 180)
@@ -182,7 +193,9 @@ function SMK2_LookPrep(req, w, h)
   end
   local ga = g(req, "GradAngle") * math.pi / 180
   local samples = ({ 24, 48, 96, 160 })[math.floor(g(req, "GlowQ") + 0.5) + 1] or 48
-  return { size = { w, h }, off = { 0, 0 }, osize = { w, h }, glowOn = g(req, "GlowOn") > 0.5 and 1 or 0, glowSamples = samples, glowSrc = math.floor(g(req, "GlowSrc") + 0.5),
+  samples = math.min(160, math.max(samples, math.floor(g(req, "GlowR") * px * 0.8)))      -- wide glows need more taps (no blocky ghosts at big radii)
+  local rings = math.max(3, math.min(8, math.ceil(g(req, "OutW") * px / 3)))              -- wide outlines need more rings (no stair-steps)
+  return { size = { w, h }, off = { 0, 0 }, osize = { w, h }, glowOn = g(req, "GlowOn") > 0.5 and 1 or 0, glowSamples = samples, glowOnly = g(req, "GlowOnly") > 0.5 and 1 or 0, outRings = rings, glowGamma = g(req, "GlowGamma"), glowSrc = math.floor(g(req, "GlowSrc") + 0.5),
     glowBehind = g(req, "GlowBehind") > 0.5 and 1 or 0, outOn = g(req, "OutOn") > 0.5 and 1 or 0, shineOn = g(req, "ShineOn") > 0.5 and 1 or 0,
     gradOn = g(req, "GradOn") > 0.5 and 1 or 0, glowR = g(req, "GlowR") * px, glowI = g(req, "GlowI"), glowThr = g(req, "GlowThr"), outW = g(req, "OutW") * px,
     shC = sc, shS = ss, shPos = pos, shW = halfW, shSoft = g(req, "ShineSoft") * w, shI = g(req, "ShineI"),

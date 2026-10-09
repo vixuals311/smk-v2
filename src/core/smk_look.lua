@@ -42,7 +42,8 @@ function smk.lookShade(P, x, y, src)
       local sr, sg, sb, sa = src(px + math.cos(ang) * rr, py + math.sin(ang) * rr)
       acc = acc + glowVal(P, sr, sg, sb, sa) * w; norm = norm + w
     end
-    local v = (norm > 0) and (acc / norm) * P.glowI or 0
+    local v0 = (norm > 0) and (acc / norm) or 0
+    local v = ((v0 > 0) and (v0 ^ P.glowGamma) or 0) * P.glowI
     local ga = smk.clamp(v * P.glowCol[4], 0, 1)
     glow = { P.glowCol[1] * ga, P.glowCol[2] * ga, P.glowCol[3] * ga, ga }
   end
@@ -50,10 +51,10 @@ function smk.lookShade(P, x, y, src)
   if P.glowOn > 0 and P.glowBehind > 0 then base = glow end
   if P.outOn > 0 and P.outW > 0.25 then
     local m = a
-    for k = 1, 3 do
-      local rad = P.outW * k / 3
-      for i = 0, 15 do
-        local ang = i * 0.39269908 + k * 0.3
+    for k = 1, P.outRings do
+      local rad = P.outW * k / P.outRings
+      for i = 0, 23 do
+        local ang = i * 0.26179939 + k * 0.3
         local _, _, _, sa = src(px + math.cos(ang) * rad, py + math.sin(ang) * rad)
         if sa > m then m = sa end
       end
@@ -62,6 +63,7 @@ function smk.lookShade(P, x, y, src)
     local oa = oc * P.outCol[4]
     base = over({ P.outCol[1] * oa, P.outCol[2] * oa, P.outCol[3] * oa, oa }, base)
   end
+  if P.glowOn > 0 and P.glowOnly > 0 then return glow[1] * P.opacity, glow[2] * P.opacity, glow[3] * P.opacity, glow[4] * P.opacity end
   local res = over(out, base)
   if P.glowOn > 0 and P.glowBehind == 0 then res = { res[1] + glow[1], res[2] + glow[2], res[3] + glow[3], smk.clamp(res[4] + glow[4] * (1 - res[4]), 0, 1) } end
   local O = P.opacity
