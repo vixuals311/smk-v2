@@ -80,3 +80,10 @@ the ~3 ms per node/modifier Fuse cost plus Calculation parsing; render ms/frame 
 never wired to the real `Style` input; fixed with a **Weight** combo (Light, Regular, Medium, SemiBold, Bold, ExtraBold, Italic, Bold Italic) that computes `Style`
 and falls back to Regular for unknown fonts. UTF-8: the text macros now count characters; the Line macro's last slide still ends 3–5 frames before the last frame
 (designed tolerance ≤ 7; last-frame alpha is 0.00).
+
+## Phase 7 design notes (2026-10)
+* **Connector**: CPU builds a ≤ 96-point polyline (curve / straight / rounded elbow / cubic Bezier with two handles / Catmull-Rom spline through up to 6 points) with cumulative arclength;
+  the GPU kernel loops the segments for distance + arclength (draw-on mask, dash phase, gradient), plus dot/arrow end-marks and travelling pulses. Magnetic ends snap to a box edge (Auto = ray from the box centre toward the
+  target) or a side port, with an outward gap, and the curve's end tangents follow the edge normal. Ends follow other elements through expressions on the Point inputs (to be confirmed in K6).
+* **Look**: single pass; glow = golden-angle spiral gather with a Gaussian-like weight (24–160 samples), outline = 3 rings × 16 taps of the neighbourhood alpha, shine = smoothstep band masked by alpha, gradient overlay masked by alpha.
+  Multi-pass (pyramid) glow and long shadow are deferred until a multi-pass DVIP spike.
