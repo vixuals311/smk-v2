@@ -9,6 +9,8 @@ FuRegisterClass("SMK2_Look", CT_Tool, {
 
 SMK2LookParams = [[
   int size[2];
+  int off[2];
+  int osize[2];
   int glowOn;
   int glowSamples;
   int glowSrc;
@@ -43,10 +45,10 @@ SMK2LookSource = [[
 __KERNEL__ void SMK2LookKernel(__CONSTANTREF__ SMK2LookParams *p, __TEXTURE2D__ src, __TEXTURE2D_WRITE__ dst)
 {
   DEFINE_KERNEL_ITERATORS_XY(x, y);
-  if (x >= p->size[0] || y >= p->size[1]) return;
+  if (x >= p->osize[0] || y >= p->osize[1]) return;
   float W = (float)p->size[0], H = (float)p->size[1];
-  float px = (float)x + 0.5f, py = (float)y + 0.5f;
-  float4 s0 = _tex2DVecN(src, px / W, py / H, 15);
+  float px = (float)(x + p->off[0]) + 0.5f, py = (float)(y + p->off[1]) + 0.5f;
+  float4 s0 = (px < 0.0f || py < 0.0f || px > W || py > H) ? make_float4(0.0f, 0.0f, 0.0f, 0.0f) : _tex2DVecN(src, px / W, py / H, 15);
   float r = s0.x, g = s0.y, b = s0.z, a = s0.w;
   if (p->gradOn > 0 && a > 0.0f) {
     float t = fminf(fmaxf(((px - W * 0.5f) * p->gC + (py - H * 0.5f) * p->gS) / (2.0f * p->gExt) + 0.5f, 0.0f), 1.0f);
@@ -72,7 +74,8 @@ __KERNEL__ void SMK2LookKernel(__CONSTANTREF__ SMK2LookParams *p, __TEXTURE2D__ 
       float rr = p->glowR * sqrtf(((float)i + 0.5f) / (float)p->glowSamples);
       float q = rr / p->glowR;
       float w = expf(-3.0f * q * q);
-      float4 sc = _tex2DVecN(src, (px + cosf(ang) * rr) / W, (py + sinf(ang) * rr) / H, 15);
+      float sx = px + cosf(ang) * rr, sy = py + sinf(ang) * rr;
+      float4 sc = (sx < 0.0f || sy < 0.0f || sx > W || sy > H) ? make_float4(0.0f, 0.0f, 0.0f, 0.0f) : _tex2DVecN(src, sx / W, sy / H, 15);
       float v = sc.w;
       if (p->glowSrc != 0) {
         float ia = (sc.w > 0.000001f) ? (1.0f / sc.w) : 0.0f;
@@ -93,7 +96,8 @@ __KERNEL__ void SMK2LookKernel(__CONSTANTREF__ SMK2LookParams *p, __TEXTURE2D__ 
       float rad = p->outW * (float)k / 3.0f;
       for (int i = 0; i < 16; ++i) {
         float ang = (float)i * 0.39269908f + (float)k * 0.3f;
-        float4 sc = _tex2DVecN(src, (px + cosf(ang) * rad) / W, (py + sinf(ang) * rad) / H, 15);
+        float sx = px + cosf(ang) * rad, sy = py + sinf(ang) * rad;
+        float4 sc = (sx < 0.0f || sy < 0.0f || sx > W || sy > H) ? make_float4(0.0f, 0.0f, 0.0f, 0.0f) : _tex2DVecN(src, sx / W, sy / H, 15);
         if (sc.w > m) m = sc.w;
       }
     }
@@ -178,7 +182,7 @@ function SMK2_LookPrep(req, w, h)
   end
   local ga = g(req, "GradAngle") * math.pi / 180
   local samples = ({ 24, 48, 96, 160 })[math.floor(g(req, "GlowQ") + 0.5) + 1] or 48
-  return { size = { w, h }, glowOn = g(req, "GlowOn") > 0.5 and 1 or 0, glowSamples = samples, glowSrc = math.floor(g(req, "GlowSrc") + 0.5),
+  return { size = { w, h }, off = { 0, 0 }, osize = { w, h }, glowOn = g(req, "GlowOn") > 0.5 and 1 or 0, glowSamples = samples, glowSrc = math.floor(g(req, "GlowSrc") + 0.5),
     glowBehind = g(req, "GlowBehind") > 0.5 and 1 or 0, outOn = g(req, "OutOn") > 0.5 and 1 or 0, shineOn = g(req, "ShineOn") > 0.5 and 1 or 0,
     gradOn = g(req, "GradOn") > 0.5 and 1 or 0, glowR = g(req, "GlowR") * px, glowI = g(req, "GlowI"), glowThr = g(req, "GlowThr"), outW = g(req, "OutW") * px,
     shC = sc, shS = ss, shPos = pos, shW = halfW, shSoft = g(req, "ShineSoft") * w, shI = g(req, "ShineI"),
@@ -186,12 +190,33 @@ function SMK2_LookPrep(req, w, h)
     opacity = g(req, "Opacity"), glowCol = col(req, "GlowC"), outCol = col(req, "OutC"), shCol = col(req, "ShineC"), gA = col(req, "GradA"), gB = col(req, "GradB") }
 end
 
+-- how far glow / outline reach beyond the input (px). Shine and gradient only act where the input has alpha, so they need no padding.
+function SMK2_LookPad(req, w)
+  local px = w / 1920
+  local pad = 0
+  if g(req, "GlowOn") > 0.5 then pad = pad + g(req, "GlowR") * px end
+  if g(req, "OutOn") > 0.5 then pad = pad + g(req, "OutW") * px end
+  return pad > 0 and (math.ceil(pad) + 2) or 0
+end
+
 function Process(req)
   local img = I.Image:GetValue(req)
   if not img then OutImage:Set(req, nil) return end
-  local out = Image({ IMG_Like = img, IMG_DeferAlloc = true })
+  local pad = SMK2_LookPad(req, img.Width)
+  local out
+  local dw = img.DataWindow
+  if pad > 0 and dw then
+    -- output window = input data window grown by glow + outline reach (only IMG_DataWindow places an image, Phase 0 / 2b)
+    out = Image({ IMG_Like = img, IMG_DeferAlloc = true, IMG_DataWindow = ImgRectI(dw.left - pad, dw.bottom - pad, dw.right + pad, dw.top + pad) })
+  else
+    out = Image({ IMG_Like = img, IMG_DeferAlloc = true }); pad = 0
+  end
   if req:IsPreCalc() then OutImage:Set(req, out) return end        -- P0: DVIPComputeNode is nil on PreCalc requests
   local P = SMK2_LookPrep(req, img.Width, img.Height)
+  if pad > 0 then
+    local ow = out.DataWindow
+    P.off = { ow.left, ow.bottom }; P.osize = { ow.right - ow.left, ow.top - ow.bottom }
+  end
   local ok, perr = pcall(function()
     local node = DVIPComputeNode(req, "SMK2LookKernel", SMK2LookSource, "SMK2LookParams", SMK2LookParams)
     local b = node:GetParamBlock(SMK2LookParams)

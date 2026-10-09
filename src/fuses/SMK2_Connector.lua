@@ -21,6 +21,7 @@ SMK2ConnParams = [[
   float dgap;
   float gradOn;
   float opacity;
+  float visA;
   float pts[192];
   float cum[96];
   float mkA[9];
@@ -49,7 +50,7 @@ __KERNEL__ void SMK2ConnKernel(__CONSTANTREF__ SMK2ConnParams *p, __TEXTURE2D_WR
     if (d2 < best) { best = d2; bu = p->cum[i] + t * sqrtf(l2); }
   }
   float d = sqrtf(best) - p->thick * 0.5f;
-  float m = fminf(fmaxf(p->trim * p->total - bu + 0.5f, 0.0f), 1.0f);
+  float m = fminf(fmaxf(p->trim * p->total - bu + 0.5f, 0.0f), 1.0f) * fminf(p->trim * 50.0f, 1.0f);
   if (p->dash > 0.0f) {
     float per = p->dash + p->dgap;
     float ph = bu - per * floorf(bu / per);
@@ -62,7 +63,7 @@ __KERNEL__ void SMK2ConnKernel(__CONSTANTREF__ SMK2ConnParams *p, __TEXTURE2D_WR
   float orr = cr * la, og = cg * la, ob = cb * la, oa = la;
   for (int e = 0; e < 2; ++e) {
     int kind = (e == 0) ? p->kindA : p->kindB;
-    float vis = (e == 0) ? 1.0f : fminf(fmaxf((p->trim - 0.92f) / 0.08f, 0.0f), 1.0f);
+    float vis = (e == 0) ? p->visA : fminf(fmaxf((p->trim - 0.92f) / 0.08f, 0.0f), 1.0f);
     float cv = 0.0f;
     if (kind == 1) {
       float cx = (e == 0) ? p->mkA[0] : p->mkB[0], cy = (e == 0) ? p->mkA[1] : p->mkB[1], r = (e == 0) ? p->mkA[2] : p->mkB[2];
@@ -197,8 +198,9 @@ function SMK2_ConnPrep(req, w, h)
   local tm = { inDelay = g(req, "InDelay"), inDur = g(req, "InDur"), outOffset = g(req, "OutOffset"), outDur = g(req, "OutDur"),
     index = g(req, "Index"), stagger = g(req, "Stagger"), hasOut = g(req, "HasOut") > 0.5 }
   local t = smk.framesToSeconds(req.Time, rs, rate)
-  local a = smk.animAmount(t, T, tm, cfg(req, "InEngine"), cfg(req, "OutEngine"))
+  local a, phase = smk.animAmount(t, T, tm, cfg(req, "InEngine"), cfg(req, "OutEngine"))
   local trim = 1 - math.max(0, math.min(1, a))
+  local visA = (phase == "out") and math.max(0, math.min(1, trim / 0.08)) or 1   -- start mark leaves with the path so the last frame is empty
   local es = g(req, "EndSize") * px
   local colA = col(req, "LCA"); local colB = (g(req, "GradOn") > 0.5) and col(req, "LCB") or colA
   local flat, cum = {}, {}
@@ -220,7 +222,7 @@ function SMK2_ConnPrep(req, w, h)
   local mB = marker(math.floor(g(req, "BEnd") + 0.5), path.pb, path.endDir, es)
   local function mk(m) local r = { m.cx, m.cy, m.r }; for i = 1, 6 do r[3 + i] = m.tri[i] end; return r end
   return { size = { w, h }, n = path.n, kindA = mA.kind, kindB = mB.kind, total = path.total, thick = g(req, "Thick") * px, trim = trim,
-    dash = g(req, "Dash") * px, dgap = g(req, "DGap") * px, gradOn = g(req, "GradOn"), opacity = 1, pts = flat, cum = cum,
+    dash = g(req, "Dash") * px, dgap = g(req, "DGap") * px, gradOn = g(req, "GradOn"), opacity = 1, visA = visA, pts = flat, cum = cum,
     mkA = mk(mA), mkB = mk(mB), pul = pul, pulCol = col(req, "PulC"), colA = colA, colB = colB }, path, a
 end
 

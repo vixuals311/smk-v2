@@ -140,7 +140,7 @@ function smk.connShade(P, x, y)
     if d2 < best then best = d2; bu = P.cum[i] + t * math.sqrt(l2) end
   end
   local d = math.sqrt(best) - P.thick * 0.5
-  local m = smk.clamp(P.trim * P.total - bu + 0.5, 0, 1)
+  local m = smk.clamp(P.trim * P.total - bu + 0.5, 0, 1) * math.min(P.trim * 50, 1)
   if P.dash > 0 then
     local ph = bu % (P.dash + P.dgap)
     m = m * smk.clamp(math.min(ph, P.dash - ph) + 0.5, 0, 1)
@@ -149,7 +149,7 @@ function smk.connShade(P, x, y)
   local c = { P.colA[1] + (P.colB[1] - P.colA[1]) * g, P.colA[2] + (P.colB[2] - P.colA[2]) * g, P.colA[3] + (P.colB[3] - P.colA[3]) * g,
               P.colA[4] + (P.colB[4] - P.colA[4]) * g }
   local out = premul(c, cov(d) * m)
-  local vis = { 1, smk.clamp((P.trim - 0.92) / 0.08, 0, 1) }                                -- end marker shows only when fully drawn
+  local vis = { P.visA or 1, smk.clamp((P.trim - 0.92) / 0.08, 0, 1) }                                -- end marker shows only when fully drawn
   for e, mk in ipairs({ P.mkA, P.mkB }) do
     local mc = (e == 1) and P.colA or P.colB
     local cv = 0

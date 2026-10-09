@@ -65,7 +65,8 @@ TEX_FILTER_MODE_LINEAR, TEX_ADDRESS_MODE_CLAMP, TEX_NORMALIZED_COORDS_TRUE = 1, 
 function FuRegisterClass() end
 function Pixel(t) return t end
 IMG = {Width=1920, Height=1080}
-function Image(a) local o={Width=a.IMG_Like and a.IMG_Like.Width, Height=a.IMG_Like and a.IMG_Like.Height}; function o:Fill() end; return o end
+function ImgRectI(l,b,r,t) return {left=l,bottom=b,right=r,top=t} end
+function Image(a) local o={Width=a.IMG_Like and a.IMG_Like.Width, Height=a.IMG_Like and a.IMG_Like.Height, DataWindow=a.IMG_DataWindow}; function o:Fill() end; return o end
 LAST = nil
 function DVIPComputeNode(req, k, src, pname, pdef)
   assert(pdef:find("float glowCol%[4%]") and src:find("__KERNEL__"))
@@ -97,6 +98,15 @@ run = lua.eval("""function(t, over, pre, fail, noimg) FAIL=fail; NOIMG=noimg; LA
   local req={Time=t, over=over}; function req:IsPreCalc() return pre end; Process(req); return LAST, req.out end""")
 def frame(t, pre=False, fail=False, noimg=False, **o): return run(t, T(o), pre, fail, noimg)
 b, out = frame(12); check("defaults: glow on, 48 samples, px@1920 radius", b.glowOn == 1 and b.glowSamples == 48 and near(b.glowR, 40, 1e-6) and b.outOn == 0 and b.shineOn == 0)
+# DoD padding (M8): output data window = input data window grown by glow radius + outline; kernel gets the window origin and size
+lua.execute("IMG.DataWindow = {left=700,bottom=400,right=1000,top=600}")
+b, out = frame(12, GlowR=40.0, OutOn=1.0, OutW=6.0)
+dw = out.DataWindow
+check("DoD padding: output window = input window + glow + outline (+2)", dw is not None and dw.left == 700 - 48 and dw.bottom == 400 - 48 and dw.right == 1000 + 48 and dw.top == 600 + 48)
+check("DoD padding: kernel origin/size follow the window", b.off[1] == 652 and b.off[2] == 352 and b.osize[1] == 396 and b.osize[2] == 296)
+b, out = frame(12, GlowOn=0.0)
+check("no glow/outline: no padding, window untouched", out.DataWindow is None and b.off[1] == 0 and b.osize[1] == 1920)
+lua.execute("IMG.DataWindow = nil")
 check("glow quality maps to sample counts", [frame(12, GlowQ=float(i))[0].glowSamples for i in range(4)] == [24, 48, 96, 160])
 check("sizes are px@1920 (outline 6 -> 6; at 3840 would double)", near(frame(12, OutW=6.0)[0].outW, 6, 1e-6))
 # shine auto sweep: before the delay off-screen, half time centred, after the sweep off-screen
@@ -146,7 +156,7 @@ else:
     A = lambda a: "{" + ",".join(F(v) for v in a) + "}"
     order = ["glowOn", "glowSamples", "glowSrc", "glowBehind", "outOn", "shineOn", "gradOn"]
     forder = ["glowR", "glowI", "glowThr", "outW", "shC", "shS", "shPos", "shW", "shSoft", "shI", "gC", "gS", "gExt", "gAmt", "opacity"]
-    ci = lambda s: ("{ {%d,%d}, " % (W, H) + ", ".join(str(s[k]) for k in order) + ", " + ", ".join(F(s[k]) for k in forder) + ", " +
+    ci = lambda s: ("{ {%d,%d}, {0,0}, {%d,%d}, " % (W, H, W, H) + ", ".join(str(s[k]) for k in order) + ", " + ", ".join(F(s[k]) for k in forder) + ", " +
                     ", ".join(A(s[k]) for k in ["glowCol", "outCol", "shCol", "gA", "gB"]) + " }")
     fields = re.search(r"SMK2LookParams = \[\[(.*?)\]\]", fuse, re.S).group(1).replace("\n", " ")
     flat_img = ",".join(F(v) for row in img for p in row for v in p)
