@@ -296,7 +296,7 @@ def callout():
         Node("UIC_Animator", "Fuse.SMK2_Animator", (220, 33), links={"Image": ("UIC_Merge", "Output")},
              expr={"PivotX": "UIC_Card.CX", "PivotY": "UIC_Card.CY"}),
         Node("UIC_Leader", "Fuse.SMK2_Shape", (110, 132), values=dict(static, UseFrameFormatSettings=1, Width=1920, Height=1080, Shape=3, UseEnd=1,
-             TrimAnim=1, LF=Raw("{ 0.65, 0.5 }"), LT=Raw("{ 0.82, 0.28 }"), Thick=3, DotR=7, InEngine=0, OutEngine=0, InDur=0.45, FillAR=1.0, FillAG=1.0, FillAB=1.0, FillAA=1.0, SCA=0.0, BW=0),
+             TrimAnim=1, InFade=0.0, OutFade=0.0, LF=Raw("{ 0.65, 0.5 }"), LT=Raw("{ 0.82, 0.28 }"), Thick=3, DotR=7, InEngine=0, OutEngine=0, InDur=0.45, FillAR=1.0, FillAG=1.0, FillAB=1.0, FillAA=1.0, SCA=0.0, BW=0),
              expr=leader_expr),
         Node("UIC_Over", "Merge", (330, 66), links={"Background": ("UIC_Animator", "Output"), "Foreground": ("UIC_Leader", "Output")}),
     ]
