@@ -1,0 +1,1 @@
+[["Card", 10, "ERR", "'NoneType' object has no attribute 'GetInput'"], ["Bloom", 1, "ERR", "'NoneType' object has no attribute 'SetAttrs'"], ["Bloom", 5, "ERR", "'NoneType' object has no attribute 'SetAttrs'"], ["Bloom", 10, "1080p", 4.2, 153.5, 21, 300], ["DONE"]]

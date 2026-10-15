@@ -1,0 +1,61 @@
+== tests/test_animator.py
+[SMK2_Animator] GPU failed: [string "<python>"]:346: RunSession failed
+animator: 10 passed, 0 failed
+== tests/test_bloom.py
+[SMK2_Bloom] GPU failed: [string "<python>"]:460: RunSession failed: SMK2BloomExtractKernel
+bloom kernel parity: SKIPPED (no C compiler)
+bloom: 24 passed, 0 failed
+== tests/test_connector.py
+[SMK2_Connector] GPU failed: [string "<python>"]:618: RunSession failed
+connector kernel parity: SKIPPED (no C compiler)
+connector: 23 passed, 0 failed
+== tests/test_connector_core.py
+connector core: 32 passed, 0 failed
+== tests/test_cursor.py
+[SMK2_Cursor] GPU failed: [string "<python>"]:505: RunSession failed
+cursor kernel parity: SKIPPED (no C compiler)
+cursor: 13 passed, 0 failed
+== tests/test_cursor_core.py
+cursor core: 27 passed, 0 failed
+== tests/test_fuse_harness.py
+fuse harness: 12 passed, 0 failed
+== tests/test_longshadow.py
+[SMK2_LongShadow] GPU failed: [string "<python>"]:389: RunSession failed: SMK2LSInitKernel
+longshadow kernel parity: SKIPPED (no C compiler)
+longshadow: 22 passed, 0 failed
+== tests/test_look.py
+[SMK2_Look] GPU failed: [string "<python>"]:523: RunSession failed
+look kernel parity: SKIPPED (no C compiler)
+look: 35 passed, 0 failed
+== tests/test_macros.py
+macros: 352 passed, 0 failed
+== tests/test_motion_rig.py
+motion rig: 9 passed, 0 failed
+== tests/test_pagecurl.py
+[SMK2_PageCurl] GPU failed: [string "<python>"]:443: RunSession failed
+pagecurl kernel parity: SKIPPED (no C compiler)
+pagecurl: 31 passed, 0 failed
+== tests/test_products.py
+products: 36 passed, 0 failed
+== tests/test_reflection.py
+[SMK2_Reflection] GPU failed: [string "<python>"]:419: RunSession failed
+reflection kernel parity: SKIPPED (no C compiler)
+reflection: 28 passed, 0 failed
+== tests/test_release.py
+release: 27 passed, 0 failed
+== tests/test_relief.py
+[SMK2_Relief] GPU failed: [string "<python>"]:387: RunSession failed
+relief kernel parity: SKIPPED (no C compiler)
+relief: 24 passed, 0 failed
+== tests/test_shape.py
+[SMK2_Shape] GPU failed: [string "<python>"]:567: RunSession failed
+shape: 47 passed, 0 failed
+== tests/test_shape_kernel.py
+kernel parity: SKIPPED (no C compiler)
+== tests/test_smk_core.py
+smk_core: 49 passed, 0 failed
+== tests/test_stagger.py
+stagger: 9 passed, 0 failed
+== tests/test_text_expr.py
+text expressions: 62 passed, 0 failed
+finished
