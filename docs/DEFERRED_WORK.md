@@ -28,3 +28,4 @@
 | D8-006 | Reflection blur stepped streaks: per-pixel spiral rotation + adaptive taps | Phase 8 F3 | FIXED, in Phase 10 gate |
 | D8-007 | Look outline serration: directions scale with width (24-72) | Phase 8 L3 | FIXED, in Phase 10 gate |
 | D8-008 | Clearer Reflection/Relief labels | Phase 8 notes | DONE (I1) |
+| D10-001 | Look outline cost at 4K (70 ms at 20 px): capped rings 6 x directions 56; re-measure; consider a distance-field outline via multi-pass | Phase 10 O2 | IN REVIEW |

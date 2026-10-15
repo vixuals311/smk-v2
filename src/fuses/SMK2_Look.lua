@@ -194,8 +194,8 @@ function SMK2_LookPrep(req, w, h)
   local ga = g(req, "GradAngle") * math.pi / 180
   local samples = ({ 24, 48, 96, 160 })[math.floor(g(req, "GlowQ") + 0.5) + 1] or 48
   samples = math.min(160, math.max(samples, math.floor(g(req, "GlowR") * px * 0.8)))      -- wide glows need more taps (no blocky ghosts at big radii)
-  local rings = math.max(3, math.min(8, math.ceil(g(req, "OutW") * px / 3)))
-  local dirs = math.max(24, math.min(72, math.ceil(math.pi * g(req, "OutW") * px)))        -- arc gap between directions <= ~2 px: no serration on wide outlines              -- wide outlines need more rings (no stair-steps)
+  local rings = math.max(3, math.min(6, math.ceil(g(req, "OutW") * px / 3)))
+  local dirs = math.max(24, math.min(56, math.ceil(math.pi * g(req, "OutW") * px)))        -- arc gap <= ~2 px up to 56 directions; rings x directions is capped (<= 336 taps) so 4K stays cheap              -- wide outlines need more rings (no stair-steps)
   return { size = { w, h }, off = { 0, 0 }, osize = { w, h }, glowOn = g(req, "GlowOn") > 0.5 and 1 or 0, glowSamples = samples, glowOnly = g(req, "GlowOnly") > 0.5 and 1 or 0, outRings = rings, outDirs = dirs, glowGamma = g(req, "GlowGamma"), glowSrc = math.floor(g(req, "GlowSrc") + 0.5),
     glowBehind = g(req, "GlowBehind") > 0.5 and 1 or 0, outOn = g(req, "OutOn") > 0.5 and 1 or 0, shineOn = g(req, "ShineOn") > 0.5 and 1 or 0,
     gradOn = g(req, "GradOn") > 0.5 and 1 or 0, glowR = g(req, "GlowR") * px, glowI = g(req, "GlowI"), glowThr = g(req, "GlowThr"), outW = g(req, "OutW") * px,

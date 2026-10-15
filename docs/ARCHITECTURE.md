@@ -100,3 +100,8 @@ and falls back to Regular for unknown fonts. UTF-8: the text macros now count ch
 - Fix found in the gate: with only 6 levels the halo saturated near R120 and 4K was not resolution independent; extra halvings (up to 3) are now built first when the radius exceeds 128 px.
 - Bloom at the same radius number is fainter and narrower than Look (needs ~4-5x intensity), so the default intensity is now 4.
 - Frame-filling additive glow thins at the frame border (nothing exists outside the frame): expected.
+
+## Phase 10 results (2026-10)
+- Long Shadow (log2-doubling max-propagation, 3 ms/instance, cost ~independent of length), Reflection blur (per-pixel spiral rotation + adaptive taps; Quality 1 stays default) and Look outline (directions scale with width) passed.
+- Look outline cost at 4K was 70 ms with 72 directions x 8 rings; rings are now capped at 6 and directions at 56 (<= 336 taps). Re-measure in the next gate (O2).
+- Tooling fix: build/package scripts read and write UTF-8 explicitly (Windows code page crashed on the arrow glyph).

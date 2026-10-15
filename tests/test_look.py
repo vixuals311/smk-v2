@@ -124,7 +124,7 @@ b_r1, _ = frame(24, ShineOn=1.0, ShineDelay=0.5, ShineDur=1.0, ShineRepeat=2.0);
 check("repeat: second sweep passes the centre again", abs(b_r1.shPos) < 0.01 * ext and abs(b_r2.shPos) < 0.01 * ext)
 check("manual shine position scales with the frame", near(frame(12, ShineOn=1.0, ShineAuto=0.0, ShinePos=0.0)[0].shPos, 0, 1e-6))
 b, _ = frame(12, GlowR=120.0, GlowQ=0.0); check("wide glow raises the sample count (R=120, Draft -> >= 96 samples)", b.glowSamples >= 96)
-b, _ = frame(12, OutOn=1.0, OutW=24.0); check("wide outline uses more rings and directions", b.outRings >= 8 and b.outDirs >= 60 and frame(12, OutOn=1.0, OutW=2.0)[0].outDirs == 24)
+b, _ = frame(12, OutOn=1.0, OutW=24.0); check("wide outline uses more rings and directions", b.outRings == 6 and b.outDirs == 56 and frame(12, OutOn=1.0, OutW=2.0)[0].outDirs == 24)
 check("glow spread input", near(frame(12, GlowGamma=0.6)[0].glowGamma, 0.6, 1e-6) and frame(12, GlowOnly=1.0)[0].glowOnly == 1)
 check("PreCalc skips the GPU", frame(10, pre=True)[0] is None)
 check("GPU failure passes the input through", frame(10, fail=True)[1] is not None)
