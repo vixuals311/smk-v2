@@ -1,0 +1,30 @@
+# Phase 12 Gate — Hardening (M4): everything, in every situation (run by Agent A)
+
+`python scripts/install.py`, restart Resolve, **paste fresh**. **Scripting only.** Standard hygiene: deselect (`FlowView.Select()`) before each paste, comp rate = timeline rate (except where a check changes it on purpose),
+cold renders (Background +0.001), readable graphs (distinct `flow:SetPos`, left→right, 2–3 units apart, clear names, one comp per check named after the check, a Note per group), `ProjectManager.SaveProject()`,
+project `SMK Phase12`. Keep "SMK Test" untouched. Write `docs/PHASE12_RESULTS.md` (table: check, comp, result, evidence) **and `docs/PERFORMANCE.md`** (the cost table from H9), push `phase12-results`, paste the table.
+NOT VERIFIED where not observed. Shape sources are empty on frame 0 and the last frames. You may fix `build/make_macros.py` / `src/fuses/*.lua` / `src/core/*.lua`; re-run build + all tests and describe each change.
+The goal is to find what breaks: report every failure, crash, red node, wrong pixel, stale frame or surprising cost, with the exact steps, even when you fix it.
+
+**Inventory (22 macros + 11 Fuses + 1 spike-free release):** Fuses `SMK2 Animator, Motion (modifier), Motion Rig, Shape, Cursor, Connector, Look, Relief, Reflection, Page Curl, Bloom, Long Shadow`;
+macros `SMK2_UIBlock, ProgressRing, ProgressBar, TextLetter, TextWord, TextLine, Callout, CardStack, StatCard, ClickDemo` and the `_Glass/_Neon/_Soft` variants of UIBlock, CardStack, StatCard, ClickDemo.
+
+| # | Check | Pass criteria / report |
+|---|---|---|
+| H1 | **Smoke, everything fresh.** For every Fuse and every macro (33): paste/instantiate in its own comp with defaults (image Fuses fed by a Shape or Text+), render frames 3, 12, mid, last−3 | No error; output not empty (except where by design); table of 33 rows: tool, comp, alpha-sum at the 4 frames |
+| H2 | **Frame-rate matrix.** Products UIBlock, CardStack, StatCard, TextLetter, ProgressRing, ClickDemo, Connector, Look(shine) at 23.976 / 24 / 25 / 29.97 / 30 / 50 / 59.94 / 60 fps | Frames at equal seconds are identical (max pixel diff ≤ 2/255 apart from sub-frame rounding); report any drift |
+| H3 | **Resolution matrix.** 1280×720, 1920×1080, 1080×1920, 1080×1080, 2560×1440, 3840×2160, 4096×2160, 7680×4320 on Look, Bloom (R 300), Long Shadow (L 1000), Reflection, Page Curl, Relief, Shape, StatCard | Same composition in frame fractions; **8K: renders or fails gracefully?** (no crash/hang; report memory/time and the error) |
+| H4 | **Long clips / large time values.** Comp render range 0–36000 (10 min @ 60 fps) and a late start (RenderStart 90000): render frames near the end and at the start for Shape, Animator (spring/elastic), TextLetter, StatCard, Connector, Cursor, Look shine, Page Curl, Long Shadow ripple (Reflection ripple) | Motion identical to the same clip at the start; no precision jitter; Out ends exactly at the clip end |
+| H5 | **Real timeline clip trimming.** Via the Resolve API put a Fusion clip (Text+/generator + product macro) on a timeline, trim head and tail (`AppendToTimeline` with start/end frames or edit-in/out), open its Fusion comp, render | Motion is clip-relative (starts at the trimmed head, Out ends at the trimmed tail). If scripting cannot do it, say exactly why — NOT VERIFIED |
+| H6 | **Real deliver.** Add a render job (PNG sequence or ProRes/H.264) for a timeline with TextLetter + StatCard + Look + Bloom + CardStack; render | Output frame count correct; frames match the in-comp render (diff); no black/stale frames; time taken |
+| H7 | **Missing and odd inputs.** Each image Fuse with no input connected; with a 1×1 image; with a fully transparent image; with an image bigger than the frame; with a non-square-pixel/other-aspect comp | No crash/red node; graceful output (transparent or pass-through); report each |
+| H8 | **Extreme parameters.** Zero and maximum of every slider that could divide by zero or explode: radius 0, length 0, width 0, huge glow radius, duration 0, stagger 0 and 1, index 200, 8 cursor waypoints, 6 spline points, 160 samples | No NaN/black frames/crash; frames stay finite; list any issue |
+| H9 | **Cost budget → `docs/PERFORMANCE.md`.** Cold 60 fps, 300 frames, 1080p and 4K, first and second run: each Fuse and each macro alone (default settings) over a plain background, plus 5 and 10 instances for the cheap ones | One table (ms/frame; "no effect" baseline subtracted); flag everything over 5 ms per instance at 1080p |
+| H10 | **Many instances.** 20 TextLetter 12-letter; 20 UIBlocks; 10 StatCards; 10 CardStacks; 5 Blooms | Completes; ms/frame; memory use; Resolve still responsive |
+| H11 | **Copy/paste, duplicate, rename, undo.** Copy/paste each macro between comps and between projects; duplicate in the same comp; rename the macro group; undo/redo a parameter change (scripted `comp:Undo()`); save as a different project | Independent copies (changing one does not move the other); expressions still resolve after rename/paste into a new comp; report anything that breaks |
+| H12 | **Full restart round-trip for everything.** After H1 save, quit Resolve fully, relaunch, reopen | All 33 comps render pixel-identical frames; no BezierSpline on any published input; all tools still connected |
+| H13 | **Install/uninstall.** `python install.py --dry-run`, `--target <temp>`, `--uninstall --dry-run`, `--uninstall` on a **copy** (not your live Fusion folder), then reinstall | Behaves as documented; nothing outside the SMK2 folders touched; Resolve loads the reinstall |
+| H14 | **Release zip.** `python build/package.py`; unzip into a temp folder; run its `install.py --target <temp>`; verify `SHA256SUMS` | All files present and hashes match; manual present |
+| H15 | **Console/log scan.** After the whole run, search the Resolve/Fusion logs you can read for `SMK2`, `GPU failed`, `RunSession failed`, `Lua error` | List any hits; none expected |
+
+**For the user by hand (not scriptable):** viewer playback fps for the heavy products, dragging crosshairs/handles, Inspector layouts, Edit-page trimming by mouse, whether everything looks good.
