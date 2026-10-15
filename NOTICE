@@ -1,0 +1,13 @@
+SMK v2 — Fusion SaaS Motion Kit v2
+Copyright (c) 2026 the SMK v2 authors. All rights reserved unless a licence file says otherwise.
+
+CLEAN-ROOM STATEMENT
+All Fuses, macros, shaders (GPU kernels), reference pixel functions and generators in this package were written from scratch for this project.
+Several effects (bevel / emboss, reflection, page curl, glow) were INSPIRED by the behaviour of third-party effect packs the author owns, studied as
+black boxes (what the controls do and how the result looks). No code, node graphs, expressions, control names, layouts or assets from those packs were
+copied; the algorithms here (Gaussian-derivative relief gather, mirror + growing blur, cylinder curl model, pyramid glow) are independent implementations
+of well-known techniques. See docs/CLEAN_ROOM.md for the review.
+
+THIRD PARTY
+- DaVinci Resolve and Fusion are products of Blackmagic Design Pty Ltd. SMK v2 is an independent add-on and is not affiliated with or endorsed by Blackmagic Design.
+- Python and the Lupa library are used only by the developer test-suite, not in the shipped package.
