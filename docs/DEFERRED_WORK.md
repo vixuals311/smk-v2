@@ -29,3 +29,6 @@
 | D8-007 | Look outline serration: directions scale with width (24-72) | Phase 8 L3 | FIXED, in Phase 10 gate |
 | D8-008 | Clearer Reflection/Relief labels | Phase 8 notes | DONE (I1) |
 | D10-001 | Look outline cost at 4K (70 ms at 20 px): capped rings 6 x directions 56; re-measure; consider a distance-field outline via multi-pass | Phase 10 O2 | IN REVIEW |
+| D11-001 | Stat card: a very long value (10 digits) overflows the card; add auto-shrink or a width cap | Phase 11 T5 | OPEN |
+| D11-002 | Click Demo: the button does not react to the click (press/flash); viewer crosshair for the macro-level cursor start unverified | Phase 11 D3 | OPEN |
+| D11-003 | Elastic count engine overshoots a stat counter by 37 %: consider a clamp option | Phase 11 T3 | OPEN |

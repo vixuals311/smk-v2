@@ -105,3 +105,8 @@ and falls back to Regular for unknown fonts. UTF-8: the text macros now count ch
 - Long Shadow (log2-doubling max-propagation, 3 ms/instance, cost ~independent of length), Reflection blur (per-pixel spiral rotation + adaptive taps; Quality 1 stays default) and Look outline (directions scale with width) passed.
 - Look outline cost at 4K was 70 ms with 72 directions x 8 rings; rings are now capped at 6 and directions at 56 (<= 336 taps). Re-measure in the next gate (O2).
 - Tooling fix: build/package scripts read and write UTF-8 explicitly (Windows code page crashed on the arrow glyph).
+
+## Phase 11 results (2026-10): products
+- Card Stack, Stat Card, Click Demo and 12 Glass/Neon/Soft variants pass in Resolve (22 macros). Point expressions on a Fuse's OffsetControl work (cursor follows the button); the Cursor honours frame size inside a macro.
+- Lessons (each was a unit-test blind spot): in Fusion expressions a linked input and Text inputs are objects, not strings: read `.Value` for text, and read the source tool's own input rather than a linked one; Number inputs need an explicit wide `INP_MinAllowed/MaxAllowed` when the slider range is narrower than the legal range. Unit tests must feed text controls as objects.
+- Look outline at 20 px / 4K now 45.7 ms (was 70.5) after capping rings x directions.
