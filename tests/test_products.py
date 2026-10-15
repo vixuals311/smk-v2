@@ -23,7 +23,7 @@ def number(frame, **ctrl):
     c = dict(Value=12480.0, Decimals=0.0, Commas=1.0, Prefix="", Suffix="", InDelay=0.3, InDur=1.4, Engine=0.0, Stiff=120.0, Damp=18.0, Over=1.7, HasOut=0.0, OutOffset=0.0, OutDur=0.5, Weight=4.0)
     c.update(ctrl)
     lua.execute("UIS_Ctrl = {}")
-    for k, v in c.items(): lua.globals().UIS_Ctrl[k] = v
+    for k, v in c.items(): lua.globals().UIS_Ctrl[k] = lua.eval("function(v) return {Value=v} end")(v) if k in ("Prefix", "Suffix") else v   # Fusion text controls are objects with .Value
     lua.execute("comp = { RenderStart = 0, RenderEnd = 239 }; function comp:GetPrefs() return 24 end")
     lua.globals().time = frame
     return lua.eval("(function() return " + e + " end)()")
@@ -47,7 +47,7 @@ def card_y(expr, cy1=0.72, h=0.07, gap=0.015):
     return lua.eval("(function() return " + expr + " end)()")
 exp = 0.72 - 3 * (0.07 + 0.015) * 1920 / 1080
 check("card 4 sits 3 pitches below card 1 (pitch = height + gap in frame-width units, converted to height units)", abs(card_y(cy4) - exp) < 1e-9)
-check("cards 2..4 follow card 1 for size/colour (linked, not copied)", all(f'{k} = Input {{ SourceOp = "UIL_S1", Source = "{k}", }}' in s for k in ("W", "H", "FillAR", "SCA", "BW")))
+check("cards 2..4 follow card 1 for size/colour (expressions, not SourceOp links: a link resolves to nil in Resolve)", all(f'{k} = Input {{ Expression = "UIL_S1.{k}", }}' in s for k in ("W", "H", "FillAR", "SCA", "BW")) and 'SourceOp = "UIL_S1"' not in s.split("UIL_S2 = ")[1])
 check("each animator has its own Index 0..3 and mirrors the first animator's timing", all(f"Index = Input {{ Value = {i}, }}" in s for i in range(4)) and "InDelay = Input { Expression = \"UIL_A1.InDelay\"" in s)
 check("four independent text controls published", len(re.findall(r"Label\d_Text = InstanceInput", s)) == 4)
 check("only the first card's stagger is published", s.count("Stagger Between Cards") == 1)

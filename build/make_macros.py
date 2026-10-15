@@ -39,6 +39,7 @@ class Node:
                     out += [f'{t}\t\t\tINPID_InputControl = "SliderControl",', f"{t}\t\t\tINP_MinScale = {float(lo)},", f"{t}\t\t\tINP_MaxScale = {float(hi)},"]
                 out += [f'{t}\t\t\tLINKID_DataType = "Number",', f"{t}\t\t\tINP_Default = {float(default)},", f'{t}\t\t\tICS_ControlPage = "{page}",']
                 if uid in ("Scale", "InDur", "OutDur"): out.append(f"{t}\t\t\tINP_MinAllowed = {0.01 if uid == 'Scale' else 0.0},")
+                if uid == "Value": out += [f"{t}			INP_MinAllowed = -1000000000000.0,", f"{t}			INP_MaxAllowed = 1000000000000.0,"]   # slider range 0..1e6 is only the visible range
                 out += [f'{t}\t\t\t{{ CCS_AddString = "{i}", }},' for i in (items or [])]
                 out.append(f"{t}\t\t}},")
             out.append(f"{t}\t}},")
@@ -363,13 +364,14 @@ def card_stack(n=4):
                      W=0.34, H=0.07, CX=0.5, CY=0.72, FillAR=0.16, FillAG=0.2, FillAB=0.36, FillAA=1.0, BW=2, BCR=1, BCG=1, BCB=1, BCA=0.35))
         if i > 1:
             shape.values = dict(STATIC_SHAPE, UseFrameFormatSettings=1, Width=1920, Height=1080)
-            shape.links = {k: ("UIL_S1", k) for k in SHAPE_LINK_KEYS}
-            shape.expr = {"CX": "UIL_S1.CX", "CY": f"UIL_S1.CY - {i - 1}*(UIL_S1.H + UIL_Ctrl.Gap)*{ASPECT}"}
+            # expressions, not SourceOp links: a linked Fuse / Text+ input resolves to nil in Resolve (render failed, "font not found")
+            shape.expr = {k: f"UIL_S1.{k}" for k in SHAPE_LINK_KEYS}
+            shape.expr.update({"CX": "UIL_S1.CX", "CY": f"UIL_S1.CY - {i - 1}*(UIL_S1.H + UIL_Ctrl.Gap)*{ASPECT}"})
         label = Node(f"UIL_L{i}", "TextPlus", (110, y), values=dict(UseFrameFormatSettings=1, Width=1920, Height=1080, Wrap=0, StyledText=f"Card {i}",
                      Font="Open Sans", Size=0.03, HorizontalJustificationNew=1, VerticalJustificationNew=3, HorizontalLeftCenterRight=0,
                      Red1=1.0, Green1=1.0, Blue1=1.0, Alpha1=1.0),
-                     expr={"Center": f"Point(UIL_S{i}.CX, UIL_S{i}.CY)", "Style": style_expr("UIL_Ctrl.Weight", f"UIL_L{i}.Font.Value")})
-        if i > 1: label.links = {k: ("UIL_L1", k) for k in ("Font", "Size", "Red1", "Green1", "Blue1")}; label.values.pop("Font"); label.values.pop("Size"); [label.values.pop(k) for k in ("Red1", "Green1", "Blue1")]
+                     expr={"Center": f"Point(UIL_S{i}.CX, UIL_S{i}.CY)", "Style": style_expr("UIL_Ctrl.Weight", "UIL_L1.Font.Value")})
+        if i > 1: label.expr.update({k: f"UIL_L1.{k}" for k in ("Font", "Size", "Red1", "Green1", "Blue1")}); label.values.pop("Font"); label.values.pop("Size"); [label.values.pop(k) for k in ("Red1", "Green1", "Blue1")]
         merge = Node(f"UIL_M{i}", "Merge", (220, y + 33), links={"Background": (f"UIL_S{i}", "Output"), "Foreground": (f"UIL_L{i}", "Output")})
         anim = Node(f"UIL_A{i}", "Fuse.SMK2_Animator", (330, y + 33), links={"Image": (f"UIL_M{i}", "Output")},
                     expr={"PivotX": f"UIL_S{i}.CX", "PivotY": f"UIL_S{i}.CY"}, values={"Index": i - 1} | ({"Stagger": 0.12} if i == 1 else {}))
@@ -411,7 +413,7 @@ def stat_number_expr():
     fmt = ('local v=UIS_Ctrl.Value*(1-a) local s=string.format("%."..math.floor(UIS_Ctrl.Decimals+0.5).."f",v) '
            'if UIS_Ctrl.Commas>0.5 then local i,f=s:match("^(-?%d+)(.*)$") local neg="" if i:sub(1,1)=="-" then neg="-" i=i:sub(2) end '
            'local r=i:reverse():gsub("(%d%d%d)","%1,") r=r:reverse() if r:sub(1,1)=="," then r=r:sub(2) end s=neg..r..f end '
-           'return UIS_Ctrl.Prefix..s..UIS_Ctrl.Suffix')
+           'return UIS_Ctrl.Prefix.Value..s..UIS_Ctrl.Suffix.Value')   # text controls are objects in expressions: .Value
     return f"(function() {body}{fmt} end)()"
 
 def stat_card():
@@ -483,7 +485,7 @@ def click_demo():
 
 
 BASE = {"SMK2_UIBlock": (ui_block, ("UIB_Shape",), ("UIB_Label",)), "SMK2_CardStack": (card_stack, tuple(f"UIL_S{i}" for i in range(1, 5)), tuple(f"UIL_L{i}" for i in range(1, 5))),
-        "SMK2_StatCard": (stat_card, ("UIS_Card",), ()), "SMK2_ClickDemo": (click_demo, ("UID_Card",), ("UID_Label",))}
+        "SMK2_StatCard": (stat_card, ("UIS_Card",), ("UIS_Num", "UIS_Label")), "SMK2_ClickDemo": (click_demo, ("UID_Card",), ("UID_Label",))}
 MACROS = {"SMK2_Callout": callout, "SMK2_TextLetter": lambda: text_macro("letter"), "SMK2_TextWord": lambda: text_macro("word"), "SMK2_TextLine": lambda: text_macro("line"),
           "SMK2_ProgressRing": lambda: progress("ring"), "SMK2_ProgressBar": lambda: progress("bar")}
 for _base, (_fn, _sh, _lb) in BASE.items():
