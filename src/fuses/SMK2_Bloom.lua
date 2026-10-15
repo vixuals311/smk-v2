@@ -129,7 +129,7 @@ end
 function Create()
   I.Image = self:AddInput("Image", "Image", { LINKID_DataType = "Image", LINK_Main = 1 })
   combo("GlowSrc", "Glow From", 0, { "Alpha", "Brightness" })
-  num("GlowR", "Radius (px @1920)", 120, 4, 400); num("GlowI", "Intensity", 1.2, 0, 6); num("GlowThr", "Brightness Threshold", 0.6, 0, 0.99)
+  num("GlowR", "Radius (px @1920)", 120, 4, 400); num("GlowI", "Intensity (Bloom is softer than Look: ~4x Look)", 4, 0, 20); num("GlowThr", "Brightness Threshold", 0.6, 0, 0.99)
   num("GlowGamma", "Spread (gamma; below 1 = wider, brighter tails)", 1, 0.3, 3)
   color("GlowC", "Glow Colour", 1, 0.45, 0.65, 1, 1)
   check("GlowBehind", "Glow Behind Object (off = additive)", 0); check("GlowOnly", "Glow Only (no object)", 0)

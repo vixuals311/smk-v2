@@ -51,7 +51,7 @@ Pyramid (multi-pass) glow with a large soft radius at fixed cost.
 | Control | Type | Default | Range / options |
 |---|---|---|---|
 | Radius (px @1920) | slider | 120 | 4 .. 400 |
-| Intensity | slider | 1.2 | 0 .. 6 |
+| Intensity (Bloom is softer than Look: ~4x Look) | slider | 4 | 0 .. 20 |
 | Brightness Threshold | slider | 0.6 | 0 .. 0.99 |
 | Spread (gamma; below 1 = wider, brighter tails) | slider | 1 | 0.3 .. 3 |
 | Opacity | slider | 1 | 0 .. 1 |

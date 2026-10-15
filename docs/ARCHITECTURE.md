@@ -94,3 +94,9 @@ and falls back to Regular for unknown fonts. UTF-8: the text macros now count ch
 - **S12 passed: a Fuse may chain several `DVIPComputeNode` sessions, feeding an intermediate `Image` (e.g. W/4 x H/4, deferred or eager) into the next pass; cost is about one pass.** Multi-pass is now the route for pyramid glow, bloom, long shadow and large blurs (D8-001).
 - Gotcha: a Shape source is empty on frame 0 and the last frames (its Out), so single-frame checks on Shape-fed effects must avoid those frames.
 - Each pixel Fuse ships a Lua reference pixel function and a GPU kernel compared pixel-for-pixel in `tests/` (`tests/kparity.py`); results in Resolve are measured with scripting only.
+
+## Phase 9 results (2026-10): Bloom
+- Multi-pass pyramid glow works in Resolve (8 passes, 6+ intermediates); cost is independent of radius (R40 vs R300 within noise); equal to Look glow in PNG renders.
+- Fix found in the gate: with only 6 levels the halo saturated near R120 and 4K was not resolution independent; extra halvings (up to 3) are now built first when the radius exceeds 128 px.
+- Bloom at the same radius number is fainter and narrower than Look (needs ~4-5x intensity), so the default intensity is now 4.
+- Frame-filling additive glow thins at the frame border (nothing exists outside the frame): expected.

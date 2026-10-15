@@ -20,7 +20,7 @@
 | D7-001 | Connector: auto-routing around obstacles, orthogonal routing with multiple bends, label on path, branching/multi-target, rope-physics sag | Beyond first Connector slice | OPEN |
 | D7-002 | Look: long shadow (log-step), inner glow/shadow (bevel done: SMK2_Relief), pyramid glow (multi-pass; needs a multi-pass DVIP spike), bilinear-accurate test oracle | Beyond first Look slice | OPEN |
 | D2-011 | Multi-element Shape (one Fuse, N elements: bars, grids, lists) | Fallback if S7 fails; also suits charts | OPEN |
-| D8-001 | Build pyramid glow / bloom / long shadow / big-radius blur on multi-pass GPU | S12 PASSED (Phase 8): chained DVIP sessions and W/4 intermediates work, cost ~ single pass | IN PROGRESS: SMK2_Bloom built (Phase 9); long shadow and Reflection blur still open |
+| D8-001 | Build pyramid glow / bloom / long shadow / big-radius blur on multi-pass GPU | S12 PASSED (Phase 8): chained DVIP sessions and W/4 intermediates work, cost ~ single pass | PARTLY DONE: SMK2_Bloom passed (Phase 9); long shadow and Reflection blur still open |
 | D8-002 | Page Curl: 3D-correct curl on arbitrary corner pivot, curl from a corner (diagonal peel with the cone), stagger by Index for several pages | First slice is a straight roll | OPEN |
 | D8-003 | Reflection: ripple from a noise map, per-pixel fresnel fade, vertical-axis (side) mirror | Beyond first slice | OPEN |
 | D8-004 | Relief: use a second input as a height map; inner/outer bevel modes | Beyond first slice | OPEN |
