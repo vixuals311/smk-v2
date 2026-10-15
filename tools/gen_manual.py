@@ -38,7 +38,7 @@ def call_args(text, fn):
     return res
 
 def parse_fuse(path):
-    t = open(path).read()
+    t = open(path, encoding="utf-8").read()
     info = {"file": os.path.basename(path)}
     m = re.search(r'REGS_Name = "([^"]+)"', t); info["name"] = m.group(1) if m else os.path.basename(path)[:-4]
     m = re.search(r'REGS_OpDescription = "([^"]+)"', t); info["desc"] = m.group(1) if m else ""
@@ -71,7 +71,7 @@ def parse_fuse(path):
     return info
 
 def parse_macro(path):
-    t = open(path).read()
+    t = open(path, encoding="utf-8").read()
     name = os.path.basename(path)[:-8]
     ctrls = []
     for m in re.finditer(r"InstanceInput \{(.*?)\n\t*\}", t, re.S):
@@ -115,5 +115,5 @@ def generate():
     return "\n".join(out)
 
 if __name__ == "__main__":
-    text = generate(); open(os.path.join(ROOT, "docs/MANUAL.md"), "w", newline="\n").write(text)
+    text = generate(); open(os.path.join(ROOT, "docs/MANUAL.md"), "w", newline="\n", encoding="utf-8").write(text)
     print("manual:", len(text.splitlines()), "lines")
