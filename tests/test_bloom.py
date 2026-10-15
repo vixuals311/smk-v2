@@ -40,6 +40,7 @@ check("no runtime require", "require(" not in fsrc and "dofile(" not in fsrc)
 b, out, added = frame(0)
 check("defaults: window not padded without a DataWindow; 6 levels halving", out.DataWindow is None and b.osize[1] == 1920 and b.lw[1] == 960 and b.lw[6] == 30 and b.lh[1] == 540)
 check("level weights sum to 1", abs(sum(b.wts[i] for i in range(1, 7)) - 1) < 1e-9)
+check("big radius adds levels: R=300 at 1080p builds 1 extra halving, weights still sum to 1", frame(0, GlowR=300.0)[0].sh == 2 and b.sh == 0 and abs(sum(frame(0, GlowR=300.0)[0].wts[i] for i in range(1, 7)) - 1) < 1e-9)
 check("a large radius shifts weight to coarse levels", frame(0, GlowR=300.0)[0].wts[6] > frame(0, GlowR=10.0)[0].wts[6])
 check("passes: extract(src) + 5 downs + comp(src, L1..L6) = last AddInput list", list(added.values())[-7:] == ["src", "L1", "L2", "L3", "L4", "L5", "L6"])
 check("8 render passes", len([a for a in added.values() if a in ("src", "prev")]) == 2 + 5)
@@ -69,7 +70,7 @@ else:
     F, A = kparity.F, kparity.A
     I_ = lambda a: "{" + ",".join(str(v) for v in a) + "}"
     def init(s, lvl):
-        return ("{ {%d,%d}, {%d,%d}, {%d,%d}, %s, %s, %d, %d, %d, %d, %s, %s, %s, %s, %s, %s }" % (W, H, -s["pad"], -s["pad"], s["ow"], s["oh"], I_(s["lw"]), I_(s["lh"]), lvl, s["glowSrc"], s["glowBehind"], s["glowOnly"],
+        return ("{ {%d,%d}, {%d,%d}, {%d,%d}, %s, %s, %d, %d, %d, %d, %d, %s, %s, %s, %s, %s, %s }" % (W, H, -s["pad"], -s["pad"], s["ow"], s["oh"], I_(s["lw"]), I_(s["lh"]), lvl, 0, s["glowSrc"], s["glowBehind"], s["glowOnly"],
                 F(s["glowThr"]), F(s["glowI"]), F(s["glowGamma"]), F(s["opacity"]), A(s["wts"]), A(s["glowCol"])))
     flat = ",".join(F(v) for row in pic for p in row for v in p)
     c = f"""

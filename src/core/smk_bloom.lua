@@ -1,5 +1,5 @@
 -- smk_bloom: reference for SMK2 Bloom (pyramid glow, multi-pass). Scalar glow field (alpha or thresholded brightness) -> 6 levels (each half the size of the previous,
--- 4x4 [1 3 3 1]/8 tent filter per axis) -> weighted sum of bilinear upsamples -> glow colour -> composite. Coordinates are PADDED-window pixels; off = window origin in source pixels.
+-- 4x4 [1 3 3 1]/8 tent filter per axis; P.sh extra halvings are built first so radii beyond ~128 px keep growing) -> weighted sum of bilinear upsamples -> glow colour -> composite. Coordinates are PADDED-window pixels; off = window origin in source pixels.
 -- Needs smk_core. Level k (1..6) texel (i,j) is centred at padded pixel (2^k (i+0.5), 2^k (j+0.5)).
 -- SMK2_MOD_BEGIN
 local function bloomVal(P, r, g, b, a)
@@ -16,7 +16,8 @@ local TAP = { 1 / 8, 3 / 8, 3 / 8, 1 / 8 }
 
 function smk.bloomBuild(P, src)
   local L = {}
-  for k = 1, 6 do
+  local sh = P.sh or 0
+  for k = 1, 6 + sh do
     local w, h = P.lw[k], P.lh[k]
     local rows = {}
     for y = 0, h - 1 do
@@ -57,7 +58,8 @@ end
 
 function smk.bloomShade(P, L, x, y, src)
   local field = 0
-  for k = 1, 6 do field = field + P.wts[k] * bil(L[k], P.lw[k], P.lh[k], 2 ^ k, x, y) end
+  local sh = P.sh or 0
+  for k = 1, 6 do field = field + P.wts[k] * bil(L[k + sh], P.lw[k + sh], P.lh[k + sh], 2 ^ (k + sh), x, y) end
   local r, g, b, a = srcAt(P, src, x + P.off[1], y + P.off[2])
   local v = ((field > 0) and field ^ P.glowGamma or 0) * P.glowI
   local ga = smk.clamp(v * P.glowCol[4], 0, 1)

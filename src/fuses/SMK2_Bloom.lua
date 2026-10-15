@@ -11,9 +11,10 @@ SMK2BloomParams = [[
   int size[2];
   int off[2];
   int osize[2];
-  int lw[6];
-  int lh[6];
+  int lw[9];
+  int lh[9];
   int lvl;
+  int sh;
   int glowSrc;
   int glowBehind;
   int glowOnly;
@@ -77,7 +78,7 @@ __KERNEL__ void SMK2BloomDownKernel(__CONSTANTREF__ SMK2BloomParams *p, __TEXTUR
 ]]
 SMK2BloomCompSource = [[
 #define SMK_TXL(OUT, T, I, J, LW, LH) { int i_ = (I), j_ = (J); OUT = (i_ < 0 || j_ < 0 || i_ >= (LW) || j_ >= (LH)) ? 0.0f : _tex2DVecN(T, ((float)i_ + 0.5f) / (float)(LW), ((float)j_ + 0.5f) / (float)(LH), 15).x; }
-#define SMK_BIL(OUT, T, K) { float sc_ = (float)(1 << ((K) + 1)); float u_ = ((float)x + 0.5f) / sc_ - 0.5f, v_ = ((float)y + 0.5f) / sc_ - 0.5f; int i0_ = (int)floorf(u_), j0_ = (int)floorf(v_); float fx_ = u_ - (float)i0_, fy_ = v_ - (float)j0_; float a00_, a10_, a01_, a11_; SMK_TXL(a00_, T, i0_, j0_, p->lw[K], p->lh[K]); SMK_TXL(a10_, T, i0_ + 1, j0_, p->lw[K], p->lh[K]); SMK_TXL(a01_, T, i0_, j0_ + 1, p->lw[K], p->lh[K]); SMK_TXL(a11_, T, i0_ + 1, j0_ + 1, p->lw[K], p->lh[K]); OUT = (a00_ * (1.0f - fx_) + a10_ * fx_) * (1.0f - fy_) + (a01_ * (1.0f - fx_) + a11_ * fx_) * fy_; }
+#define SMK_BIL(OUT, T, K) { float sc_ = (float)(1 << ((K) + 1 + p->sh)); float u_ = ((float)x + 0.5f) / sc_ - 0.5f, v_ = ((float)y + 0.5f) / sc_ - 0.5f; int i0_ = (int)floorf(u_), j0_ = (int)floorf(v_); float fx_ = u_ - (float)i0_, fy_ = v_ - (float)j0_; float a00_, a10_, a01_, a11_; SMK_TXL(a00_, T, i0_, j0_, p->lw[(K) + p->sh], p->lh[(K) + p->sh]); SMK_TXL(a10_, T, i0_ + 1, j0_, p->lw[(K) + p->sh], p->lh[(K) + p->sh]); SMK_TXL(a01_, T, i0_, j0_ + 1, p->lw[(K) + p->sh], p->lh[(K) + p->sh]); SMK_TXL(a11_, T, i0_ + 1, j0_ + 1, p->lw[(K) + p->sh], p->lh[(K) + p->sh]); OUT = (a00_ * (1.0f - fx_) + a10_ * fx_) * (1.0f - fy_) + (a01_ * (1.0f - fx_) + a11_ * fx_) * fy_; }
 __KERNEL__ void SMK2BloomCompKernel(__CONSTANTREF__ SMK2BloomParams *p, __TEXTURE2D__ src, __TEXTURE2D__ L1, __TEXTURE2D__ L2, __TEXTURE2D__ L3, __TEXTURE2D__ L4, __TEXTURE2D__ L5, __TEXTURE2D__ L6, __TEXTURE2D_WRITE__ dst)
 {
   DEFINE_KERNEL_ITERATORS_XY(x, y);
@@ -149,13 +150,15 @@ function SMK2_BloomPrep(req, w, h, ow)
   local R = math.max(g(req, "GlowR") * px, 1)
   local off, osize = { 0, 0 }, { w, h }
   if ow then off = { ow.left, ow.bottom }; osize = { ow.right - ow.left, ow.top - ow.bottom } end
+  -- radii beyond ~128 px would saturate the 6-level pyramid: build `sh` extra halvings first and use the 6 coarsest-but-sh levels
+  local sh = math.max(0, math.min(3, math.ceil(math.log(R / 128) / math.log(2))))
   local lw, lh, wts, sum = {}, {}, {}, 0
+  for k = 1, 6 + sh do lw[k] = math.ceil(osize[1] / 2 ^ k); lh[k] = math.ceil(osize[2] / 2 ^ k) end
   for k = 1, 6 do
-    lw[k] = math.ceil(osize[1] / 2 ^ k); lh[k] = math.ceil(osize[2] / 2 ^ k)
-    wts[k] = 1 / (1 + (2 ^ k / R) ^ 4); sum = sum + wts[k]
+    wts[k] = 1 / (1 + (2 ^ (k + sh) / R) ^ 4); sum = sum + wts[k]
   end
   for k = 1, 6 do wts[k] = wts[k] / sum end
-  return { size = { w, h }, off = off, osize = osize, lw = lw, lh = lh, lvl = 0, glowSrc = math.floor(g(req, "GlowSrc") + 0.5),
+  return { size = { w, h }, off = off, osize = osize, lw = lw, lh = lh, lvl = 0, sh = sh, glowSrc = math.floor(g(req, "GlowSrc") + 0.5),
     glowBehind = g(req, "GlowBehind") > 0.5 and 1 or 0, glowOnly = g(req, "GlowOnly") > 0.5 and 1 or 0,
     glowThr = g(req, "GlowThr"), glowI = g(req, "GlowI"), glowGamma = g(req, "GlowGamma"), opacity = g(req, "Opacity"), wts = wts,
     glowCol = { g(req, "GlowCR"), g(req, "GlowCG"), g(req, "GlowCB"), g(req, "GlowCA") } }
@@ -189,11 +192,12 @@ function Process(req)
   local P = SMK2_BloomPrep(req, img.Width, img.Height, ow)
   local ok, perr = pcall(function()
     local L = {}
-    for k = 1, 6 do L[k] = Image({ IMG_Width = P.lw[k], IMG_Height = P.lh[k], IMG_Depth = img.Depth, IMG_DeferAlloc = true }) end      -- S12: intermediates of any size work
+    local T, sh = 6 + P.sh, P.sh
+    for k = 1, T do L[k] = Image({ IMG_Width = P.lw[k], IMG_Height = P.lh[k], IMG_Depth = img.Depth, IMG_DeferAlloc = true }) end      -- S12: intermediates of any size work
     runPass(req, "SMK2BloomExtractKernel", SMK2BloomExtractSource, P, 0, { { name = "src", img = img } }, L[1])
-    for k = 2, 6 do runPass(req, "SMK2BloomDownKernel", SMK2BloomDownSource, P, k - 1, { { name = "prev", img = L[k - 1] } }, L[k]) end
-    runPass(req, "SMK2BloomCompKernel", SMK2BloomCompSource, P, 0, { { name = "src", img = img }, { name = "L1", img = L[1] }, { name = "L2", img = L[2] },
-      { name = "L3", img = L[3] }, { name = "L4", img = L[4] }, { name = "L5", img = L[5] }, { name = "L6", img = L[6] } }, out)
+    for k = 2, T do runPass(req, "SMK2BloomDownKernel", SMK2BloomDownSource, P, k - 1, { { name = "prev", img = L[k - 1] } }, L[k]) end
+    runPass(req, "SMK2BloomCompKernel", SMK2BloomCompSource, P, 0, { { name = "src", img = img }, { name = "L1", img = L[1 + sh] }, { name = "L2", img = L[2 + sh] },
+      { name = "L3", img = L[3 + sh] }, { name = "L4", img = L[4 + sh] }, { name = "L5", img = L[5 + sh] }, { name = "L6", img = L[6 + sh] } }, out)
   end)
   if not ok then print("[SMK2_Bloom] GPU failed: " .. tostring(perr)); out = img end      -- pass-through fallback
   OutImage:Set(req, out)
