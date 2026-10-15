@@ -9,6 +9,6 @@ for t in tests/test_*.py; do python $t; done
 python scripts/install.py        # copy Fuses into Resolve
 ```
 
-**Status:** Phases 0–8 done and gated in Resolve (Callout parked). Shipped Fuses: Shape, Cursor, Connector, Look, Relief, Reflection, Page Curl, Animator/Motion/MotionRig, plus generated macros (UI Block, Progress Ring/Bar, Text Letter/Word/Line). Next: multi-pass Look (pyramid glow, bloom, long shadow; spike S12 passed), release packaging, manual. Results: `docs/PHASE*_RESULTS.md`; open items: `docs/DEFERRED_WORK.md`; agents: `docs/AGENTS_PLAN.md`.
+**Status:** Phases 0–8 done and gated in Resolve (Callout parked). Shipped Fuses: Shape, Cursor, Connector, Look, Relief, Reflection, Page Curl, Animator/Motion/MotionRig, plus generated macros (UI Block, Progress Ring/Bar, Text Letter/Word/Line). Phase 9 built, awaiting `docs/PHASE9_GATE.md`: `SMK2_Bloom` (multi-pass pyramid glow). Next: long shadow and Reflection blur on the multi-pass path, release packaging, manual. Results: `docs/PHASE*_RESULTS.md`; open items: `docs/DEFERRED_WORK.md`; agents: `docs/AGENTS_PLAN.md`.
 
 This repo was split out of the v1 repo's `smk-v2/` folder.
