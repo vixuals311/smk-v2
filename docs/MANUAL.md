@@ -401,6 +401,82 @@ Rect / rounded / pill / ellipse / ring / line with fill, border, shadow, trim an
 - **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
 - **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
 
+### SMK2_CardStack
+
+66 published controls.
+
+- **Cards:** Text 1, Text 2, Text 3, Text 4, Font, Weight, Text Size, Text Color, Card Width (frac of frame width), Card Height (frac of frame width), Corner Radius, Stack Center X, First Card Y, Shape, Fill, Gap Between Cards (frac of frame width), Fill Color, Fill Color B, Gradient Angle, Border Width (px @1920), Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Stagger Between Cards (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+### SMK2_CardStack_Glass
+
+66 published controls.
+
+- **Cards:** Text 1, Text 2, Text 3, Text 4, Font, Weight, Text Size, Text Color, Card Width (frac of frame width), Card Height (frac of frame width), Corner Radius, Stack Center X, First Card Y, Shape, Fill, Gap Between Cards (frac of frame width), Fill Color, Fill Color B, Gradient Angle, Border Width (px @1920), Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Stagger Between Cards (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+### SMK2_CardStack_Neon
+
+66 published controls.
+
+- **Cards:** Text 1, Text 2, Text 3, Text 4, Font, Weight, Text Size, Text Color, Card Width (frac of frame width), Card Height (frac of frame width), Corner Radius, Stack Center X, First Card Y, Shape, Fill, Gap Between Cards (frac of frame width), Fill Color, Fill Color B, Gradient Angle, Border Width (px @1920), Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Stagger Between Cards (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+### SMK2_CardStack_Soft
+
+66 published controls.
+
+- **Cards:** Text 1, Text 2, Text 3, Text 4, Font, Weight, Text Size, Text Color, Card Width (frac of frame width), Card Height (frac of frame width), Corner Radius, Stack Center X, First Card Y, Shape, Fill, Gap Between Cards (frac of frame width), Fill Color, Fill Color B, Gradient Angle, Border Width (px @1920), Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Stagger Between Cards (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+### SMK2_ClickDemo
+
+73 published controls.
+
+- **Button:** Button Text, Font, Weight, Text Size, Text Color, Width (frac of frame width), Height (frac of frame width), Corner Radius, Center X, Center Y, Button Color, Border Width (px @1920), Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Cursor:** Cursor Start (drag in viewer), Cursor Start Delay (s), Time To Reach The Button (s), Hold On The Button (s), Click Delay After Arrival (s), Move Style, Path Arc, Cursor Size, Ripple Radius, Ripple Duration (s), Cursor Fade In (s), Cursor Fade Out (s), Cursor Color, Ripple Color
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Index, Stagger (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+### SMK2_ClickDemo_Glass
+
+73 published controls.
+
+- **Button:** Button Text, Font, Weight, Text Size, Text Color, Width (frac of frame width), Height (frac of frame width), Corner Radius, Center X, Center Y, Button Color, Border Width (px @1920), Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Cursor:** Cursor Start (drag in viewer), Cursor Start Delay (s), Time To Reach The Button (s), Hold On The Button (s), Click Delay After Arrival (s), Move Style, Path Arc, Cursor Size, Ripple Radius, Ripple Duration (s), Cursor Fade In (s), Cursor Fade Out (s), Cursor Color, Ripple Color
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Index, Stagger (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+### SMK2_ClickDemo_Neon
+
+73 published controls.
+
+- **Button:** Button Text, Font, Weight, Text Size, Text Color, Width (frac of frame width), Height (frac of frame width), Corner Radius, Center X, Center Y, Button Color, Border Width (px @1920), Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Cursor:** Cursor Start (drag in viewer), Cursor Start Delay (s), Time To Reach The Button (s), Hold On The Button (s), Click Delay After Arrival (s), Move Style, Path Arc, Cursor Size, Ripple Radius, Ripple Duration (s), Cursor Fade In (s), Cursor Fade Out (s), Cursor Color, Ripple Color
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Index, Stagger (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+### SMK2_ClickDemo_Soft
+
+73 published controls.
+
+- **Button:** Button Text, Font, Weight, Text Size, Text Color, Width (frac of frame width), Height (frac of frame width), Corner Radius, Center X, Center Y, Button Color, Border Width (px @1920), Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Cursor:** Cursor Start (drag in viewer), Cursor Start Delay (s), Time To Reach The Button (s), Hold On The Button (s), Click Delay After Arrival (s), Move Style, Path Arc, Cursor Size, Ripple Radius, Ripple Duration (s), Cursor Fade In (s), Cursor Fade Out (s), Cursor Color, Ripple Color
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Index, Stagger (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
 ### SMK2_ProgressBar
 
 53 published controls.
@@ -417,6 +493,54 @@ Rect / rounded / pill / ellipse / ring / line with fill, border, shadow, trim an
 - **Progress:** Progress (0-1), Font, Label Size, Label Color, Diameter, Thickness (px @1920), Center X, Center Y, Angle, Progress Color, Track Color
 - **Motion:** In Delay (s), In Duration (s), Index, Stagger (s), Clip Length (s, 0=auto), In Engine, In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay, Enable Out, Out Offset (s), Out Duration (s)
 - **In Motion:** In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg)
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+### SMK2_StatCard
+
+75 published controls.
+
+- **Number:** Target Value, Decimals, Thousands Separator, Prefix (e.g. $), Suffix (e.g. % or K), Weight, Number Font, Number Size, Number Color
+- **Count:** Count Delay (s), Count Duration (s), Count Engine, Spring Stiffness, Spring Damping, Overshoot
+- **Caption:** Caption, Caption Size, Caption Color
+- **Card:** Width (frac of frame width), Height (frac of frame width), Corner Radius, Center X, Center Y, Fill, Fill Color, Fill Color B, Gradient Angle, Border Width (px @1920), Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Index, Stagger (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+### SMK2_StatCard_Glass
+
+75 published controls.
+
+- **Number:** Target Value, Decimals, Thousands Separator, Prefix (e.g. $), Suffix (e.g. % or K), Weight, Number Font, Number Size, Number Color
+- **Count:** Count Delay (s), Count Duration (s), Count Engine, Spring Stiffness, Spring Damping, Overshoot
+- **Caption:** Caption, Caption Size, Caption Color
+- **Card:** Width (frac of frame width), Height (frac of frame width), Corner Radius, Center X, Center Y, Fill, Fill Color, Fill Color B, Gradient Angle, Border Width (px @1920), Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Index, Stagger (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+### SMK2_StatCard_Neon
+
+75 published controls.
+
+- **Number:** Target Value, Decimals, Thousands Separator, Prefix (e.g. $), Suffix (e.g. % or K), Weight, Number Font, Number Size, Number Color
+- **Count:** Count Delay (s), Count Duration (s), Count Engine, Spring Stiffness, Spring Damping, Overshoot
+- **Caption:** Caption, Caption Size, Caption Color
+- **Card:** Width (frac of frame width), Height (frac of frame width), Corner Radius, Center X, Center Y, Fill, Fill Color, Fill Color B, Gradient Angle, Border Width (px @1920), Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Index, Stagger (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+### SMK2_StatCard_Soft
+
+75 published controls.
+
+- **Number:** Target Value, Decimals, Thousands Separator, Prefix (e.g. $), Suffix (e.g. % or K), Weight, Number Font, Number Size, Number Color
+- **Count:** Count Delay (s), Count Duration (s), Count Engine, Spring Stiffness, Spring Damping, Overshoot
+- **Caption:** Caption, Caption Size, Caption Color
+- **Card:** Width (frac of frame width), Height (frac of frame width), Corner Radius, Center X, Center Y, Fill, Fill Color, Fill Color B, Gradient Angle, Border Width (px @1920), Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Index, Stagger (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
 - **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
 
 ### SMK2_TextLetter
@@ -447,6 +571,33 @@ Rect / rounded / pill / ellipse / ring / line with fill, border, shadow, trim an
 - **Out:** Enable Out, Out Offset (s), Out Duration (s)
 
 ### SMK2_UIBlock
+
+65 published controls.
+
+- **Card:** Text, Font, Weight, Text Size, Text Color, Shape, Width (frac of frame width), Height (frac of frame width), Corner Radius, Center X, Center Y, Angle, Fill, Fill Color, Fill Color B, Gradient Angle, Border Width (px @1920), Border Position, Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Index, Stagger (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+### SMK2_UIBlock_Glass
+
+65 published controls.
+
+- **Card:** Text, Font, Weight, Text Size, Text Color, Shape, Width (frac of frame width), Height (frac of frame width), Corner Radius, Center X, Center Y, Angle, Fill, Fill Color, Fill Color B, Gradient Angle, Border Width (px @1920), Border Position, Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Index, Stagger (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+### SMK2_UIBlock_Neon
+
+65 published controls.
+
+- **Card:** Text, Font, Weight, Text Size, Text Color, Shape, Width (frac of frame width), Height (frac of frame width), Corner Radius, Center X, Center Y, Angle, Fill, Fill Color, Fill Color B, Gradient Angle, Border Width (px @1920), Border Position, Border Color, Shadow Color, Shadow X, Shadow Y (down), Shadow Blur
+- **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Index, Stagger (s), Clip Length (s, 0=auto)
+- **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
+- **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+### SMK2_UIBlock_Soft
 
 65 published controls.
 

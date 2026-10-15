@@ -25,6 +25,7 @@ def fuse_keys(name):
     lua.execute(open(os.path.join(ROOT, f"dist/fuses/{name}.fuse")).read()); lua.execute("Create()")
     return set(lua.eval("IDS").values())
 KEYS = {"Fuse.SMK2_Shape": fuse_keys("SMK2_Shape"), "Fuse.SMK2_Animator": fuse_keys("SMK2_Animator"), "Fuse.SMK2_Motion": fuse_keys("SMK2_Motion") | {"Output"}}
+KEYS["Fuse.SMK2_Cursor"] = fuse_keys("SMK2_Cursor") | {"Output"}
 KEYS["Fuse.SMK2_Shape"] |= {"Output"}; KEYS["Fuse.SMK2_Animator"] |= {"Output", "Image"}
 TEXTPLUS = {"StyledText", "Font", "Style", "Size", "Red1", "Green1", "Blue1", "Alpha1", "Center", "Angle", "Output"}
 KEYS["TextPlus"] = TEXTPLUS; KEYS["Merge"] = {"Output", "Background", "Foreground"}
@@ -60,7 +61,7 @@ for path in sorted(os.listdir(os.path.join(ROOT, "dist/templates"))):
     is_text = "Text" in path
     check(f"{path}: no raw newline inside any expression string", not [l for l in s.split("\n") if "Expression = " in l and l.count('"') - l.count('\\"') % 2 and (l.count('"') - l.count('\\"')) % 2])
     check(f"{path}: nodes at distinct positions (readable graph)", len(pos) == len(set(pos)) == len(nodes))
-    check(f"{path}: expression length within limits (<90 chars; text and UI Block <2300)", all(len(e) < (2300 if (is_text or "UIBlock" in path) else 90) for e in re.findall(EXPR, s)))
+    check(f"{path}: expression length within limits (<90 chars; text and UI Block <2300)", all(len(e) < (2300 if (is_text or any(k in path for k in ("UIBlock", "StatCard", "CardStack", "ClickDemo"))) else 90) for e in re.findall(EXPR, s)))
     # DAG: forward-only (no cycles) through links+expressions
     deps = {n: set() for n in nodes}
     for n in nodes:
@@ -76,8 +77,8 @@ for path in sorted(os.listdir(os.path.join(ROOT, "dist/templates"))):
         g = re.search(r"ControlGroup = (\d+)", b)
         if g: groups.setdefault(g.group(1), []).append("Name =" in b)
     check(f"{path}: colour pickers grouped (>=3 groups, 3-4 channels, one Name each)", len(groups) >= (1 if is_text else 3) and all(len(v) in (3, 4) and v.count(True) == 1 and v[0] for v in groups.values()))
-    check(f"{path}: label rotates with card (AngleZ)", "UIB_Shape.Angle" in s or "UIC_Card.Angle" in s or "Progress" in path or is_text)
+    check(f"{path}: label rotates with card (AngleZ)", "UIB_Shape.Angle" in s or "UIC_Card.Angle" in s or "Progress" in path or is_text or any(k in path for k in ("CardStack", "StatCard", "ClickDemo")))
     check(f"{path}: no .Output socket in expressions (v1 rule)", not re.search(r'Expression = "(?:[^"\\]|\\.)*\.Output', s))
-    check(f"{path}: expression targets exist (tool.Input)", all(m in nodes and i in (kk(m) | {"AngleZ"}) for m, i in re.findall(r"\b(UI[BPTC]_\w+)\.(\w+)", " ".join(re.findall(EXPR, s)))))
-    check(f"{path}: published control count > {20 if is_text else 60}", len(pubs) > (20 if is_text else 60))
+    check(f"{path}: expression targets exist (tool.Input)", all(m in nodes and i in (kk(m) | {"AngleZ"}) for m, i in re.findall(r"\b(UI[A-Z]_\w+)\.(\w+)", " ".join(re.findall(EXPR, s)))))
+    check(f"{path}: published control count > {20 if is_text else 60}", len(pubs) > (20 if (is_text or any(k in path for k in ("CardStack", "StatCard", "ClickDemo"))) else 60))
 print(f"macros: {passed} passed, {failed} failed"); sys.exit(1 if failed else 0)

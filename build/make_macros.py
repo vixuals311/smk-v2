@@ -192,11 +192,11 @@ DELAY_EXPR = {  # follower Delay (frames) = d * frame rate; same d as in the amo
     "line": 'UIT_Ctrl.Stagger * comp:GetPrefs("Comp.FrameFormat.Rate") * math.max(1, select(2, UIT_Ctrl.Text.Value:gsub("[^\\n]+", ""))) / math.max(1, select(2, UIT_Ctrl.Text.Value:gsub("[^\\128-\\191]", "")))',
 }
 
-def text_amount_lua(unit="letter"):
-    """Lua body computing `a` (0 = settled, 1 = fully offset) for the current (letter-shifted) time. Closed-form engines."""
-    U = "UIT_Ctrl."
+def text_amount_lua(unit="letter", U="UIT_Ctrl.", prelude=None):
+    """Lua body computing `a` (0 = settled, 1 = fully offset) for the current (letter-shifted) time. Closed-form engines.
+    U = control-holder prefix; prelude replaces the per-unit prelude (it must define L and d)."""
     return (
-        UNIT_DEF[unit] +
+        (prelude if prelude is not None else UNIT_DEF[unit]) +
         'local r=comp:GetPrefs("Comp.FrameFormat.Rate") local t=(time-comp.RenderStart)/r '
         'local T=(comp.RenderEnd-comp.RenderStart)/r local ti=t-U.InDelay local a=1 '
         'if ti>=0 then local p=math.min(1,ti/math.max(U.InDur,0.001)) local g=U.Engine local e=p '
@@ -318,8 +318,179 @@ def callout():
         for k, n in ENGINE_KEYS: m.publish("UIC_Animator", ph + k, f"{ph} {n}", f"{ph} Motion")
     return m
 
+
+# ---------------------------------------------------------------------------------------------------
+# Style presets: the same macro with different default values (a preset = a variant macro; nothing else differs).
+# ---------------------------------------------------------------------------------------------------
+STYLES = {
+    "Glass": dict(fill=(1, 1, 1, 0.12), border=(1, 1, 1, 0.45), bw=2, shadow=(0, 0, 0, 0.25), sx=0, sy=10, sb=30, text=(1, 1, 1)),
+    "Neon": dict(fill=(0.04, 0.05, 0.1, 1), border=(0.1, 0.9, 1.0, 1), bw=3, shadow=(0.1, 0.8, 1.0, 0.55), sx=0, sy=0, sb=40, text=(0.75, 1, 1)),
+    "Soft": dict(fill=(0.97, 0.97, 0.99, 1), border=(0, 0, 0, 0), bw=0, shadow=(0.2, 0.25, 0.4, 0.25), sx=0, sy=14, sb=36, text=(0.12, 0.14, 0.2)),
+}
+def apply_style(nodes, shapes, labels, style):
+    st = STYLES[style]
+    for n in nodes:
+        if n.name in shapes:
+            for c, v in zip("RGBA", st["fill"]): n.values["FillA" + c] = v
+            for c, v in zip("RGBA", st["border"]): n.values["BC" + c] = v
+            for c, v in zip("RGBA", st["shadow"]): n.values["SC" + c] = v
+            n.values.update(BW=st["bw"], SX=st["sx"], SY=st["sy"], SB=st["sb"])
+        if n.name in labels:
+            for c, v in zip(("Red1", "Green1", "Blue1"), st["text"]): n.values[c] = v
+
+def with_style(builder, base, shapes, labels):
+    def make(style=None):
+        m = builder()
+        if style:
+            apply_style(m.nodes, shapes, labels, style); m.name = f"{base}_{style}"
+        return m
+    return make
+
+SHAPE_LINK_KEYS = ["Shape", "W", "H", "Radius", "FillMode", "GradAngle", "BW", "BPos", "SX", "SY", "SB"] + \
+    [p + c for p in ("FillA", "FillB", "BC", "SC") for c in "RGBA"]
+ASPECT = 'comp:GetPrefs("Comp.FrameFormat.Width")/comp:GetPrefs("Comp.FrameFormat.Height")'
+STATIC_SHAPE = {f"{p}{k}": v for p in ("In", "Out") for k, v in (("Fade", 1.0), ("SlideDist", 0.0), ("Scale", 1.0), ("Rot", 0.0))}
+ANIM_MIRROR = [k for k, _ in TIMING if k != "Index"] + [ph + k for ph in ("In", "Out") for k, _ in ENGINE_KEYS] + \
+              [ph + k for ph in ("In", "Out") for k in ("Fade", "SlideDist", "SlideAngle", "Scale", "Rot")]
+
+# ---- Card stack: four UI cards, one set of controls, automatic Index 0..3 stagger ----
+def card_stack(n=4):
+    nodes = [Node("UIL_Ctrl", "Background", (0, 440), user=[("Weight", "combo", WEIGHT_DEFAULT, 0, 0, "Cards", WEIGHT_ITEMS),
+                                                              ("Gap", "slider", 0.015, 0, 0.2, "Cards", None)], values=dict(TopLeftAlpha=0.0))]
+    for i in range(1, n + 1):
+        y = (i - 1) * 110
+        shape = Node(f"UIL_S{i}", "Fuse.SMK2_Shape", (0, y), values=dict(STATIC_SHAPE, UseFrameFormatSettings=1, Width=1920, Height=1080,
+                     W=0.34, H=0.07, CX=0.5, CY=0.72, FillAR=0.16, FillAG=0.2, FillAB=0.36, FillAA=1.0, BW=2, BCR=1, BCG=1, BCB=1, BCA=0.35))
+        if i > 1:
+            shape.values = dict(STATIC_SHAPE, UseFrameFormatSettings=1, Width=1920, Height=1080)
+            shape.links = {k: ("UIL_S1", k) for k in SHAPE_LINK_KEYS}
+            shape.expr = {"CX": "UIL_S1.CX", "CY": f"UIL_S1.CY - {i - 1}*(UIL_S1.H + UIL_Ctrl.Gap)*{ASPECT}"}
+        label = Node(f"UIL_L{i}", "TextPlus", (110, y), values=dict(UseFrameFormatSettings=1, Width=1920, Height=1080, Wrap=0, StyledText=f"Card {i}",
+                     Font="Open Sans", Size=0.03, HorizontalJustificationNew=1, VerticalJustificationNew=3, HorizontalLeftCenterRight=0,
+                     Red1=1.0, Green1=1.0, Blue1=1.0, Alpha1=1.0),
+                     expr={"Center": f"Point(UIL_S{i}.CX, UIL_S{i}.CY)", "Style": style_expr("UIL_Ctrl.Weight", f"UIL_L{i}.Font.Value")})
+        if i > 1: label.links = {k: ("UIL_L1", k) for k in ("Font", "Size", "Red1", "Green1", "Blue1")}; label.values.pop("Font"); label.values.pop("Size"); [label.values.pop(k) for k in ("Red1", "Green1", "Blue1")]
+        merge = Node(f"UIL_M{i}", "Merge", (220, y + 33), links={"Background": (f"UIL_S{i}", "Output"), "Foreground": (f"UIL_L{i}", "Output")})
+        anim = Node(f"UIL_A{i}", "Fuse.SMK2_Animator", (330, y + 33), links={"Image": (f"UIL_M{i}", "Output")},
+                    expr={"PivotX": f"UIL_S{i}.CX", "PivotY": f"UIL_S{i}.CY"}, values={"Index": i - 1} | ({"Stagger": 0.12} if i == 1 else {}))
+        if i > 1: anim.expr.update({k: f"UIL_A1.{k}" for k in ANIM_MIRROR})
+        nodes += [shape, label, merge, anim]
+    prev = "UIL_A1"
+    for i in range(2, n + 1):
+        nodes.append(Node(f"UIL_O{i}", "Merge", (440 + (i - 2) * 110, 33 + (i - 1) * 55), links={"Background": (prev, "Output"), "Foreground": (f"UIL_A{i}", "Output")}))
+        prev = f"UIL_O{i}"
+    m = Macro("SMK2_CardStack", nodes, prev)
+    for i in range(1, n + 1): m.publish(f"UIL_L{i}", "StyledText", f"Text {i}", "Cards", key=f"Label{i}_Text")
+    m.publish("UIL_L1", "Font", "Font", "Cards"); m.publish("UIL_Ctrl", "Weight", "Weight", "Cards"); m.publish("UIL_L1", "Size", "Text Size", "Cards")
+    for i, k in enumerate(("Red1", "Green1", "Blue1")): m.publish("UIL_L1", k, "Text Color" if i == 0 else "", "Cards", group=1)
+    for k, nm in (("W", "Card Width (frac of frame width)"), ("H", "Card Height (frac of frame width)"), ("Radius", "Corner Radius"),
+                  ("CX", "Stack Center X"), ("CY", "First Card Y"), ("Shape", "Shape"), ("FillMode", "Fill")): m.publish("UIL_S1", k, nm, "Cards")
+    m.publish("UIL_Ctrl", "Gap", "Gap Between Cards (frac of frame width)", "Cards")
+    m.publish_color("UIL_S1", "FillA", "Fill Color", "Cards", 2); m.publish_color("UIL_S1", "FillB", "Fill Color B", "Cards", 3)
+    m.publish("UIL_S1", "GradAngle", "Gradient Angle", "Cards"); m.publish("UIL_S1", "BW", "Border Width (px @1920)", "Cards")
+    m.publish_color("UIL_S1", "BC", "Border Color", "Cards", 4); m.publish_color("UIL_S1", "SC", "Shadow Color", "Cards", 5)
+    for k, nm in (("SX", "Shadow X"), ("SY", "Shadow Y (down)"), ("SB", "Shadow Blur")): m.publish("UIL_S1", k, nm, "Cards")
+    for k, nm in TIMING:
+        if k != "Index": m.publish("UIL_A1", k, nm if k != "Stagger" else "Stagger Between Cards (s)", "Motion")
+    for ph in ("In", "Out"):
+        for k, nm in ENGINE_KEYS: m.publish("UIL_A1", ph + k, f"{ph} {nm}", f"{ph} Motion")
+    return m
+
+# ---- Stat card: card + big counting number + caption ----
+STAT_USER = [("Value", "slider", 12480, 0, 1000000, "Number", None), ("Decimals", "combo", 0, 0, 0, "Number", ["0", "1", "2"]),
+             ("Commas", "check", 1, 0, 1, "Number", None), ("Prefix", "text", "", 0, 0, "Number", None), ("Suffix", "text", "", 0, 0, "Number", None),
+             ("Weight", "combo", WEIGHT_DEFAULT, 0, 0, "Number", WEIGHT_ITEMS),
+             ("InDelay", "slider", 0.3, 0, 5, "Count", None), ("InDur", "slider", 1.4, 0.05, 10, "Count", None),
+             ("Engine", "combo", 0, 0, 0, "Count", ["Ease", "Spring", "Bounce", "Elastic", "Overshoot", "Inertia"]),
+             ("Stiff", "slider", 120, 1, 1000, "Count", None), ("Damp", "slider", 18, 0, 100, "Count", None), ("Over", "slider", 1.70158, 0, 5, "Count", None),
+             ("HasOut", "slider", 0, 0, 1, "Count", None), ("OutOffset", "slider", 0, 0, 5, "Count", None), ("OutDur", "slider", 0.5, 0, 5, "Count", None)]
+STAT_LABELS = {"Value": "Target Value", "Decimals": "Decimals", "Commas": "Thousands Separator", "Prefix": "Prefix (e.g. $)", "Suffix": "Suffix (e.g. % or K)", "Weight": "Weight",
+               "InDelay": "Count Delay (s)", "InDur": "Count Duration (s)", "Engine": "Count Engine", "Stiff": "Spring Stiffness", "Damp": "Spring Damping", "Over": "Overshoot"}
+def stat_number_expr():
+    body = text_amount_lua(U="UIS_Ctrl.", prelude="local L=0 local d=0 ")
+    fmt = ('local v=UIS_Ctrl.Value*(1-a) local s=string.format("%."..math.floor(UIS_Ctrl.Decimals+0.5).."f",v) '
+           'if UIS_Ctrl.Commas>0.5 then local i,f=s:match("^(-?%d+)(.*)$") local neg="" if i:sub(1,1)=="-" then neg="-" i=i:sub(2) end '
+           'local r=i:reverse():gsub("(%d%d%d)","%1,") r=r:reverse() if r:sub(1,1)=="," then r=r:sub(2) end s=neg..r..f end '
+           'return UIS_Ctrl.Prefix..s..UIS_Ctrl.Suffix')
+    return f"(function() {body}{fmt} end)()"
+
+def stat_card():
+    cy = lambda f: f'Point(UIS_Card.CX, UIS_Card.CY + UIS_Card.H*{ASPECT}*{f})'
+    nodes = [
+        Node("UIS_Ctrl", "Background", (0, 264), user=STAT_USER, values=dict(TopLeftAlpha=0.0)),
+        Node("UIS_Card", "Fuse.SMK2_Shape", (0, 0), values=dict(STATIC_SHAPE, UseFrameFormatSettings=1, Width=1920, Height=1080, W=0.26, H=0.17, CX=0.5, CY=0.5,
+             FillAR=0.16, FillAG=0.2, FillAB=0.36, FillAA=1.0, BW=2, BCR=1, BCG=1, BCB=1, BCA=0.35)),
+        Node("UIS_Num", "TextPlus", (0, 66), values=dict(UseFrameFormatSettings=1, Width=1920, Height=1080, Wrap=0, StyledText="0", Font="Open Sans", Size=0.075,
+             HorizontalJustificationNew=1, VerticalJustificationNew=3, HorizontalLeftCenterRight=0, Red1=1.0, Green1=1.0, Blue1=1.0, Alpha1=1.0),
+             expr={"Center": cy(0.12), "StyledText": stat_number_expr(), "Style": style_expr("UIS_Ctrl.Weight", "UIS_Num.Font.Value")}),
+        Node("UIS_Label", "TextPlus", (0, 132), values=dict(UseFrameFormatSettings=1, Width=1920, Height=1080, Wrap=0, StyledText="Total users", Font="Open Sans",
+             Style="Regular", Size=0.026, HorizontalJustificationNew=1, VerticalJustificationNew=3, HorizontalLeftCenterRight=0, Red1=0.75, Green1=0.8, Blue1=0.95, Alpha1=1.0),
+             expr={"Center": cy(-0.3)}),
+        Node("UIS_M1", "Merge", (110, 33), links={"Background": ("UIS_Card", "Output"), "Foreground": ("UIS_Num", "Output")}),
+        Node("UIS_M2", "Merge", (220, 66), links={"Background": ("UIS_M1", "Output"), "Foreground": ("UIS_Label", "Output")}),
+        Node("UIS_Animator", "Fuse.SMK2_Animator", (330, 66), links={"Image": ("UIS_M2", "Output")}, expr={"PivotX": "UIS_Card.CX", "PivotY": "UIS_Card.CY"}),
+    ]
+    m = Macro("SMK2_StatCard", nodes, "UIS_Animator")
+    for uid, *_ in STAT_USER:
+        if uid not in ("HasOut", "OutOffset", "OutDur"): m.publish("UIS_Ctrl", uid, STAT_LABELS[uid], next(u[5] for u in STAT_USER if u[0] == uid))
+    m.publish("UIS_Num", "Font", "Number Font", "Number"); m.publish("UIS_Num", "Size", "Number Size", "Number")
+    for i, k in enumerate(("Red1", "Green1", "Blue1")): m.publish("UIS_Num", k, "Number Color" if i == 0 else "", "Number", group=1)
+    m.publish("UIS_Label", "StyledText", "Caption", "Caption", key="Caption_Text"); m.publish("UIS_Label", "Size", "Caption Size", "Caption", key="Caption_Size")
+    for i, k in enumerate(("Red1", "Green1", "Blue1")): m.publish("UIS_Label", k, "Caption Color" if i == 0 else "", "Caption", group=2)
+    for k, nm in (("W", "Width (frac of frame width)"), ("H", "Height (frac of frame width)"), ("Radius", "Corner Radius"), ("CX", "Center X"), ("CY", "Center Y"),
+                  ("FillMode", "Fill")): m.publish("UIS_Card", k, nm, "Card")
+    m.publish_color("UIS_Card", "FillA", "Fill Color", "Card", 3); m.publish_color("UIS_Card", "FillB", "Fill Color B", "Card", 4)
+    m.publish("UIS_Card", "GradAngle", "Gradient Angle", "Card"); m.publish("UIS_Card", "BW", "Border Width (px @1920)", "Card")
+    m.publish_color("UIS_Card", "BC", "Border Color", "Card", 5); m.publish_color("UIS_Card", "SC", "Shadow Color", "Card", 6)
+    for k, nm in (("SX", "Shadow X"), ("SY", "Shadow Y (down)"), ("SB", "Shadow Blur")): m.publish("UIS_Card", k, nm, "Card")
+    for k, nm in TIMING: m.publish("UIS_Animator", k, nm, "Motion")
+    for ph in ("In", "Out"):
+        for k, nm in ENGINE_KEYS: m.publish("UIS_Animator", ph + k, f"{ph} {nm}", f"{ph} Motion")
+    return m
+
+# ---- Click demo: a button that appears, a cursor that travels to it and clicks (ripple) ----
+def click_demo():
+    nodes = [
+        Node("UID_Ctrl", "Background", (0, 198), user=[("Weight", "combo", WEIGHT_DEFAULT, 0, 0, "Button", WEIGHT_ITEMS)], values=dict(TopLeftAlpha=0.0)),
+        Node("UID_Card", "Fuse.SMK2_Shape", (0, 0), values=dict(STATIC_SHAPE, UseFrameFormatSettings=1, Width=1920, Height=1080, W=0.16, H=0.055, CX=0.6, CY=0.4,
+             Radius=0.5, FillAR=0.2, FillAG=0.45, FillAB=1.0, FillAA=1.0, BW=0)),
+        Node("UID_Label", "TextPlus", (0, 66), values=dict(UseFrameFormatSettings=1, Width=1920, Height=1080, Wrap=0, StyledText="Get started", Font="Open Sans", Size=0.026,
+             HorizontalJustificationNew=1, VerticalJustificationNew=3, HorizontalLeftCenterRight=0, Red1=1.0, Green1=1.0, Blue1=1.0, Alpha1=1.0),
+             expr={"Center": "Point(UID_Card.CX, UID_Card.CY)", "Style": style_expr("UID_Ctrl.Weight", "UID_Label.Font.Value")}),
+        Node("UID_Merge", "Merge", (110, 33), links={"Background": ("UID_Card", "Output"), "Foreground": ("UID_Label", "Output")}),
+        Node("UID_Animator", "Fuse.SMK2_Animator", (220, 33), links={"Image": ("UID_Merge", "Output")}, expr={"PivotX": "UID_Card.CX", "PivotY": "UID_Card.CY"}),
+        Node("UID_Cursor", "Fuse.SMK2_Cursor", (110, 132), values=dict(UseFrameFormatSettings=1, Width=1920, Height=1080, N=2, P1=Raw("{ 0.25, 0.7 }"), StartDelay=0.5, M2=1.1, H2=0.6, K2=1),
+             expr={"P2": "Point(UID_Card.CX, UID_Card.CY)"}),
+        Node("UID_Over", "Merge", (330, 66), links={"Background": ("UID_Animator", "Output"), "Foreground": ("UID_Cursor", "Output")}),
+    ]
+    m = Macro("SMK2_ClickDemo", nodes, "UID_Over")
+    m.publish("UID_Label", "StyledText", "Button Text", "Button", key="Label_Text"); m.publish("UID_Label", "Font", "Font", "Button", key="Label_Font")
+    m.publish("UID_Ctrl", "Weight", "Weight", "Button"); m.publish("UID_Label", "Size", "Text Size", "Button", key="Label_Size")
+    for i, k in enumerate(("Red1", "Green1", "Blue1")): m.publish("UID_Label", k, "Text Color" if i == 0 else "", "Button", group=1)
+    for k, nm in (("W", "Width (frac of frame width)"), ("H", "Height (frac of frame width)"), ("Radius", "Corner Radius"), ("CX", "Center X"), ("CY", "Center Y")):
+        m.publish("UID_Card", k, nm, "Button")
+    m.publish_color("UID_Card", "FillA", "Button Color", "Button", 2); m.publish("UID_Card", "BW", "Border Width (px @1920)", "Button")
+    m.publish_color("UID_Card", "BC", "Border Color", "Button", 3); m.publish_color("UID_Card", "SC", "Shadow Color", "Button", 4)
+    for k, nm in (("SX", "Shadow X"), ("SY", "Shadow Y (down)"), ("SB", "Shadow Blur")): m.publish("UID_Card", k, nm, "Button")
+    for k, nm in (("P1", "Cursor Start (drag in viewer)"), ("StartDelay", "Cursor Start Delay (s)"), ("M2", "Time To Reach The Button (s)"), ("H2", "Hold On The Button (s)"),
+                  ("ClickDelay", "Click Delay After Arrival (s)"), ("Ease", "Move Style"), ("Arc", "Path Arc"), ("Size", "Cursor Size"), ("RippleR", "Ripple Radius"),
+                  ("RippleDur", "Ripple Duration (s)"), ("FadeIn", "Cursor Fade In (s)"), ("FadeOut", "Cursor Fade Out (s)")): m.publish("UID_Cursor", k, nm, "Cursor", key=f"Cursor_{k}")
+    m.publish_color("UID_Cursor", "FillC", "Cursor Color", "Cursor", 5); m.publish_color("UID_Cursor", "RippleC", "Ripple Color", "Cursor", 6)
+    for k, nm in TIMING: m.publish("UID_Animator", k, nm, "Motion")
+    for ph in ("In", "Out"):
+        for k, nm in ENGINE_KEYS: m.publish("UID_Animator", ph + k, f"{ph} {nm}", f"{ph} Motion")
+    return m
+
+
+BASE = {"SMK2_UIBlock": (ui_block, ("UIB_Shape",), ("UIB_Label",)), "SMK2_CardStack": (card_stack, tuple(f"UIL_S{i}" for i in range(1, 5)), tuple(f"UIL_L{i}" for i in range(1, 5))),
+        "SMK2_StatCard": (stat_card, ("UIS_Card",), ()), "SMK2_ClickDemo": (click_demo, ("UID_Card",), ("UID_Label",))}
 MACROS = {"SMK2_Callout": callout, "SMK2_TextLetter": lambda: text_macro("letter"), "SMK2_TextWord": lambda: text_macro("word"), "SMK2_TextLine": lambda: text_macro("line"),
-          "SMK2_UIBlock": ui_block, "SMK2_ProgressRing": lambda: progress("ring"), "SMK2_ProgressBar": lambda: progress("bar")}
+          "SMK2_ProgressRing": lambda: progress("ring"), "SMK2_ProgressBar": lambda: progress("bar")}
+for _base, (_fn, _sh, _lb) in BASE.items():
+    _mk = with_style(_fn, _base, _sh, _lb)
+    MACROS[_base] = _mk
+    for _st in STYLES: MACROS[f"{_base}_{_st}"] = (lambda mk=_mk, st=_st: mk(st))
+
 
 if __name__ == "__main__":
     os.makedirs(DIST, exist_ok=True)

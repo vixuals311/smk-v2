@@ -16,7 +16,8 @@ rel = lambda n: n[len(name) + 1:]
 files = {rel(n) for n in names}
 fuses = {f for f in files if f.startswith("fuses/")}; macros = {f for f in files if f.startswith("macros/")}
 check("all Fuses packaged", len(fuses) == len([f for f in os.listdir(os.path.join(ROOT, "src/fuses")) if f.endswith(".lua")]) and "fuses/SMK2_Bloom.fuse" in fuses and "fuses/SMK2_PageCurl.fuse" in fuses)
-check("macros packaged", len(macros) == 7)
+nm = len([f for f in os.listdir(os.path.join(ROOT, "dist/templates")) if f.endswith(".setting")])
+check("macros packaged", len(macros) == nm and nm >= 22)
 check("no spikes in the release", not any("Spike" in f for f in files))
 for need in ("install.py", "install.bat", "install.command", "README.txt", "NOTICE", "MANUAL.md", "VERSION", "SHA256SUMS"): check("contains " + need, need in files)
 check("no junk metadata", not any(re.search(r"(^|/)(\._|\.DS_Store|Thumbs\.db|__MACOSX)", n) for n in names))
@@ -38,7 +39,7 @@ with tempfile.TemporaryDirectory() as tmp:
     check("dry run changes nothing", rc == 0 and "would install" in out and not os.path.exists(tgt))
     rc, out = run_installer(inst, "--target", tgt)
     fd, md = os.path.join(tgt, "Fuses", "SMK2"), os.path.join(tgt, "Macros", "SMK2")
-    check("release install copies Fuses and macros", rc == 0 and len(os.listdir(fd)) == len(fuses) and len(os.listdir(md)) == 7)
+    check("release install copies Fuses and macros", rc == 0 and len(os.listdir(fd)) == len(fuses) and len(os.listdir(md)) == nm)
     open(os.path.join(tgt, "Fuses", "Other.fuse"), "w").write("x")
     rc, out = run_installer(inst, "--target", tgt, "--uninstall", "--dry-run")
     check("uninstall dry run keeps files", rc == 0 and os.path.isdir(fd) and "would remove" in out)
