@@ -3,6 +3,8 @@
 -- SMK2_MOD_BEGIN
 local function over(top, bot) local k = 1 - top[4]; return { top[1] + bot[1] * k, top[2] + bot[2] * k, top[3] + bot[3] * k, top[4] + bot[4] * k } end
 
+local function frac(v) return v - math.floor(v) end
+
 function smk.reflectShade(P, x, y, src)
   local px, py = x + 0.5, y + 0.5
   local orig = { 0, 0, 0, 0 }
@@ -19,8 +21,9 @@ function smk.reflectShade(P, x, y, src)
       ar, ag, ab, aa = src(px + dx, ys)
     else
       local sr, sg, sb, sa, sw = 0, 0, 0, 0, 0
+      local jit = 6.2831853 * frac(52.9829189 * frac(0.06711056 * x + 0.00583715 * y))        -- per-pixel rotation of the spiral: streaks become fine noise
       for i = 0, P.samples - 1 do
-        local ang = i * 2.39996323
+        local ang = i * 2.39996323 + jit
         local rr = rad * math.sqrt((i + 0.5) / P.samples)
         local w = math.exp(-3 * (rr / rad) ^ 2)
         local r, g, b, a = src(px + dx + math.cos(ang) * rr, ys + math.sin(ang) * rr)

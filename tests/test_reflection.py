@@ -43,6 +43,7 @@ check("defaults: keep original, baseline 0.4 of height, length 400 px", b.keepOr
 check("blur growth is a ratio (resolution independent)", abs(frame(0, BlurGrow=4.0)[0].blurGrow - 0.04) < 1e-9)
 check("ripple phase advances in seconds, clip-relative", abs(frame(0, RippleSpeed=1.0)[0].phase) < 1e-9 and abs(frame(24, RippleSpeed=1.0)[0].phase - 2 * math.pi) < 1e-6 and abs(frame(12, RippleSpeed=1.0)[0].phase - math.pi) < 1e-6)
 check("quality maps to taps", [frame(0, Quality=float(i))[0].samples for i in range(3)] == [16, 32, 64])
+check("big blurs raise the tap count (cap 128)", frame(0, BlurGrow=30.0, Length=1000.0)[0].samples >= 128 and frame(0, Quality=0.0, BlurGrow=12.0)[0].samples > 16)
 check("one input texture", list(added.values()) == ["src"])
 lua2.execute("IMG.DataWindow = {left=0,bottom=0,right=1920,top=200}")
 b, out, _ = frame(0, Base=0.05)

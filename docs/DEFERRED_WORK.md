@@ -20,11 +20,11 @@
 | D7-001 | Connector: auto-routing around obstacles, orthogonal routing with multiple bends, label on path, branching/multi-target, rope-physics sag | Beyond first Connector slice | OPEN |
 | D7-002 | Look: long shadow (log-step), inner glow/shadow (bevel done: SMK2_Relief), pyramid glow (multi-pass; needs a multi-pass DVIP spike), bilinear-accurate test oracle | Beyond first Look slice | OPEN |
 | D2-011 | Multi-element Shape (one Fuse, N elements: bars, grids, lists) | Fallback if S7 fails; also suits charts | OPEN |
-| D8-001 | Build pyramid glow / bloom / long shadow / big-radius blur on multi-pass GPU | S12 PASSED (Phase 8): chained DVIP sessions and W/4 intermediates work, cost ~ single pass | PARTLY DONE: SMK2_Bloom passed (Phase 9); long shadow and Reflection blur still open |
+| D8-001 | Build pyramid glow / bloom / long shadow / big-radius blur on multi-pass GPU | S12 PASSED (Phase 8): chained DVIP sessions and W/4 intermediates work, cost ~ single pass | DONE: Bloom passed (Phase 9); Long Shadow built (Phase 10 gate) |
 | D8-002 | Page Curl: 3D-correct curl on arbitrary corner pivot, curl from a corner (diagonal peel with the cone), stagger by Index for several pages | First slice is a straight roll | OPEN |
 | D8-003 | Reflection: ripple from a noise map, per-pixel fresnel fade, vertical-axis (side) mirror | Beyond first slice | OPEN |
 | D8-004 | Relief: use a second input as a height map; inner/outer bevel modes | Beyond first slice | OPEN |
 | D8-005 | Neo-style effects not yet studied: only Paper Curl, Reflection, Bevel, Emboss, Glow were supplied | Waiting for more samples | OPEN |
-| D8-006 | Reflection blur shows faint stepped streaks at every quality: add a per-pixel hash rotation of the spiral (oracle + kernel) or use a multi-pass blur (S12) | Phase 8 F3 | OPEN |
-| D8-007 | Look outline on Text+ at 20 px has fine serration: more directions/rings, or distance-field outline via multi-pass | Phase 8 L3 | OPEN |
-| D8-008 | Reflection Gap sign and tint-alpha semantics confusing in the Inspector; Relief direction 0 = light from the right: clearer labels | Phase 8 notes | OPEN |
+| D8-006 | Reflection blur stepped streaks: per-pixel spiral rotation + adaptive taps | Phase 8 F3 | FIXED, in Phase 10 gate |
+| D8-007 | Look outline serration: directions scale with width (24-72) | Phase 8 L3 | FIXED, in Phase 10 gate |
+| D8-008 | Clearer Reflection/Relief labels | Phase 8 notes | DONE (I1) |

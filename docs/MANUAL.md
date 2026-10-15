@@ -148,6 +148,24 @@ Cursor path with waypoints, press and click ripples.
 | Shadow Color | colour | 0, 0, 0, 0.35 | RGBA |
 | Ripple Color | colour | 0.25, 0.55, 1, 0.9 | RGBA |
 
+### SMK2 Long Shadow
+
+Long flat shadow with distance fade, multi-pass GPU.
+
+> SMK2_LongShadow — flat "long shadow" behind any element, multi-pass GPU (init + log2(length) doubling passes + one composite). Cost grows with log(length), not length.
+> The shadow falls in the chosen direction (deg, positive = counter-clockwise; -45 = down-right) and fades linearly to nothing at Length (px @1920).
+> The output window is padded only on the shadow's side. Shadow alpha comes from the element's alpha; colour and opacity are controls.
+
+**Inputs:** Image (main image)
+
+| Control | Type | Default | Range / options |
+|---|---|---|---|
+| Shadow Direction (deg: 0 = right, 90 = up, -45 = down-right) | slider | -45 | -360 .. 360 |
+| Length (px @1920) | slider | 400 | 5 .. 1500 |
+| Fade Curve (1 = linear, <1 = longer, brighter) | slider | 1 | 0.3 .. 3 |
+| Opacity | slider | 1 | 0 .. 1 |
+| Shadow Colour | colour | 0, 0, 0, 0.5 | RGBA |
+
 ### SMK2 Look
 
 Glow, outline, shine sweep and gradient overlay in one GPU pass.
@@ -285,7 +303,7 @@ Floor reflection with distance blur, fade and ripple, one GPU pass.
 | Control | Type | Default | Range / options |
 |---|---|---|---|
 | Baseline (frac of height from the bottom) | slider | 0.4 | 0 .. 1 |
-| Gap (px @1920) | slider | 0 | -200 .. 400 |
+| Gap (px @1920; + moves the reflection further down) | slider | 0 | -200 .. 400 |
 | Reflection Length (px @1920) | slider | 400 | 10 .. 2000 |
 | Fade Curve (1 = linear) | slider | 1.5 | 0.3 .. 4 |
 | Reflection Opacity | slider | 0.5 | 0 .. 1 |
@@ -297,7 +315,7 @@ Floor reflection with distance blur, fade and ripple, one GPU pass.
 | Quality | slider | 1 | 0 .. 2 |
 | Opacity | slider | 1 | 0 .. 1 |
 | Keep Original (off = reflection only) | checkbox | 1 | on/off |
-| Tint | colour | 1, 1, 1, 1 | RGBA |
+| Tint (alpha = strength) | colour | 1, 1, 1, 1 | RGBA |
 
 ### SMK2 Relief
 
@@ -312,7 +330,7 @@ Bevel and emboss from alpha or brightness, one GPU pass.
 |---|---|---|---|
 | Size (px @1920) | slider | 8 | 0.5 .. 80 |
 | Depth | slider | 2 | 0 .. 12 |
-| Light Direction (deg, + = counter-clockwise) | slider | 135 | -360 .. 360 |
+| Light Direction (deg: 0 = from the right, 90 = from the top, 135 = upper left) | slider | 135 | -360 .. 360 |
 | Light Elevation (deg) | slider | 45 | 5 .. 89 |
 | Highlight Amount | slider | 1.5 | 0 .. 5 |
 | Shadow Amount | slider | 1.5 | 0 .. 5 |

@@ -20,6 +20,7 @@ SMK2LookParams = [[
   int gradOn;
   int glowOnly;
   int outRings;
+  int outDirs;
   float glowR;
   float glowI;
   float glowThr;
@@ -98,8 +99,8 @@ __KERNEL__ void SMK2LookKernel(__CONSTANTREF__ SMK2LookParams *p, __TEXTURE2D__ 
     float m = a;
     for (int k = 1; k <= p->outRings; ++k) {
       float rad = p->outW * (float)k / (float)p->outRings;
-      for (int i = 0; i < 24; ++i) {
-        float ang = (float)i * 0.26179939f + (float)k * 0.3f;
+      for (int i = 0; i < p->outDirs; ++i) {
+        float ang = (float)i * (6.28318531f / (float)p->outDirs) + (float)k * 0.3f;
         float sx = px + cosf(ang) * rad, sy = py + sinf(ang) * rad;
         float4 sc = (sx < 0.0f || sy < 0.0f || sx > W || sy > H) ? make_float4(0.0f, 0.0f, 0.0f, 0.0f) : _tex2DVecN(src, sx / W, sy / H, 15);
         if (sc.w > m) m = sc.w;
@@ -193,8 +194,9 @@ function SMK2_LookPrep(req, w, h)
   local ga = g(req, "GradAngle") * math.pi / 180
   local samples = ({ 24, 48, 96, 160 })[math.floor(g(req, "GlowQ") + 0.5) + 1] or 48
   samples = math.min(160, math.max(samples, math.floor(g(req, "GlowR") * px * 0.8)))      -- wide glows need more taps (no blocky ghosts at big radii)
-  local rings = math.max(3, math.min(8, math.ceil(g(req, "OutW") * px / 3)))              -- wide outlines need more rings (no stair-steps)
-  return { size = { w, h }, off = { 0, 0 }, osize = { w, h }, glowOn = g(req, "GlowOn") > 0.5 and 1 or 0, glowSamples = samples, glowOnly = g(req, "GlowOnly") > 0.5 and 1 or 0, outRings = rings, glowGamma = g(req, "GlowGamma"), glowSrc = math.floor(g(req, "GlowSrc") + 0.5),
+  local rings = math.max(3, math.min(8, math.ceil(g(req, "OutW") * px / 3)))
+  local dirs = math.max(24, math.min(72, math.ceil(math.pi * g(req, "OutW") * px)))        -- arc gap between directions <= ~2 px: no serration on wide outlines              -- wide outlines need more rings (no stair-steps)
+  return { size = { w, h }, off = { 0, 0 }, osize = { w, h }, glowOn = g(req, "GlowOn") > 0.5 and 1 or 0, glowSamples = samples, glowOnly = g(req, "GlowOnly") > 0.5 and 1 or 0, outRings = rings, outDirs = dirs, glowGamma = g(req, "GlowGamma"), glowSrc = math.floor(g(req, "GlowSrc") + 0.5),
     glowBehind = g(req, "GlowBehind") > 0.5 and 1 or 0, outOn = g(req, "OutOn") > 0.5 and 1 or 0, shineOn = g(req, "ShineOn") > 0.5 and 1 or 0,
     gradOn = g(req, "GradOn") > 0.5 and 1 or 0, glowR = g(req, "GlowR") * px, glowI = g(req, "GlowI"), glowThr = g(req, "GlowThr"), outW = g(req, "OutW") * px,
     shC = sc, shS = ss, shPos = pos, shW = halfW, shSoft = g(req, "ShineSoft") * w, shI = g(req, "ShineI"),

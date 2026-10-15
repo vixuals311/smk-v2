@@ -53,8 +53,8 @@ function smk.lookShade(P, x, y, src)
     local m = a
     for k = 1, P.outRings do
       local rad = P.outW * k / P.outRings
-      for i = 0, 23 do
-        local ang = i * 0.26179939 + k * 0.3
+      for i = 0, P.outDirs - 1 do
+        local ang = i * (6.28318531 / P.outDirs) + k * 0.3
         local _, _, _, sa = src(px + math.cos(ang) * rad, py + math.sin(ang) * rad)
         if sa > m then m = sa end
       end

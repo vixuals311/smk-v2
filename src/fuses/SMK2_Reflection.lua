@@ -50,8 +50,11 @@ __KERNEL__ void SMK2ReflectKernel(__CONSTANTREF__ SMK2ReflectParams *p, __TEXTUR
       ar = sc.x; ag = sc.y; ab = sc.z; aa = sc.w;
     } else {
       float sr = 0.0f, sg = 0.0f, sb = 0.0f, sa = 0.0f, sw = 0.0f;
+      float h0 = 0.06711056f * (float)x + 0.00583715f * (float)y; h0 = h0 - floorf(h0);
+      float h1 = 52.9829189f * h0; h1 = h1 - floorf(h1);
+      float jit = 6.2831853f * h1;
       for (int i = 0; i < p->samples; ++i) {
-        float ang = (float)i * 2.39996323f;
+        float ang = (float)i * 2.39996323f + jit;
         float rr = rad * sqrtf(((float)i + 0.5f) / (float)p->samples);
         float q = rr / rad;
         float w = expf(-3.0f * q * q);
@@ -93,12 +96,12 @@ end
 
 function Create()
   I.Image = self:AddInput("Image", "Image", { LINKID_DataType = "Image", LINK_Main = 1 })
-  num("Base", "Baseline (frac of height from the bottom)", 0.4, 0, 1); num("Gap", "Gap (px @1920)", 0, -200, 400)
+  num("Base", "Baseline (frac of height from the bottom)", 0.4, 0, 1); num("Gap", "Gap (px @1920; + moves the reflection further down)", 0, -200, 400)
   num("Length", "Reflection Length (px @1920)", 400, 10, 2000); num("FadePow", "Fade Curve (1 = linear)", 1.5, 0.3, 4)
   num("ReflOpacity", "Reflection Opacity", 0.5, 0, 1)
   num("Blur0", "Blur at Baseline (px @1920)", 0, 0, 40); num("BlurGrow", "Blur Growth (px per 100 px)", 4, 0, 30)
   num("RippleAmp", "Ripple Amount (px @1920)", 0, 0, 40); num("RippleFreq", "Ripple Frequency (per 100 px)", 6, 0.5, 40); num("RippleSpeed", "Ripple Speed (cycles per second)", 0.5, -5, 5)
-  color("TintC", "Tint", 1, 1, 1, 1, 1)
+  color("TintC", "Tint (alpha = strength)", 1, 1, 1, 1, 1)
   num("Quality", "Quality", 1, 0, 2, { INP_Integer = true, INP_MinAllowed = 0, INP_MaxAllowed = 2 })
   check("KeepOrig", "Keep Original (off = reflection only)", 1)
   num("Opacity", "Opacity", 1, 0, 1)
@@ -114,6 +117,8 @@ function SMK2_ReflectPrep(req, w, h)
   local t = smk.framesToSeconds(req.Time, rs, rate)
   local px = w / 1920
   local samples = ({ 16, 32, 64 })[math.floor(g(req, "Quality") + 0.5) + 1] or 32
+  local maxRad = (g(req, "Blur0") * px) + (g(req, "BlurGrow") / 100) * (g(req, "Length") * px)
+  samples = math.min(128, math.max(samples, math.ceil(maxRad * 0.7)))                  -- big blurs need more taps
   return { size = { w, h }, off = { 0, 0 }, osize = { w, h }, keepOrig = g(req, "KeepOrig") > 0.5 and 1 or 0, samples = samples,
     baseY = g(req, "Base") * h, gap = g(req, "Gap") * px, fadeLen = g(req, "Length") * px, fadePow = g(req, "FadePow"), reflOpacity = g(req, "ReflOpacity"),
     blur0 = g(req, "Blur0") * px, blurGrow = g(req, "BlurGrow") / 100,                                           -- growth is a ratio (px per px): resolution independent
