@@ -27,7 +27,11 @@ function smk.framesToSeconds(frame, renderStart, rate)
 end
 
 -- Clip length in seconds from RenderStart/RenderEnd (inclusive frame range).
+-- Phase 12 H5: on a comp attached to a trimmed timeline clip the host can report RenderEnd = 0 (no usable range). That used to give a clip length of 0 s,
+-- so every Out had already finished and the element was blank. An unusable range now means "length unknown": the Out never starts (set Clip Length to get one).
+smk.CLIP_UNKNOWN = 1e9
 function smk.clipSeconds(renderStart, renderEnd, rate)
+  if not renderEnd or not renderStart or renderEnd <= renderStart then return smk.CLIP_UNKNOWN end
   return (renderEnd - renderStart + 1) / rate
 end
 

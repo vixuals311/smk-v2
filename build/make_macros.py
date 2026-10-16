@@ -199,7 +199,7 @@ def text_amount_lua(unit="letter", U="UIT_Ctrl.", prelude=None):
     return (
         (prelude if prelude is not None else UNIT_DEF[unit]) +
         'local r=comp:GetPrefs("Comp.FrameFormat.Rate") local t=(time-comp.RenderStart)/r '
-        'local T=(comp.RenderEnd-comp.RenderStart)/r local ti=t-U.InDelay local a=1 '
+        'local T=(comp.RenderEnd-comp.RenderStart)/r if T<=0 then T=1e9 end local ti=t-U.InDelay local a=1 '
         'if ti>=0 then local p=math.min(1,ti/math.max(U.InDur,0.001)) local g=U.Engine local e=p '
         'if g<0.5 then e=1-(1-p)^3 '
         'elseif g<1.5 then local k=math.max(U.Stiff,1) local w=math.sqrt(k) local z=math.min(0.999,math.max(0.05,U.Damp/(2*w))) '

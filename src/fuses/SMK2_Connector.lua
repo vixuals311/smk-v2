@@ -194,7 +194,7 @@ function SMK2_ConnPrep(req, w, h)
     bBox = { hw = g(req, "BW") * w * 0.5, hh = g(req, "BH") * w * 0.5, mag = math.floor(g(req, "BMag") + 0.5) } }
   if S.mode == 5 and #mid == 0 then S.mode = 1 end
   local path = smk.connPath(S)
-  local T = g(req, "ClipLen"); if T <= 0 then T = (re - rs) / rate end
+  local T = g(req, "ClipLen"); if T <= 0 then T = (re > rs) and (re - rs) / rate or smk.CLIP_UNKNOWN end
   local tm = { inDelay = g(req, "InDelay"), inDur = g(req, "InDur"), outOffset = g(req, "OutOffset"), outDur = g(req, "OutDur"),
     index = g(req, "Index"), stagger = g(req, "Stagger"), hasOut = g(req, "HasOut") > 0.5 }
   local t = smk.framesToSeconds(req.Time, rs, rate)

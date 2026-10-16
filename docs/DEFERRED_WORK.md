@@ -32,3 +32,8 @@
 | D11-001 | Stat card: a very long value (10 digits) overflows the card; add auto-shrink or a width cap | Phase 11 T5 | OPEN |
 | D11-002 | Click Demo: the button does not react to the click (press/flash); viewer crosshair for the macro-level cursor start unverified | Phase 11 D3 | OPEN |
 | D11-003 | Elastic count engine overshoots a stat counter by 37 %: consider a clamp option | Phase 11 T3 | OPEN |
+| D12-001 | H5: SMK elements blank on a comp of a trimmed timeline clip (RenderEnd reads 0) | Phase 12 | FIX BUILT (unknown clip length = no Out), awaiting Phase 13 Q1-Q3 |
+| D12-002 | Macro cost: every macro > 5 ms/frame at 1080p (CardStack 23.5 ms warm, 89 ms cold; Callout/ClickDemo/CardStack +47..70 ms at 4K). Ideas: merge Shape+Label into one Fuse draw, share the Animator, cut Text+ re-render | Phase 12 H9 | OPEN (M4b optimisation) |
+| D12-003 | Motion modifier +8 ms: forces Text+ re-render each frame | Phase 12 H9 | OPEN |
+| D12-004 | Relief blocky / faint tiling at extreme depth+size | Phase 12 H8 | OPEN (Phase 13 Q7) |
+| D12-005 | Resolve crash during two-session scripting (H15); not reproduced alone | Phase 12 H15 | WATCH: run one session only |

@@ -150,7 +150,7 @@ function SMK2_CursorPrep(req, w, h)
     local pt = I["P" .. i]:GetValue(req)
     wp[i] = { x = pt.X, y = pt.Y, move = (i > 1) and g(req, "M" .. i) or 0, hold = g(req, "H" .. i), click = g(req, "K" .. i) > 0.5 }
   end
-  local T = g(req, "ClipLen"); if T <= 0 then T = (re - rs) / rate end
+  local T = g(req, "ClipLen"); if T <= 0 then T = (re > rs) and (re - rs) / rate or smk.CLIP_UNKNOWN end
   local o = { n = n, startDelay = g(req, "StartDelay"), arc = g(req, "Arc"), ease = math.floor(g(req, "Ease") + 0.5) + 1,
     clickDelay = g(req, "ClickDelay"), pressDur = g(req, "PressDur"), pressAmt = g(req, "PressAmt"), rippleDur = g(req, "RippleDur"),
     fadeIn = g(req, "FadeIn"), fadeOut = g(req, "FadeOut"), T = T, aspect = w / h }

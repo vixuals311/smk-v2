@@ -20,6 +20,7 @@ check("tin includes delay+stagger", near(tin, 2.0 - 0.7))
 check("out start anchors to clip end", near(os_, 5.0 - 0.25 - 0.5))
 check("frames->seconds fps-independent", near(smk.framesToSeconds(30, 0, 30), smk.framesToSeconds(60, 0, 60)))
 check("clip seconds", near(smk.clipSeconds(0, 59, 30), 2.0))
+check("unusable render range (RenderEnd 0 / <= start) = length unknown, not 0 s (Phase 12 H5)", smk.clipSeconds(0, 0, 30) >= 1e8 and smk.clipSeconds(0, -1, 30) >= 1e8 and smk.clipSeconds(5, 3, 30) >= 1e8 and smk.clipSeconds(None, 10, 30) >= 1e8)
 
 # bezier
 check("bezier endpoints", smk.cubicBezier(.25,.1,.25,1,0)==0 and smk.cubicBezier(.25,.1,.25,1,1)==1)

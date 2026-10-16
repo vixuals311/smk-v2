@@ -67,4 +67,14 @@ check("preset renames the macro and changes only defaults", "SMK2_StatCard_Neon 
 check("neon border is cyan", re.search(r"BCG = Input \{ Value = 0\.9", neon) is not None)
 glass = setting("SMK2_UIBlock_Glass"); check("glass fill is translucent", re.search(r"FillAA = Input \{ Value = 0\.12", glass) is not None)
 check("preset names unique and valid macro names", len(names) == len(set(names)) and all(re.fullmatch(r"SMK2_\w+", n) for n in names))
+# ---- Phase 12 H5: host reports RenderEnd = 0 (trimmed clip): the element must not be blank
+tl = setting("SMK2_TextLetter"); te = expr_of(tl, "UIT_Amt", "FirstOperand")
+def amount(frame, rend):
+    lua.execute("UIT_Ctrl = { Text = { Value = 'ABC' }, InDelay = 0, InDur = 0.5, Stagger = 0.04, Engine = 0, Stiff = 180, Damp = 18, Over = 1.7, HasOut = 1, OutOffset = 0, OutDur = 0.5 }")
+    lua.execute("comp = { RenderStart = 0, RenderEnd = %d }; function comp:GetPrefs() return 24 end" % rend)
+    lua.globals().time = frame
+    return lua.eval("(function() return " + te + " end)()")
+check("text amount: valid range -> the last frame is out (a = 1)", abs(amount(119, 119) - 1) < 1e-6)
+check("text amount: RenderEnd = 0 -> settled (a = 0) at any frame, not blank", all(abs(amount(f, 0)) < 1e-6 for f in (30, 100, 5000)))
+check("text expression stays within the length budget", len(te) < 2300 and len(e) < 2300)
 print(f"products: {passed} passed, {failed} failed"); sys.exit(1 if failed else 0)
