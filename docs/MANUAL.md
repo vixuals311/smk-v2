@@ -1,4 +1,4 @@
-# SMK v2 manual (v2.0.0-rc1)
+# SMK v2 manual (v2.0.0-rc2)
 
 _Generated from the sources by `tools/gen_manual.py` — do not edit by hand._
 
@@ -58,7 +58,7 @@ Pyramid (multi-pass) glow with a large soft radius at fixed cost.
 | Spread (gamma; below 1 = wider, brighter tails) | slider | 1 | 0.3 .. 3 |
 | Opacity | slider | 1 | 0 .. 1 |
 | Glow From | choice | 0 | Alpha / Brightness |
-| Glow Behind Object (off = additive) | checkbox | 0 | on/off |
+| Glow Behind Object (off = additive) | checkbox | 1 | on/off |
 | Glow Only (no object) | checkbox | 0 | on/off |
 | Glow Colour | colour | 0.45, 0.65, 1, 1 | RGBA |
 
@@ -101,8 +101,8 @@ Editable connector (handles, points, magnets, dashes, arrows, pulses) with draw-
 | Spring Damping | slider | 18 | 0 .. 100 |
 | Overshoot | slider | 1.70158 | 0 .. 5 |
 | Path Style | choice | 0 | Curve / Straight / Elbow / Bezier (handles) / Spline (through points) |
-| Start Magnet | choice | 0 | Off / Auto (edge toward target) / Top / Right / Bottom / Left |
-| End Magnet | choice | 0 | Off / Auto (edge toward target) / Top / Right / Bottom / Left |
+| Start Magnet | choice | 1 | Off / Auto (edge toward target) / Top / Right / Bottom / Left |
+| End Magnet | choice | 1 | Off / Auto (edge toward target) / Top / Right / Bottom / Left |
 | Start End-Mark | choice | 1 | None / Dot / Arrow |
 | End End-Mark | choice | 2 | None / Dot / Arrow |
 | Draw Engine | choice | 0 |  |
@@ -199,7 +199,7 @@ Glow, outline, shine sweep and gradient overlay in one GPU pass.
 | Glow Quality | choice | 1 | Draft (24) / Normal (48) / High (96) / Max (160) |
 | Glow | checkbox | 1 | on/off |
 | Glow Only (no object) | checkbox | 0 | on/off |
-| Glow Behind Object (off = additive) | checkbox | 0 | on/off |
+| Glow Behind Object (off = additive) | checkbox | 1 | on/off |
 | Outline | checkbox | 0 | on/off |
 | Shine | checkbox | 0 | on/off |
 | Shine Auto Sweep (seconds, clip-relative) | checkbox | 1 | on/off |
@@ -607,6 +607,14 @@ Rect / rounded / pill / ellipse / ring / line with fill, border, shadow, trim an
 - **Motion:** In Delay (s), In Duration (s), Enable Out, Out Offset (s), Out Duration (s), Index, Stagger (s), Clip Length (s, 0=auto)
 - **In Motion:** In Engine, In Opacity At Offset, In Slide Distance, In Slide Angle, In Scale At Offset, In Rotation At Offset (deg), In Spring Stiffness, In Spring Damping, In Spring Mass, In Bezier x1, In Bezier y1, In Bezier x2, In Bezier y2, In Elastic Amplitude, In Elastic Period, In Overshoot, In Inertia Decay
 - **Out Motion:** Out Engine, Out Opacity At Offset, Out Slide Distance, Out Slide Angle, Out Scale At Offset, Out Rotation At Offset (deg), Out Spring Stiffness, Out Spring Damping, Out Spring Mass, Out Bezier x1, Out Bezier y1, Out Bezier x2, Out Bezier y2, Out Elastic Amplitude, Out Elastic Period, Out Overshoot, Out Inertia Decay
+
+## Playback speed
+
+Fusion plays complex comps from its cache: the first pass is slower (each card is a GPU Fuse plus Text+, roughly 10-15 ms per card; a letter-by-letter title adds ~3 ms per letter), cached playback runs at full speed.
+- **Edit page:** right-click the clip ▸ *Render Cache Fusion Output* ▸ *On*, and set *Playback ▸ Render Cache ▸ Smart*. Edit freely, play back smoothly.
+- **Fusion page:** play once to fill the cache (or use proxy / lower display quality while building).
+- Prefer the **Word** or **Line** text variants over **Letter** for long text; avoid many Look/Bloom/Reflection instances on frame-filling sources.
+- Measured costs per tool: `docs/PERFORMANCE.md`.
 
 ## Known limits
 

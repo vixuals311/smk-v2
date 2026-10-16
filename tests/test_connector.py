@@ -50,14 +50,15 @@ run = lua.eval("""function(t, over, pre, fail) FAIL=fail; LAST=nil
 def frame(t, pre=False, fail=False, **o):
     over = {k: (lua.table_from(v) if isinstance(v, dict) else v) for k, v in o.items()}
     return run(t, lua.table_from(over), pre, fail)
-b, out = frame(60)
+b, out = frame(60, AMag=0.0, BMag=0.0)
+check("default magnets are Auto (line leaves the box edge, not the centre)", frame(60)[0].pts[1] != 480 and frame(60)[0].n > 20)
 check("default (curve): path between the two points, many samples", b.n > 20 and near(b.pts[1], 480, 0.5) and near(b.pts[2], 540, 0.5) and near(b.pts[2 * b.n - 1], 1440, 0.5))
 check("default end marks: dot at start, arrow at end", b.kindA == 1 and b.kindB == 2)
 check("settled: fully drawn; opacity 1", near(b.trim, 1, 1e-3) and b.opacity == 1)
 b0, _ = frame(0, InEngine=0.0); check("frame 0: nothing drawn yet (draw-on)", near(b0.trim, 0, 1e-6))
 check("last frame: un-drawn by the Out", frame(119, OutEngine=0.0)[0].trim < 0.02)
 check("Out off: stays drawn", frame(119, HasOut=0.0)[0].trim > 0.99)
-b, _ = frame(60, Mode=1.0); check("straight: 2 points, length = 960 px", b.n == 2 and near(b.total, 960, 0.5))
+b, _ = frame(60, Mode=1.0, AMag=0.0, BMag=0.0); check("straight: 2 points, length = 960 px", b.n == 2 and near(b.total, 960, 0.5))
 b, _ = frame(60, Mode=1.0, AMag=3.0); check("magnet Right on a 0.2-wide box: start moves to the edge + gap (480+192+6)", near(b.pts[1], 678, 0.5))
 b, _ = frame(60, Mode=1.0, AMag=1.0); check("magnet Auto toward the other end exits the right edge", near(b.pts[1], 678, 0.5) and near(b.pts[2], 540, 0.5))
 b, _ = frame(60, Mode=3.0, H1={"X": 0.4, "Y": 0.9}, H2={"X": 0.6, "Y": 0.1}); ys = [b.pts[2 * i] for i in range(1, b.n + 1)]

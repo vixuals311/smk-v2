@@ -112,7 +112,13 @@ def generate():
         for pg, n in ctrls: pages.setdefault(pg or "Controls", []).append(n)
         for pg, ns in pages.items(): out.append(f"- **{pg}:** " + ", ".join(ns))
         out.append("")
-    out += ["## Known limits", "", "See `docs/DEFERRED_WORK.md` in the repository. Viewer playback speed on the first (uncached) pass depends on your GPU; cached playback is much faster.", ""]
+    out += ["## Playback speed", "",
+            "Fusion plays complex comps from its cache: the first pass is slower (each card is a GPU Fuse plus Text+, roughly 10-15 ms per card; a letter-by-letter title adds ~3 ms per letter), cached playback runs at full speed.",
+            "- **Edit page:** right-click the clip ▸ *Render Cache Fusion Output* ▸ *On*, and set *Playback ▸ Render Cache ▸ Smart*. Edit freely, play back smoothly.",
+            "- **Fusion page:** play once to fill the cache (or use proxy / lower display quality while building).",
+            "- Prefer the **Word** or **Line** text variants over **Letter** for long text; avoid many Look/Bloom/Reflection instances on frame-filling sources.",
+            "- Measured costs per tool: `docs/PERFORMANCE.md`.", "",
+            "## Known limits", "", "See `docs/DEFERRED_WORK.md` in the repository. Viewer playback speed on the first (uncached) pass depends on your GPU; cached playback is much faster.", ""]
     return "\n".join(out)
 
 if __name__ == "__main__":
