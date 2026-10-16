@@ -80,3 +80,18 @@ The first multi-instance run fed the Fuses from small Text+ nodes: Relief, Bloom
 - Between roughly 17:55 and 18:45 a second Claude session (a fork of this one) was running its own benchmarks on the same Resolve. Items marked ² and the first CardStack ×10 run (820 ms) were affected; everything else was measured with Resolve otherwise idle.
 - Some numbers are PNG-encode-bound (≈ 4.7 ms at 1080p, 18.4 ms at 4K); GPU time without PNG encoding was not separated (**NOT VERIFIED**).
 - The Python-in-Resolve benchmark threads stalled several times (the script thread simply stopped; Resolve was fine). Items were re-run, not interpolated.
+
+## 4. Style variants vs base (Phase 13, Q6)
+
+Resolve Studio 21.1.0.14, project `SMK Phase13`, 1080p, 60 fps comp, cold (Background +0.001), 300 frames to PNG, first / second run ms/frame, **no other session on the Resolve**. "No effect" baseline in this session: 5.6 / 4.9 ms. Comps `H9_<macro>_1080p`; raw data `docs/phase13_evidence/q6a.json … q6d.json`.
+
+| Macro | Base first / second | `_Glass` | `_Neon` | `_Soft` |
+|---|---|---|---|---|
+| SMK2_UIBlock | 21.8 / 15.1 | 21.9 / 15.2 | 21.6 / 14.9 | 21.7 / 15.2 |
+| SMK2_CardStack | 85.9 / 27.4 | 87.9 / 27.5 | 87.2 / 29.7 | 108.0 / 28.6 |
+| SMK2_StatCard | 26.1 / 16.8 | 15.6³ / 16.4 | 25.6 / 15.9 | 25.7 / 16.5 |
+| SMK2_ClickDemo | 27.1 / 16.6 | 27.3 / 16.9 | 27.3 / 16.3 | 27.1 / 16.9 |
+
+³ The first-run figure for StatCard_Glass (15.6) is not a cold render: the comp had already been rendered by a benchmark thread that stalled and was restarted, so its cache was warm. Treat it as NOT VERIFIED; its second run (16.4) is normal.
+
+**Result: the variants cost the same as the base macro** (second run within ±2.3 ms of the base for all 12; the largest gap is CardStack_Neon +2.3 ms, within run-to-run noise). CardStack_Soft's cold first run is 108 vs 86 ms, a cold-start difference only (second run 28.6 vs 27.4). The Phase 12 base numbers reproduce (UIBlock 22.5 / 15.6 then, 21.8 / 15.1 now; CardStack 89.1 / 28.4 then, 85.9 / 27.4 now).

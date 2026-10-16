@@ -1,0 +1,17 @@
+-- DEBUG ONLY (Phase 13): Number modifier that returns what a Fuse reads from self.Comp. Which: 0 RenderStart, 1 RenderEnd, 2 GlobalStart, 3 GlobalEnd, 4 nil-ness of RenderEnd (1=nil), 5 rate
+FuRegisterClass("SMK2_DbgRange", CT_Modifier, {
+  REGS_Name = "SMK2 DbgRange", REGS_Category = "Fuses\SMK v2 debug",
+  REGID_DataType = "Number", REGID_InputDataType = "Number", REG_TimeVariant = true, REG_Version = 1,
+})
+function Create()
+  W = self:AddInput("Which", "Which", { LINKID_DataType = "Number", INPID_InputControl = "SliderControl", INP_Default = 0, INP_MinScale = 0, INP_MaxScale = 5, INP_Integer = true })
+  Out = self:AddOutput("Output", "Output", { LINKID_DataType = "Number", LINK_Main = 1 })
+end
+function Process(req)
+  local c = self.Comp
+  local w = W:GetValue(req).Value
+  local v
+  if w == 0 then v = c.RenderStart elseif w == 1 then v = c.RenderEnd elseif w == 2 then v = c.GlobalStart
+  elseif w == 3 then v = c.GlobalEnd elseif w == 4 then v = (c.RenderEnd == nil) and 1 or 0 else v = c:GetPrefs("Comp.FrameFormat.Rate") end
+  Out:Set(req, Number(v or -1))
+end
