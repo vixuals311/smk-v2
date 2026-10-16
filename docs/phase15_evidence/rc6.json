@@ -1,0 +1,45 @@
+{
+ "live_before": [
+  12,
+  22
+ ],
+ "run1": [
+  0,
+  "done. Restart Resolve."
+ ],
+ "run2": [
+  0,
+  "done. Restart Resolve."
+ ],
+ "idempotent": true,
+ "counts_after_twice": [
+  12,
+  22
+ ],
+ "tmp_install_twice_counts": [
+  12,
+  22
+ ],
+ "tmp_uninstall": [
+  0,
+  "done."
+ ],
+ "tmp_foreign_left": [
+  "Fuses\\OtherVendor\\x.fuse",
+  "Fuses\\foreign.fuse",
+  "Macros\\OtherVendor\\y.setting",
+  "Macros\\foreign.setting"
+ ],
+ "tmp_smk2_dirs_gone": true,
+ "tmp_reinstall_equal": true,
+ "live_uninstall": [
+  0,
+  "done."
+ ],
+ "live_dirs_gone": true,
+ "live_reinstall": [
+  0,
+  "done. Restart Resolve."
+ ],
+ "live_reinstall_equal": true
+}

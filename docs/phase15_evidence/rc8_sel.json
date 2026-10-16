@@ -1,0 +1,380 @@
+{
+ "Animator": [
+  [
+   "Out Duration (s)",
+   "slider",
+   "0.5",
+   "0 .. 10"
+  ],
+  [
+   "In Delay (s)",
+   "slider",
+   "0",
+   "0 .. 10"
+  ],
+  [
+   "Index",
+   "slider",
+   "0",
+   "0 .. 500"
+  ],
+  [
+   "Stagger (s)",
+   "slider",
+   "0",
+   "0 .. 1"
+  ],
+  [
+   "Pivot X",
+   "slider",
+   "0.5",
+   "0 .. 1"
+  ]
+ ],
+ "Bloom": [
+  [
+   "Intensity (Bloom is softer than Look: ~4x Look)",
+   "slider",
+   "4",
+   "0 .. 20"
+  ],
+  [
+   "Glow Only (no object)",
+   "checkbox",
+   "0",
+   "on/off"
+  ],
+  [
+   "Radius (px @1920)",
+   "slider",
+   "120",
+   "4 .. 400"
+  ],
+  [
+   "Opacity",
+   "slider",
+   "1",
+   "0 .. 1"
+  ],
+  [
+   "Brightness Threshold",
+   "slider",
+   "0.6",
+   "0 .. 0.99"
+  ]
+ ],
+ "Connector": [
+  [
+   "Magnet Gap (px @1920)",
+   "slider",
+   "6",
+   "0 .. 60"
+  ],
+  [
+   "Travelling Pulses",
+   "checkbox",
+   "0",
+   "on/off"
+  ],
+  [
+   "Clip Length (s, 0=auto)",
+   "slider",
+   "0",
+   "0 .. 600"
+  ],
+  [
+   "Dash Gap (px @1920)",
+   "slider",
+   "12",
+   "0 .. 200"
+  ],
+  [
+   "Spline Points (0-6)",
+   "slider",
+   "2",
+   "0 .. 6"
+  ]
+ ],
+ "Cursor": [
+  [
+   "Fade In (s)",
+   "slider",
+   "0.25",
+   "0 .. 3"
+  ],
+  [
+   "Shadow Blur (px @1920)",
+   "slider",
+   "6",
+   "0 .. 50"
+  ],
+  [
+   "Ripple Radius (frac of frame width)",
+   "slider",
+   "0.04",
+   "0.005 .. 0.3"
+  ],
+  [
+   "Click Delay After Arrival (s)",
+   "slider",
+   "0.12",
+   "0 .. 2"
+  ],
+  [
+   "Fade Out (s)",
+   "slider",
+   "0.3",
+   "0 .. 3"
+  ]
+ ],
+ "LongShadow": [
+  [
+   "Opacity",
+   "slider",
+   "1",
+   "0 .. 1"
+  ],
+  [
+   "Length (px @1920)",
+   "slider",
+   "400",
+   "5 .. 1500"
+  ],
+  [
+   "Fade Curve (1 = linear, <1 = longer, brighter)",
+   "slider",
+   "1",
+   "0.3 .. 3"
+  ],
+  [
+   "Shadow Direction (deg: 0 = right, 90 = up, -45 = down-right)",
+   "slider",
+   "-45",
+   "-360 .. 360"
+  ]
+ ],
+ "Look": [
+  [
+   "Shine Half-Width (frac of frame width)",
+   "slider",
+   "0.04",
+   "0.002 .. 0.5"
+  ],
+  [
+   "Sweep Duration (s)",
+   "slider",
+   "0.9",
+   "0.05 .. 10"
+  ],
+  [
+   "Sweep Delay (s)",
+   "slider",
+   "0.4",
+   "0 .. 10"
+  ],
+  [
+   "Shine Softness (frac of frame width)",
+   "slider",
+   "0.03",
+   "0 .. 0.3"
+  ],
+  [
+   "Shine Position (manual, -1..1)",
+   "slider",
+   "-1",
+   "-1.5 .. 1.5"
+  ]
+ ],
+ "Motion": [
+  [
+   "Bezier x1",
+   "slider",
+   "0.25",
+   "0 .. 1"
+  ],
+  [
+   "Elastic Period",
+   "slider",
+   "0.3",
+   "0.05 .. 1"
+  ],
+  [
+   "Index",
+   "slider",
+   "0",
+   "0 .. 200"
+  ],
+  [
+   "Overshoot",
+   "slider",
+   "1.70158",
+   "0 .. 5"
+  ],
+  [
+   "Bezier y2",
+   "slider",
+   "1",
+   "-1 .. 2"
+  ]
+ ],
+ "MotionRig": [
+  [
+   "Base Center X",
+   "slider",
+   "0.5",
+   "-2 .. 3"
+  ],
+  [
+   "In Duration (s)",
+   "slider",
+   "0.5",
+   "0 .. 10"
+  ],
+  [
+   "Out Duration (s)",
+   "slider",
+   "0.5",
+   "0 .. 10"
+  ],
+  [
+   "Index",
+   "slider",
+   "0",
+   "0 .. 500"
+  ],
+  [
+   "Out Offset (s)",
+   "slider",
+   "0",
+   "0 .. 10"
+  ]
+ ],
+ "PageCurl": [
+  [
+   "Ambient Light (0 = deep shading)",
+   "slider",
+   "0.45",
+   "0 .. 1"
+  ],
+  [
+   "Paper Back Tint Amount",
+   "slider",
+   "0.55",
+   "0 .. 1"
+  ],
+  [
+   "Shadow Strength",
+   "slider",
+   "0.55",
+   "0 .. 1"
+  ],
+  [
+   "Opacity",
+   "slider",
+   "1",
+   "0 .. 1"
+  ],
+  [
+   "Shadow Length (px @1920)",
+   "slider",
+   "120",
+   "5 .. 600"
+  ]
+ ],
+ "Reflection": [
+  [
+   "Keep Original (off = reflection only)",
+   "checkbox",
+   "1",
+   "on/off"
+  ],
+  [
+   "Gap (px @1920; + moves the reflection further down)",
+   "slider",
+   "0",
+   "-200 .. 400"
+  ],
+  [
+   "Ripple Amount (px @1920)",
+   "slider",
+   "0",
+   "0 .. 40"
+  ],
+  [
+   "Baseline (frac of height from the bottom)",
+   "slider",
+   "0.4",
+   "0 .. 1"
+  ],
+  [
+   "Fade Curve (1 = linear)",
+   "slider",
+   "1.5",
+   "0.3 .. 4"
+  ]
+ ],
+ "Relief": [
+  [
+   "Light Direction (deg: 0 = from the right, 90 = from the top, 135 = upper left)",
+   "slider",
+   "135",
+   "-360 .. 360"
+  ],
+  [
+   "Highlight Amount",
+   "slider",
+   "1.5",
+   "0 .. 5"
+  ],
+  [
+   "Depth",
+   "slider",
+   "2",
+   "0 .. 12"
+  ],
+  [
+   "Blend",
+   "slider",
+   "1",
+   "0 .. 1"
+  ],
+  [
+   "Size (px @1920)",
+   "slider",
+   "8",
+   "0.5 .. 80"
+  ]
+ ],
+ "Shape": [
+  [
+   "Center Y",
+   "slider",
+   "0.5",
+   "-2 .. 3"
+  ],
+  [
+   "In Duration (s)",
+   "slider",
+   "0.5",
+   "0 .. 10"
+  ],
+  [
+   "In Delay (s)",
+   "slider",
+   "0",
+   "0 .. 10"
+  ],
+  [
+   "Trim / Sweep",
+   "slider",
+   "1",
+   "0 .. 1"
+  ],
+  [
+   "Ring / Line Thickness (px @1920)",
+   "slider",
+   "24",
+   "0.5 .. 400"
+  ]
+ ]
+}

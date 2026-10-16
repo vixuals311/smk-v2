@@ -1,0 +1,50 @@
+== tests/test_animator.py
+animator: 10 passed, 0 failed
+== tests/test_bloom.py
+bloom kernel parity: SKIPPED (no C compiler)
+bloom: 24 passed, 0 failed
+== tests/test_connector.py
+connector kernel parity: SKIPPED (no C compiler)
+connector: 23 passed, 0 failed
+== tests/test_connector_core.py
+connector core: 32 passed, 0 failed
+== tests/test_cursor.py
+cursor kernel parity: SKIPPED (no C compiler)
+cursor: 13 passed, 0 failed
+== tests/test_cursor_core.py
+cursor core: 27 passed, 0 failed
+== tests/test_fuse_harness.py
+fuse harness: 12 passed, 0 failed
+== tests/test_longshadow.py
+longshadow kernel parity: SKIPPED (no C compiler)
+longshadow: 22 passed, 0 failed
+== tests/test_look.py
+look kernel parity: SKIPPED (no C compiler)
+look: 35 passed, 0 failed
+== tests/test_macros.py
+macros: 352 passed, 0 failed
+== tests/test_motion_rig.py
+motion rig: 9 passed, 0 failed
+== tests/test_pagecurl.py
+pagecurl kernel parity: SKIPPED (no C compiler)
+pagecurl: 31 passed, 0 failed
+== tests/test_products.py
+products: 39 passed, 0 failed
+== tests/test_reflection.py
+reflection kernel parity: SKIPPED (no C compiler)
+reflection: 28 passed, 0 failed
+== tests/test_release.py
+release: 31 passed, 0 failed
+== tests/test_relief.py
+relief kernel parity: SKIPPED (no C compiler)
+relief: 24 passed, 0 failed
+== tests/test_shape.py
+shape: 47 passed, 0 failed
+== tests/test_shape_kernel.py
+kernel parity: SKIPPED (no C compiler)
+== tests/test_smk_core.py
+smk_core: 50 passed, 0 failed
+== tests/test_stagger.py
+stagger: 9 passed, 0 failed
+== tests/test_text_expr.py
+text expressions: 62 passed, 0 failed

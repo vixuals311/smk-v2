@@ -1,0 +1,24 @@
+wrote SMK2_Callout.setting
+wrote SMK2_TextLetter.setting
+wrote SMK2_TextWord.setting
+wrote SMK2_TextLine.setting
+wrote SMK2_ProgressRing.setting
+wrote SMK2_ProgressBar.setting
+wrote SMK2_UIBlock.setting
+wrote SMK2_UIBlock_Glass.setting
+wrote SMK2_UIBlock_Neon.setting
+wrote SMK2_UIBlock_Soft.setting
+wrote SMK2_CardStack.setting
+wrote SMK2_CardStack_Glass.setting
+wrote SMK2_CardStack_Neon.setting
+wrote SMK2_CardStack_Soft.setting
+wrote SMK2_StatCard.setting
+wrote SMK2_StatCard_Glass.setting
+wrote SMK2_StatCard_Neon.setting
+wrote SMK2_StatCard_Soft.setting
+wrote SMK2_ClickDemo.setting
+wrote SMK2_ClickDemo_Glass.setting
+wrote SMK2_ClickDemo_Neon.setting
+wrote SMK2_ClickDemo_Soft.setting
+built: SMK2_Animator.fuse, SMK2_Bloom.fuse, SMK2_Connector.fuse, SMK2_Cursor.fuse, SMK2_LongShadow.fuse, SMK2_Look.fuse, SMK2_Motion.fuse, SMK2_MotionRig.fuse, SMK2_PageCurl.fuse, SMK2_Reflection.fuse, SMK2_Relief.fuse, SMK2_Shape.fuse
+package: dist\SMK2_Phase0_Spikes_v2.0.0-rc1.zip
