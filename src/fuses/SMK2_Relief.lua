@@ -38,7 +38,7 @@ __KERNEL__ void SMK2ReliefKernel(__CONSTANTREF__ SMK2ReliefParams *p, __TEXTURE2
   float sig2 = p->sigma * p->sigma;
   float h0 = 0.06711056f * (float)x + 0.00583715f * (float)y; h0 = h0 - floorf(h0);
   float h1 = 52.9829189f * h0; h1 = h1 - floorf(h1);
-  float jit = 6.2831853f * h1;
+  float jit = (p->sigma > 12.0f) ? 6.2831853f * h1 : 0.0f;
   float R = 3.0f * p->sigma;
   for (int i = 0; i < p->samples; ++i) {
     float ang = (float)i * 2.39996323f + jit;

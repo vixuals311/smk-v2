@@ -56,7 +56,7 @@ fuse = open(os.path.join(ft.ROOT, "dist/fuses/SMK2_Relief.fuse")).read()
 bimg2 = kparity.make_image(W, H, random, blobs=6)
 def scen():
     dr, el = random.uniform(0, 6.28), random.uniform(0.3, 1.4)
-    return dict(samples=random.choice([24, 48, 96]), srcKind=random.choice([0, 1]), reliefOnly=random.choice([0, 0, 1]), sigma=random.uniform(1, 7), depth=random.uniform(0.5, 6),
+    return dict(samples=random.choice([24, 48, 96]), srcKind=random.choice([0, 1]), reliefOnly=random.choice([0, 0, 1]), sigma=random.choice([random.uniform(1, 7), random.uniform(13, 18)]), depth=random.uniform(0.5, 6),
                 lx=math.cos(el) * math.cos(dr), ly=math.cos(el) * math.sin(dr), hiAmt=random.uniform(0.5, 4), shAmt=random.uniform(0.5, 4),
                 blend=random.choice([1, 0.6]), opacity=random.choice([1, 0.8]), hiCol=[random.random() for _ in range(3)] + [1], shCol=[random.random() for _ in range(3)] + [random.choice([1, 0.7])])
 scens = [scen() for _ in range(5)]

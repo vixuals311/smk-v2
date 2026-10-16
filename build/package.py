@@ -30,7 +30,7 @@ INSTALL
   macOS:   double-click install.command (if macOS blocks it: right-click > Open, or run `chmod +x install.command`)
   Any OS:  python3 install.py        (options: --dry-run, --uninstall, --target <Fusion folder>)
 Then restart DaVinci Resolve. Fuses appear under Effects > Fuses > SMK v2, macros under Effects > Tools > Macros > SMK2.
-EDIT PAGE (optional): double-click SMK2_Titles_v{v}.drfx and confirm; the products then appear under Effects > Titles > SMK2 (drag onto the timeline). Install the Fuses first: a .drfx cannot carry them.
+EDIT PAGE (optional): double-click SMK2_Titles_v{v}.drfx and confirm; the products then appear under Effects > Titles > SMK2 (drag onto the timeline). Install the Fuses first: a .drfx cannot carry them. Without the Fuses every title opens with "Warning: Unknown tool found ... Fuse.SMK2_Shape" (click OK, install the Fuses, restart Resolve).
 UNINSTALL: python3 install.py --uninstall   (removes only the SMK2 folders)
 Manual: MANUAL.md.  Licence and credits: NOTICE.  Integrity: SHA256SUMS.
 """

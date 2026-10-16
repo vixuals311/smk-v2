@@ -85,7 +85,8 @@ def generate():
     version = open(os.path.join(ROOT, "VERSION")).read().strip()
     out = [f"# SMK v2 manual (v{version})", "", "_Generated from the sources by `tools/gen_manual.py` — do not edit by hand._", "",
            "## Install", "", "Windows: run `install.bat`. macOS: run `install.command`. Any OS: `python3 install.py` (`--dry-run`, `--uninstall`, `--target <Fusion folder>`). Restart Resolve.",
-           "Fuses: Effects ▸ Fuses ▸ SMK v2. Macros: Effects ▸ Tools ▸ Macros ▸ SMK2.", "",
+           "Fuses: Effects ▸ Fuses ▸ SMK v2. Macros: Effects ▸ Tools ▸ Macros ▸ SMK2. Edit-page titles (optional): double-click `SMK2_Titles_*.drfx` and confirm; they appear under Effects ▸ Titles ▸ SMK2.", "",
+           "> **Install the Fuses first** (`install.py`), then the titles. Without the Fuses every title and macro opens with *Warning: Unknown tool found … Fuse.SMK2_Shape*; install the Fuses and restart Resolve. Do not keep old spike Fuses in `Fuses/`: Resolve loads every sub-folder.", "",
            "## Conventions", "",
            "- **Seconds, clip-relative** timing: everything starts at the clip's first frame and ends with it; frame rate does not change the look.",
            "- **Sizes are px @1920**: the same value looks identical at 1080p, vertical and 4K.",

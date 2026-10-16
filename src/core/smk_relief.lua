@@ -14,7 +14,7 @@ function smk.reliefShade(P, x, y, src)
   local r, g, b, a = src(px, py)
   local gx, gy, norm = 0, 0, 0
   local sig2 = P.sigma * P.sigma
-  local jit = 6.2831853 * frac(52.9829189 * frac(0.06711056 * x + 0.00583715 * y))      -- per-pixel rotation of the spiral: no crosshatch at big sizes
+  local jit = (P.sigma > 12) and 6.2831853 * frac(52.9829189 * frac(0.06711056 * x + 0.00583715 * y)) or 0      -- per-pixel rotation of the spiral only for big sizes (sigma > 12 px): no crosshatch there, no grain at normal sizes
   local R = 3 * P.sigma
   for i = 0, P.samples - 1 do
     local ang = i * 2.39996323 + jit
