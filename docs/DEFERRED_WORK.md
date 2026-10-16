@@ -38,3 +38,5 @@
 | D12-004 | Relief blocky / faint tiling at extreme depth+size | Phase 12 H8 | FIX BUILT (spiral jitter), Phase 14 E9 |
 | D12-005 | Resolve crash during two-session scripting (H15); not reproduced alone | Phase 12 H15 | WATCH: run one session only |
 | D14-001 | Studio Lite (macros baked to native tools, no Fuses): frozen; needs an owner decision on whether 1.0 needs it | ARCHITECTURE | DECISION NEEDED |
+| D15-001 | Connector line starts at the block centre and crosses the block's label unless the start point is moved to the box edge; consider default magnet = Auto in Connector | Phase 15 demo | OPEN (owner call) |
+| D15-002 | Look + Bloom on a bright plain card blows out to white: consider a gentler default (additive off / lower intensity) | Phase 15 demo | OPEN (owner call) |
