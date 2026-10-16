@@ -8,6 +8,7 @@ def check(n, c):
     else: failed += 1; print("FAIL:", n)
 py = sys.executable
 subprocess.check_call([py, os.path.join(ROOT, "build/package.py")], stdout=subprocess.DEVNULL)
+nm0 = len([f for f in os.listdir(os.path.join(ROOT, 'dist/templates')) if f.endswith('.setting')])
 ver = open(os.path.join(ROOT, "VERSION")).read().strip(); name = f"SMK2_v{ver}"
 zp = os.path.join(ROOT, "dist/release", name + ".zip")
 z = zipfile.ZipFile(zp); names = z.namelist()
@@ -15,6 +16,14 @@ check("zip exists with a top-level folder", all(n.startswith(name + "/") for n i
 rel = lambda n: n[len(name) + 1:]
 files = {rel(n) for n in names}
 fuses = {f for f in files if f.startswith("fuses/")}; macros = {f for f in files if f.startswith("macros/")}
+drf = f"SMK2_Titles_v{ver}.drfx"
+check("drfx bundle in the release", drf in files)
+if drf in files:
+    import io
+    dz = zipfile.ZipFile(io.BytesIO(z.read(f"{name}/{drf}"))); dn = dz.namelist()
+    check("drfx: only Edit/Titles/SMK2/*.setting (no Fuses folder)", dn and all(n.startswith("Edit/Titles/SMK2/") and n.endswith(".setting") for n in dn))
+    check("drfx: one title per macro except the parked Callout", len(dn) == nm0 - 1)
+    check("drfx: each title is balanced, has a MediaOut fed by the macro group", all((lambda s: s.count("{") == s.count("}") and "MediaOut1 = MediaOut" in s and 'Source = "MainOutput1"' in s)(dz.read(n).decode()) for n in dn))
 check("all Fuses packaged", len(fuses) == len([f for f in os.listdir(os.path.join(ROOT, "src/fuses")) if f.endswith(".lua")]) and "fuses/SMK2_Bloom.fuse" in fuses and "fuses/SMK2_PageCurl.fuse" in fuses)
 nm = len([f for f in os.listdir(os.path.join(ROOT, "dist/templates")) if f.endswith(".setting")])
 check("macros packaged", len(macros) == nm and nm >= 22)

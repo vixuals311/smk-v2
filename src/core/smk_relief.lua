@@ -7,14 +7,17 @@ local function heightVal(P, r, g, b, a)
   return (0.2126 * r + 0.7152 * g + 0.0722 * b) * ia * a
 end
 
+local function frac(v) return v - math.floor(v) end
+
 function smk.reliefShade(P, x, y, src)
   local px, py = x + 0.5, y + 0.5
   local r, g, b, a = src(px, py)
   local gx, gy, norm = 0, 0, 0
   local sig2 = P.sigma * P.sigma
+  local jit = 6.2831853 * frac(52.9829189 * frac(0.06711056 * x + 0.00583715 * y))      -- per-pixel rotation of the spiral: no crosshatch at big sizes
   local R = 3 * P.sigma
   for i = 0, P.samples - 1 do
-    local ang = i * 2.39996323
+    local ang = i * 2.39996323 + jit
     local rr = R * math.sqrt((i + 0.5) / P.samples)
     local ox, oy = math.cos(ang) * rr, math.sin(ang) * rr
     local w = math.exp(-(rr * rr) / (2 * sig2))

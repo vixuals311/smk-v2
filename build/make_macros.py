@@ -62,7 +62,8 @@ class Macro:
         """One colour picker: channels share a ControlGroup; only the first carries the Name (v1 pattern)."""
         for i, ch in enumerate(("R", "G", "B", "A") if alpha else ("R", "G", "B")):
             self.publish(op, base + ch, label if i == 0 else "", page, group=group)
-    def render(self):
+    def render(self, title=False):
+        """title=True: also emit a MediaOut so the file is a complete Edit-page title/generator (.drfx Templates/Edit/Titles)."""
         o = ["{", "\tTools = ordered() {", f"\t\t{self.name} = GroupOperator {{", "\t\t\tCtrlWZoom = false,", "\t\t\tInputs = ordered() {"]
         for p in self.pub:
             o += [f"\t\t\t\t{p['key']} = InstanceInput {{", f'\t\t\t\t\tSourceOp = "{p["op"]}",', f'\t\t\t\t\tSource = "{p["src"]}",',
@@ -74,7 +75,11 @@ class Macro:
         o += ["\t\t\t},", "\t\t\tOutputs = {", "\t\t\t\tMainOutput1 = InstanceOutput {", f'\t\t\t\t\tSourceOp = "{self.out_op}",', '\t\t\t\t\tSource = "Output",', "\t\t\t\t}", "\t\t\t},",
               "\t\t\tViewInfo = GroupInfo { Pos = { 0, 0 } },", "\t\t\tTools = ordered() {"]
         o += [n.render(4) for n in self.nodes]
-        o += ["\t\t\t},", "\t\t},", "\t},", "\tActiveTool = \"%s\"" % self.name, "}"]
+        o += ["\t\t\t},", "\t\t},"]
+        if title:
+            o += ["\t\tMediaOut1 = MediaOut {", "\t\t\tInputs = {", '\t\t\t\tIndex = Input { Value = "0", },',
+                  f'\t\t\t\tInput = Input {{ SourceOp = "{self.name}", Source = "MainOutput1", }},', "\t\t\t},", "\t\t\tViewInfo = OperatorInfo { Pos = { 220, 0 } },", "\t\t},"]
+        o += ["\t},", "\tActiveTool = \"%s\"" % self.name, "}"]
         return "\n".join(o) + "\n"
 
 # ---- shared lists (keys must exist on the Fuses; tests verify against the real Create()) ----

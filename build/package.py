@@ -30,6 +30,7 @@ INSTALL
   macOS:   double-click install.command (if macOS blocks it: right-click > Open, or run `chmod +x install.command`)
   Any OS:  python3 install.py        (options: --dry-run, --uninstall, --target <Fusion folder>)
 Then restart DaVinci Resolve. Fuses appear under Effects > Fuses > SMK v2, macros under Effects > Tools > Macros > SMK2.
+EDIT PAGE (optional): double-click SMK2_Titles_v{v}.drfx and confirm; the products then appear under Effects > Titles > SMK2 (drag onto the timeline). Install the Fuses first: a .drfx cannot carry them.
 UNINSTALL: python3 install.py --uninstall   (removes only the SMK2 folders)
 Manual: MANUAL.md.  Licence and credits: NOTICE.  Integrity: SHA256SUMS.
 """
@@ -47,6 +48,7 @@ def clean_macro(text):
 def build_release():
     subprocess.check_call([sys.executable, os.path.join(ROOT, "build", "build.py")], stdout=subprocess.DEVNULL)
     subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "gen_manual.py")], stdout=subprocess.DEVNULL)
+    subprocess.check_call([sys.executable, os.path.join(ROOT, "build", "make_drfx.py")], stdout=subprocess.DEVNULL)
     rel = os.path.join(ROOT, "dist", "release"); name = f"SMK2_v{VERSION}"; stage = os.path.join(rel, name)
     shutil.rmtree(rel, ignore_errors=True); os.makedirs(os.path.join(stage, "fuses")); os.makedirs(os.path.join(stage, "macros"))
     for f in sorted(os.listdir(os.path.join(ROOT, "dist/fuses"))):
@@ -56,6 +58,7 @@ def build_release():
         if f.endswith(".setting") and not JUNK.match(f):
             open(os.path.join(stage, "macros", f), "w", newline="\n").write(clean_macro(open(os.path.join(tdir, f)).read()))
     shutil.copy(os.path.join(ROOT, "scripts/install.py"), stage)
+    shutil.copy(os.path.join(ROOT, "dist", f"SMK2_Titles_v{VERSION}.drfx"), stage)
     open(os.path.join(stage, "install.bat"), "w", newline="\r\n").write(INSTALL_BAT)
     open(os.path.join(stage, "install.command"), "w", newline="\n").write(INSTALL_COMMAND)
     open(os.path.join(stage, "README.txt"), "w", newline="\n").write(README.format(v=VERSION))
