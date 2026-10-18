@@ -1,5 +1,5 @@
 SMK v2 — Fusion SaaS Motion Kit v2
-Copyright (c) 2026 the SMK v2 authors. All rights reserved unless a licence file says otherwise.
+Copyright (c) 2026 the SMK v2 authors. All rights reserved. Use of SMK v2 is governed by the end-user licence agreement in the LICENSE file.
 
 CLEAN-ROOM STATEMENT
 All Fuses, macros, shaders (GPU kernels), reference pixel functions and generators in this package were written from scratch for this project.

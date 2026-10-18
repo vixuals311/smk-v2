@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Build the release zip: dist/release/SMK2_v<VERSION>.zip (+ .sha256). Layout inside:
-  SMK2_v<VERSION>/{fuses/*.fuse, macros/*.setting, install.py, install.bat, install.command, README.txt, NOTICE, MANUAL.md, VERSION, SHA256SUMS}
+  SMK2_v<VERSION>/{fuses/*.fuse, macros/*.setting, install.py, install.bat, install.command, README.txt, LICENSE, NOTICE, MANUAL.md, VERSION, SHA256SUMS}
 No ._* / __MACOSX / .DS_Store / Thumbs.db metadata; no machine paths (CustomData.Path) in macros. Usage: python build/package.py"""
 import hashlib, os, re, shutil, subprocess, sys, zipfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -32,7 +32,7 @@ INSTALL
 Then restart DaVinci Resolve. Fuses appear under Effects > Fuses > SMK v2, macros under Effects > Tools > Macros > SMK2.
 EDIT PAGE (optional): double-click SMK2_Titles_v{v}.drfx and confirm; the products then appear under Effects > Titles > SMK2 (drag onto the timeline). Install the Fuses first: a .drfx cannot carry them. Without the Fuses every title opens with "Warning: Unknown tool found ... Fuse.SMK2_Shape" (click OK, install the Fuses, restart Resolve).
 UNINSTALL: python3 install.py --uninstall   (removes only the SMK2 folders)
-Manual: MANUAL.md.  Licence and credits: NOTICE.  Integrity: SHA256SUMS.
+Manual: MANUAL.md.  Licence: LICENSE.  Credits: NOTICE.  Integrity: SHA256SUMS.
 """
 
 def sha256(p):
@@ -62,7 +62,7 @@ def build_release():
     open(os.path.join(stage, "install.bat"), "w", newline="\r\n").write(INSTALL_BAT)
     open(os.path.join(stage, "install.command"), "w", newline="\n").write(INSTALL_COMMAND)
     open(os.path.join(stage, "README.txt"), "w", newline="\n").write(README.format(v=VERSION))
-    for f in ("NOTICE", "VERSION"): shutil.copy(os.path.join(ROOT, f), stage)
+    for f in ("LICENSE", "NOTICE", "VERSION"): shutil.copy(os.path.join(ROOT, f), stage)
     shutil.copy(os.path.join(ROOT, "docs/MANUAL.md"), os.path.join(stage, "MANUAL.md"))
     files = sorted(os.path.relpath(os.path.join(d, x), stage).replace(os.sep, "/") for d, _, fs in os.walk(stage) for x in fs)
     open(os.path.join(stage, "SHA256SUMS"), "w", newline="\n").write("".join(f"{sha256(os.path.join(stage, f))}  {f}\n" for f in files))

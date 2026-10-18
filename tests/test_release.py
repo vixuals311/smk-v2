@@ -28,7 +28,7 @@ check("all Fuses packaged", len(fuses) == len([f for f in os.listdir(os.path.joi
 nm = len([f for f in os.listdir(os.path.join(ROOT, "dist/templates")) if f.endswith(".setting")])
 check("macros packaged", len(macros) == nm and nm >= 22)
 check("no spikes in the release", not any("Spike" in f for f in files))
-for need in ("install.py", "install.bat", "install.command", "README.txt", "NOTICE", "MANUAL.md", "VERSION", "SHA256SUMS"): check("contains " + need, need in files)
+for need in ("install.py", "install.bat", "install.command", "README.txt", "LICENSE", "NOTICE", "MANUAL.md", "VERSION", "SHA256SUMS"): check("contains " + need, need in files)
 check("no junk metadata", not any(re.search(r"(^|/)(\._|\.DS_Store|Thumbs\.db|__MACOSX)", n) for n in names))
 sums = dict(l.split("  ", 1)[::-1] for l in z.read(f"{name}/SHA256SUMS").decode().strip().splitlines())
 check("SHA256SUMS covers every file but itself and matches", set(sums) == files - {"SHA256SUMS"} and all(hashlib.sha256(z.read(f"{name}/{f}")).hexdigest() == h for f, h in sums.items()))

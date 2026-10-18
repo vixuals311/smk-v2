@@ -8,12 +8,12 @@ Fusion SaaS Motion Kit v2 for DaVinci Resolve/Fusion: GPU Fuses (Shape, Cursor, 
 Plan and design: `docs/ARCHITECTURE.md`; engines: `docs/MOTION_ENGINES_REFERENCE.md`; costs: `docs/PERFORMANCE.md`; manual (generated): `docs/MANUAL.md`; clean-room/licence: `NOTICE`, `docs/CLEAN_ROOM.md`.
 
 ## Status
-Phases 0–15 done. Every phase has `docs/PHASE<N>_GATE.md` (what to test) and `docs/PHASE<N>_RESULTS.md` (what Resolve showed). Release candidate verified from the zip (Phase 15, 9/9). Owner hand-check of rc1: all good; viewer 4–5 fps first pass, 24 fps cached (normal; see manual "Playback speed").
-rc2 changed defaults only (Connector magnets Auto, Look/Bloom glow behind): unit-tested, **not yet re-checked in Resolve**.
+Phases 0–16 done. Every phase has `docs/PHASE<N>_GATE.md` (what to test) and `docs/PHASE<N>_RESULTS.md` (what Resolve showed). Release candidate verified from the zip (Phase 15, 9/9). Owner hand-check of rc1: all good; viewer 4–5 fps first pass, 24 fps cached (normal; see manual "Playback speed").
+rc2 changed defaults only (Connector magnets Auto, Look/Bloom glow behind): **re-checked in Resolve in Phase 16, all pass** (`docs/PHASE16_RESULTS.md`). Remaining before 2.0.0: owner approval, then set VERSION and package.
 
 ## Open items (see `docs/DEFERRED_WORK.md`)
-1. **Licence**: `NOTICE` says all rights reserved; owner must choose (proprietary EULA vs permissive) and add `LICENSE`.
-2. rc2 smoke re-check in Resolve (34 tools + the three changed defaults), then tag **2.0.0** (set `VERSION`, `python build/package.py`, copy zip/sha256/drfx to `releases/`).
+1. **Licence**: DONE: proprietary end-user agreement in `LICENSE` (draft, no legal review; fill in the licensor name and contact before selling).
+2. rc2 smoke re-check: DONE (Phase 16). Next: tag **2.0.0** (set `VERSION`, `python build/package.py`, copy zip/sha256/drfx to `releases/`, remove rc files).
 3. Optional: macro cost optimisation (D12-002; CardStack 23.5 ms warm), Studio Lite (D14-001, recommended to drop), Callout rework (parked), Click Demo button reaction (D11-002), Stat Card auto-shrink (D11-001).
 
 ## How we work (the loop)

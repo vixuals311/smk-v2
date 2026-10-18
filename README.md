@@ -12,7 +12,7 @@ python tools/gen_manual.py       # regenerate docs/MANUAL.md from the sources
 python build/make_drfx.py        # dist/SMK2_Titles_v<VERSION>.drfx: every product as an Edit-page title (install Fuses first)
 ```
 
-`studio/SMK2_Stagger.lua` numbers selected elements 0,1,2… so Index × Stagger delays them in order (Resolve Studio Fusion script; dialog shell UNVERIFIED). `NOTICE` and `docs/CLEAN_ROOM.md` hold the licence / clean-room review.
+`studio/SMK2_Stagger.lua` numbers selected elements 0,1,2… so Index × Stagger delays them in order (Resolve Studio Fusion script; dialog shell UNVERIFIED). `LICENSE` is the end-user agreement; `NOTICE` and `docs/CLEAN_ROOM.md` hold the credits and clean-room review.
 
 **Download (release candidate):** `releases/SMK2_v2.0.0-rc1.zip` (everything: Fuses, macros, installers, manual, and the Edit-page titles bundle) and `releases/SMK2_Titles_v2.0.0-rc1.drfx` (titles only; install the Fuses first). SHA-256 in `releases/*.sha256`.
 
