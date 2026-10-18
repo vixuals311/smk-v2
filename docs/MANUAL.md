@@ -1,4 +1,4 @@
-# SMK v2 manual (v2.0.0-rc2)
+# SMK v2 manual (v2.0.1)
 
 _Generated from the sources by `tools/gen_manual.py` — do not edit by hand._
 

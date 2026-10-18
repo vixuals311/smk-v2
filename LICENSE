@@ -1,8 +1,8 @@
 SMK v2 (Fusion SaaS Motion Kit v2) — END-USER LICENCE AGREEMENT
 
-Copyright (c) 2026 the SMK v2 authors ("Licensor"). All rights reserved.
+Copyright (c) 2026 vixuals311 / SaaSor Engineering ("Licensor"). All rights reserved.
 
-DRAFT: this agreement was drafted without legal review. Have it checked by a lawyer, and fill in the Licensor's legal name and contact address below, before the product is sold or distributed.
+DRAFT: this agreement was drafted without legal review. Have it checked by a lawyer, and fill in the Licensor's legal country and contact address below, before the product is sold or distributed.
 
 By installing or using SMK v2 (the Fuses, macros, titles, installers, documentation and any other files in this package, together the "Software") you agree to these terms. If you do not agree, do not install or use the Software.
 
@@ -37,6 +37,6 @@ TO THE MAXIMUM EXTENT PERMITTED BY LAW, LICENSOR IS NOT LIABLE FOR INDIRECT, INC
 This licence applies until terminated. It ends automatically if you break these terms. On termination you must stop using the Software and delete all copies (`python scripts/install.py --uninstall` removes the installed files). Sections 2, 4, 6, 7 and 9 survive termination.
 
 9. GENERAL
-This agreement is the entire agreement about the Software. If a provision is unenforceable, the rest remains in force. You may not assign this licence without the Licensor's written consent. The governing law and courts are those of the Licensor's country of residence, unless mandatory consumer law says otherwise. [Licensor legal name and country: TO BE FILLED IN.]
+This agreement is the entire agreement about the Software. If a provision is unenforceable, the rest remains in force. You may not assign this licence without the Licensor's written consent. The governing law and courts are those of the Licensor's country of residence, unless mandatory consumer law says otherwise. Licensor: vixuals311 / SaaSor Engineering. [Country of residence: TO BE FILLED IN.]
 
-Contact: [TO BE FILLED IN]
+Contact: vixuals311 / SaaSor Engineering, via https://github.com/vixuals311 [email / postal address: TO BE FILLED IN]
