@@ -1,6 +1,6 @@
 # Handoff — continuing SMK v2 on another device / in a new chat
 
-**Repo:** `vixuals311/smk-v2`, branch `main` (latest release candidate **2.0.0-rc2**; files in `releases/`). Start a new chat with: *"Read README.md and docs/HANDOFF.md in vixuals311/smk-v2 and continue."*
+**Repo:** `vixuals311/smk-v2`, branch `main` (release **2.0.0**; files in `releases/`). Start a new chat with: *"Read README.md and docs/HANDOFF.md in vixuals311/smk-v2 and continue."*
 
 ## What this is
 Fusion SaaS Motion Kit v2 for DaVinci Resolve/Fusion: GPU Fuses (Shape, Cursor, Connector, Look, Relief, Reflection, Page Curl, Bloom, Long Shadow, Animator, Motion, Motion Rig) + 22 generated macros
@@ -13,7 +13,7 @@ rc2 changed defaults only (Connector magnets Auto, Look/Bloom glow behind): **re
 
 ## Open items (see `docs/DEFERRED_WORK.md`)
 1. **Licence**: DONE: proprietary end-user agreement in `LICENSE` (draft, no legal review; fill in the licensor name and contact before selling).
-2. rc2 smoke re-check: DONE (Phase 16). Next: tag **2.0.0** (set `VERSION`, `python build/package.py`, copy zip/sha256/drfx to `releases/`, remove rc files).
+2. 2.0.0 released (VERSION, zip, sha256 and drfx in `releases/`).
 3. Optional: macro cost optimisation (D12-002; CardStack 23.5 ms warm), Studio Lite (D14-001, recommended to drop), Callout rework (parked), Click Demo button reaction (D11-002), Stat Card auto-shrink (D11-001).
 
 ## How we work (the loop)
